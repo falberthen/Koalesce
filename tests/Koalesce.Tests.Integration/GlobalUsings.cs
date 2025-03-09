@@ -1,0 +1,9 @@
+global using Koalesce.Core;
+global using Koalesce.OpenAPI;
+global using Koalesce.Tests.Integration.RestAPIs;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Hosting;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.Extensions.Configuration;
+global using System.Net;
+global using System.Net.Sockets;
