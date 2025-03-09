@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageId>Koalesce.Core</PackageId>
+		<IsPackable>true</IsPackable>
+		<Version>0.1.0-alpha</Version>
+		<Authors>Felipe Henrique (Falberthen)</Authors>
+		<Company>falberthen.github.io</Company>
+		<Description>The Core library for Koalesce packages.</Description>
+		<PackageTags>Koalesce, API, OpenAPI, Swagger, Microservices</PackageTags>		
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\LICENSE">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="6.0.0" />
+	</ItemGroup>
+</Project>
