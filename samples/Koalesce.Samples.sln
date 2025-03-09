@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.11.35431.28
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RestAPIs", "RestAPIs", "{1011EECF-70C4-4046-B6B4-D9A8388C46E6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.Swagger", "Koalesce.Samples.Swagger\Koalesce.Samples.Swagger.csproj", "{67E31CD9-142C-4551-938B-F09EA93265C1}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.Swagger.Ocelot", "Koalesce.Samples.Swagger.Ocelot\Koalesce.Samples.Swagger.Ocelot.csproj", "{600E59C3-3405-4FD6-9FF6-257B4771F742}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.Kiota", "Koalesce.Samples.Kiota\Koalesce.Samples.Kiota.csproj", "{C7C9BBCE-573E-4BDD-99CE-7857FED67255}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.CustomersAPI", "Koalesce.Samples.CustomersAPI\Koalesce.Samples.CustomersAPI.csproj", "{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.ProductsAPI", "Koalesce.Samples.ProductsAPI\Koalesce.Samples.ProductsAPI.csproj", "{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{67E31CD9-142C-4551-938B-F09EA93265C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{67E31CD9-142C-4551-938B-F09EA93265C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{67E31CD9-142C-4551-938B-F09EA93265C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{67E31CD9-142C-4551-938B-F09EA93265C1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{600E59C3-3405-4FD6-9FF6-257B4771F742}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{600E59C3-3405-4FD6-9FF6-257B4771F742}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{600E59C3-3405-4FD6-9FF6-257B4771F742}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{600E59C3-3405-4FD6-9FF6-257B4771F742}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7C9BBCE-573E-4BDD-99CE-7857FED67255}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7C9BBCE-573E-4BDD-99CE-7857FED67255}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7C9BBCE-573E-4BDD-99CE-7857FED67255}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7C9BBCE-573E-4BDD-99CE-7857FED67255}.Release|Any CPU.Build.0 = Release|Any CPU
+		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD} = {1011EECF-70C4-4046-B6B4-D9A8388C46E6}
+		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4} = {1011EECF-70C4-4046-B6B4-D9A8388C46E6}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AB1241EC-E4BC-4518-A486-776F861DCFA5}
+	EndGlobalSection
+EndGlobal
