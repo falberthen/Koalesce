@@ -86,7 +86,7 @@ public class KoalesceMiddleware
 		{
 			// Calling provider to merge definitions
 			string mergedDocument = await _koalesceProvider
-				.ProvideSerializedDocumentAsync();
+				.ProvideMergedDocumentAsync();
 
 			if (string.IsNullOrWhiteSpace(mergedDocument))
 			{

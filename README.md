@@ -110,28 +110,6 @@ app.UseKoalesce();
 
 <br/>
 
-## 🛠 Extending Koalesce
-You can create **custom Koalesce providers** by implementing `IKoalesceProvider`.
-
-*Example:*
-```csharp
-public class CustomKoalesceProvider : IKoalesceProvider
-{
-    public async Task<string> ProvideSerializedDocumentAsync()
-    {
-        return "{}"; // Example: Return empty OpenAPI document
-    }
-}
-```
-*Then, register it:*
-```csharp
-builder.Services.AddKoalesce(builder.Configuration)
-  .AddProvider<DummyProvider, KoalesceProviderOptions>();
-```
-
-<br/>
-
-
 ## ⚠️ Important Considerations and Limitations
 
 🔹 What Happens when using Koalesce?

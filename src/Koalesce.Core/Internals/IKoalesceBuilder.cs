@@ -1,4 +1,4 @@
-﻿namespace Koalesce.Core;
+﻿namespace Koalesce.Core.Internals;
 
 /// <summary>
 /// Defines the contract for building Koalesce services and middleware.

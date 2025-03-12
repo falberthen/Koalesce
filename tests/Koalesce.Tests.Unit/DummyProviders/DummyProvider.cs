@@ -1,9 +1,10 @@
-﻿using Koalesce.Core;
+﻿using Koalesce.Core.Providers;
 
 namespace Koalesce.Tests.Unit.DummyProviders;
 
 // Dummy provider for testing
 internal class DummyProvider : IKoalesceProvider
 {
-	public Task<string> ProvideSerializedDocumentAsync() => Task.FromResult("{}");
+	public Task<string> ProvideMergedDocumentAsync() => 
+		Task.FromResult("{}");
 }

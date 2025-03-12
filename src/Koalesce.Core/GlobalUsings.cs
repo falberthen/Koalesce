@@ -12,3 +12,6 @@ global using System.Linq;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
 global using System.ComponentModel.DataAnnotations;
 global using Microsoft.Extensions.Caching.Memory;
+global using Koalesce.Core.Providers;
+global using Koalesce.Core.Services;
+global using Koalesce.Core.Internals;

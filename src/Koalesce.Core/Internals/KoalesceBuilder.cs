@@ -1,9 +1,9 @@
-﻿namespace Koalesce.Core;
+﻿namespace Koalesce.Core.Internals;
 
 /// <summary>
-/// Builder for Koalesce services and middleware.
+/// Internal builder for Koalesce services and middleware.
 /// </summary>
-public class KoalesceBuilder : IKoalesceBuilder
+internal sealed class KoalesceBuilder : IKoalesceBuilder
 {
 	public IServiceCollection Services { get; }
 	public IConfiguration Configuration { get; }
@@ -11,7 +11,7 @@ public class KoalesceBuilder : IKoalesceBuilder
 	// Track if middleware is enabled
 	public bool UseMiddlewareEnabled { get; private set; } = false;
 
-	public KoalesceBuilder(IServiceCollection services, IConfiguration configuration)
+	internal KoalesceBuilder(IServiceCollection services, IConfiguration configuration)
 	{
 		ArgumentNullException.ThrowIfNull(services);
 		ArgumentNullException.ThrowIfNull(configuration);

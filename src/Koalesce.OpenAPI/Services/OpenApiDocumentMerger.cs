@@ -1,18 +1,17 @@
-﻿namespace Koalesce.OpenAPI.Builders;
+﻿namespace Koalesce.OpenAPI.Services;
 
 /// <summary>
-/// Builds a single API definition document from multiple OpenAPI sources.
+/// Merges multiple API sources into a single OpenApiDocument
 /// </summary>
-public class OpenApiDocumentBuilder<TOptions> : IOpenApiDocumentBuilder
-	where TOptions : OpenApiOptions
+public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 {
-	private readonly TOptions _options;
-	private readonly ILogger<OpenApiDocumentBuilder<TOptions>> _logger;
+	private readonly OpenApiOptions _options;
+	private readonly ILogger<OpenApiDocumentMerger> _logger;
 	private readonly IHttpClientFactory _httpClientFactory;
 
-	public OpenApiDocumentBuilder(
-		IOptions<TOptions> options,
-		ILogger<OpenApiDocumentBuilder<TOptions>> logger,
+	public OpenApiDocumentMerger(
+		IOptions<OpenApiOptions> options,
+		ILogger<OpenApiDocumentMerger> logger,
 		IHttpClientFactory httpClientFactory)
 	{
 		ArgumentNullException.ThrowIfNull(options);
@@ -27,54 +26,62 @@ public class OpenApiDocumentBuilder<TOptions> : IOpenApiDocumentBuilder
 	/// <summary>
 	/// Builds a single API definition document from multiple API specifications.
 	/// </summary>
-	public async Task<OpenApiDocument> BuildSingleDefinitionAsync(IEnumerable<string> definitionUrls)
+	public async Task<OpenApiDocument> MergeIntoSingleDefinitionAsync()
 	{
-		if (!definitionUrls.Any())
+		if (!_options.SourceOpenApiUrls.Any())
 			throw new ArgumentException("API URL list cannot be empty.");
 
 		_logger.LogInformation("Starting API Koalescing process with {SourceDefinitionsCount} APIs",
-			definitionUrls.Count());
+			_options.SourceOpenApiUrls.Count());
 
-		var httpClient = _httpClientFactory.CreateClient();
-		var detectedApiVersion = ExtractVersionFromPath(_options.MergedOpenApiPath);
-
-		var mergedDocument = new OpenApiDocument
+		try
 		{
-			Info = new OpenApiInfo
+			var httpClient = _httpClientFactory.CreateClient();
+			var detectedApiVersion = ExtractVersionFromPath(_options.MergedOpenApiPath);
+
+			var mergedDocument = new OpenApiDocument
 			{
-				Title = _options.Title,
-				Version = detectedApiVersion ?? "v1"
-			},
-			Paths = new OpenApiPaths(),
-			Components = new OpenApiComponents
+				Info = new OpenApiInfo
+				{
+					Title = _options.Title,
+					Version = detectedApiVersion ?? "v1"
+				},
+				Paths = new OpenApiPaths(),
+				Components = new OpenApiComponents
+				{
+					SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>()
+				},
+				Servers = new List<OpenApiServer>(),
+				SecurityRequirements = new List<OpenApiSecurityRequirement>()
+			};
+
+			// Fetch all API definitions concurrently
+			var fetchResults = await Task.WhenAll(_options.SourceOpenApiUrls.Select(url =>
+				FetchApiDefinitionAsync(httpClient, url))
+			);
+
+			// Merge results sequentially in the order of definitionUrls
+			foreach (var (url, apiDoc) in _options.SourceOpenApiUrls.Zip(fetchResults))
 			{
-				SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>()
-			},
-			Servers = new List<OpenApiServer>(),
-			SecurityRequirements = new List<OpenApiSecurityRequirement>()
-		};
+				if (apiDoc != null)
+					MergeApiDefinition(apiDoc, mergedDocument, url);
+			}
 
-		// Fetch all API definitions concurrently
-		var fetchResults = await Task.WhenAll(definitionUrls.Select(url =>
-			FetchApiDefinitionAsync(httpClient, url))
-		);
+			// Ensure at least one fallback server exists
+			if (!mergedDocument.Servers.Any())
+			{
+				_logger.LogWarning("No valid servers found in API definitions. Adding fallback '/'");
+				mergedDocument.Servers.Add(new OpenApiServer { Url = "/" });
+			}
 
-		// Merge results sequentially in the order of definitionUrls
-		foreach (var (url, apiDoc) in definitionUrls.Zip(fetchResults))
-		{
-			if (apiDoc != null)
-				MergeApiDefinition(apiDoc, mergedDocument, url);
+			_logger.LogInformation("API Koalescing completed.");
+			return mergedDocument;
 		}
-
-		// Ensure at least one fallback server exists
-		if (!mergedDocument.Servers.Any())
+		catch (Exception ex)
 		{
-			_logger.LogWarning("No valid servers found in API definitions. Adding fallback '/'");
-			mergedDocument.Servers.Add(new OpenApiServer { Url = "/" });
+			_logger.LogError(ex, "Error during API Koalescing.");
+			throw;
 		}
-
-		_logger.LogInformation("API Koalescing completed.");
-		return mergedDocument;
 	}
 
 	/// <summary>
@@ -106,8 +113,8 @@ public class OpenApiDocumentBuilder<TOptions> : IOpenApiDocumentBuilder
 	private void MergeApiDefinition(OpenApiDocument sourceDocument, OpenApiDocument targetDocument, string definitionUrl)
 	{
 		string apiName = sourceDocument.Info?.Title ?? "Unknown API";
-		string apiVersion = sourceDocument.Info?.Version ?? "v1";		
-		string baseUrl = _options.ApiGatewayBaseUrl 
+		string apiVersion = sourceDocument.Info?.Version ?? "v1";
+		string baseUrl = _options.ApiGatewayBaseUrl
 			?? new Uri(definitionUrl).GetLeftPart(UriPartial.Authority);
 
 		var serverEntry = new OpenApiServer

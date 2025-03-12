@@ -1,5 +1,6 @@
 using Koalesce.Core;
 using Koalesce.Core.Exceptions;
+using Koalesce.Core.Internals;
 using Koalesce.Tests.Unit.DummyProviders;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
