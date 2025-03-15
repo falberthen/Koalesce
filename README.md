@@ -27,6 +27,7 @@ Koalesce is a **.NET distributed library** that *coalesces* multiple **OpenAPI d
 | `Koalesce.SourceOpenApiUrls`         | `array`   | 🔺  | Source list of OpenAPI URLs to merge. |
 | `Koalesce.MergedOpenApiPath` | `string`  | 🔺 | Path where the merged API definition is exposed. |
 | `Koalesce.Title`      | `string`  | "My 🐨Koalesced OpenAPI" | Title for the Koalesced API definition. |
+| `Koalesce.SkipIdenticalPaths`     | `boolean` | `true` | If `false`, Koalesce will throw an exception when detecting identical API paths across merged definitions. If `true`, it will log a warning and skip them. |
 | `Koalesce.CacheDurationSeconds`      | `int`  | 300 | The cache duration in seconds for a Koalesced API definition. |
 | `Koalesce.DisableCache` | `boolean` | `false` | Disables caching when set to `true`. This may impact performance by forcing recomputation on every request. |
 | `Koalesce.ApiGateWayBaseUrl` | `string` | null / empty | If provided, Koalesce will ensure a single server for the entire merged document. 
@@ -35,7 +36,6 @@ Koalesce is a **.NET distributed library** that *coalesces* multiple **OpenAPI d
 **💡Note:** The file extension defined in **MergedOpenApiPath** will define the merged output format.
 
 **💡Note:** Koalesce will respect the order defined in **SourceOpenApiUrls**.
-
 
 <br/>
 
@@ -112,8 +112,6 @@ app.UseKoalesce();
 
 ## ⚠️ Important Considerations and Limitations
 
-🔹 What Happens when using Koalesce?
-
 ### 🔐 Security Schemes & Authorization
 Koalesce merges authentication schemes found in different API definitions. If multiple APIs define different security schemes (e.g., OAuth2, API Key, Bearer Tokens), 
 these will be preserved in the final Koalesced API document.
@@ -123,10 +121,11 @@ these will be preserved in the final Koalesced API document.
 
 
 ### 🔀 Handling Identical Routes
-The OpenAPI specification does not allow duplicate paths, meaning that if multiple APIs define identical paths (e.g., /api/products exists in multiple APIs), 
-they will be merged into a single entry.
 
+🔹 At the moment, what Happens when using Koalesce?
 - ⚠️ **The order of SourceOpenApiUrls** determines which API takes merging precedence.
+- ⚠️ By default, Koalesce is configured with **SkipIdenticalPaths** set to `true`, meaning it will ignore duplicate paths, keeping only the first occurrence.
+If set to `false`, Koalesce will throw an exception when detecting identical paths across merged APIs.
 - ⚠️ **Only one path definition will be retained in the Koalesced document**, as OpenAPI does not support multiple definitions for the same path.
 
 🔹 How to Avoid This?

@@ -9,6 +9,7 @@ public abstract class KoalesceIntegrationTestBase : IAsyncLifetime
 	protected Uri _gatewayUri = null!;
 	protected WebApplication? _customersApi;
 	protected WebApplication? _productsApi;
+	protected WebApplication? _inventoryApi;
 	protected HttpClient _httpClient = null!;
 
 	public async Task InitializeAsync()
@@ -17,17 +18,21 @@ public abstract class KoalesceIntegrationTestBase : IAsyncLifetime
 		_gatewayUri = new Uri($"http://localhost:{port}");
 		_httpClient = new HttpClient { BaseAddress = _gatewayUri };
 
-		// Start the downstream APIs (Customers & Products)
+		// Start the downstream APIs (Customers, Products & Inventory)
 		_customersApi = CustomersApi.Create();
 		_productsApi = ProductsApi.Create();
+		_inventoryApi = InventoryApi.Create();
+
 		await _customersApi.StartAsync();
 		await _productsApi.StartAsync();
+		await _inventoryApi.StartAsync();
 	}
 
 	public async Task DisposeAsync()
 	{
 		await _customersApi!.StopAsync();
 		await _productsApi!.StopAsync();
+		await _inventoryApi!.StopAsync();
 	}
 
 	/// <summary>

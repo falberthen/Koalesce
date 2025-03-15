@@ -1,4 +1,6 @@
-﻿namespace Koalesce.OpenAPI.Services;
+﻿using Koalesce.Core.Exceptions;
+
+namespace Koalesce.OpenAPI.Services;
 
 /// <summary>
 /// Merges multiple API sources into a single OpenApiDocument
@@ -128,7 +130,7 @@ public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 		if (!targetDocument.Servers.Any(s => s.Url == baseUrl))
 			targetDocument.Servers.Add(serverEntry);
 
-		MergePaths(sourceDocument.Paths, targetDocument.Paths, serverEntry);
+		MergePaths(sourceDocument.Paths, targetDocument.Paths, serverEntry, apiName);
 		MergeComponents(sourceDocument.Components, targetDocument.Components);
 		MergeSecuritySchemes(sourceDocument, targetDocument);
 		MergeTags(sourceDocument, targetDocument, serverEntry);
@@ -137,12 +139,20 @@ public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	/// <summary>
 	/// Merges API paths while preserving per-operation security and summaries.
 	/// </summary>
-	private void MergePaths(OpenApiPaths sourcePaths, OpenApiPaths targetPaths, OpenApiServer server)
+	/// <summary>
+	private void MergePaths(OpenApiPaths sourcePaths, OpenApiPaths targetPaths, OpenApiServer server, string apiName)
 	{
+		var identicalPaths = new List<(string Path, string ApiName)>();
+
 		foreach (var (pathKey, pathItem) in sourcePaths)
 		{
 			if (!targetPaths.TryGetValue(pathKey, out var existingPath))
 				targetPaths[pathKey] = existingPath = new OpenApiPathItem();
+			else if (!_options.SkipIdenticalPaths)
+				identicalPaths.Add((pathKey, apiName)); // Collect duplicate paths
+			else
+				_logger.LogWarning("Identical path '{Path}' from API '{ApiName}' found. " +
+					"Skipping due to SkipIdenticalPaths being enabled.", pathKey, apiName);
 
 			foreach (var (operationType, operation) in pathItem.Operations)
 			{
@@ -166,6 +176,10 @@ public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 				}
 			}
 		}
+
+		// Throw an exception after merging if duplicates were found
+		if (identicalPaths.Any() && !_options.SkipIdenticalPaths)
+			throw new KoalesceIdenticalPathFoundException(identicalPaths);
 	}
 
 	/// <summary>

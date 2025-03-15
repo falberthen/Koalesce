@@ -1,4 +1,6 @@
-﻿namespace Koalesce.Core;
+﻿using Microsoft.AspNetCore.Http;
+
+namespace Koalesce.Core;
 
 /// <summary>
 /// Middleware to handle API requests.
@@ -85,8 +87,7 @@ public class KoalesceMiddleware
 		try
 		{
 			// Calling provider to merge definitions
-			string mergedDocument = await _koalesceProvider
-				.ProvideMergedDocumentAsync();
+			string mergedDocument = await _koalesceProvider.ProvideMergedDocumentAsync();
 
 			if (string.IsNullOrWhiteSpace(mergedDocument))
 			{
@@ -98,19 +99,17 @@ public class KoalesceMiddleware
 			// Store result in cache if caching is enabled
 			if (!_disableCache)
 			{
-				var cacheEntryOptions = new MemoryCacheEntryOptions()
-					.SetAbsoluteExpiration(_cacheDuration);
-				_cache.Set(_mergedOpenApiPath, mergedDocument, cacheEntryOptions);
+				_cache.Set(_mergedOpenApiPath, mergedDocument,
+					new MemoryCacheEntryOptions().SetAbsoluteExpiration(_cacheDuration));
 			}
 
 			context.Response.ContentType = "application/json";
 			await context.Response.WriteAsync(mergedDocument);
 		}
-		catch (Exception ex)
+		catch (Exception ex) when (ex is KoalesceIdenticalPathFoundException || ex is Exception)
 		{
-			_logger.LogError(ex, "Failed to Koalesce API definitions.");
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-			await context.Response.WriteAsync("Error while Koalescing API definitions.");
+			await context.Response.WriteAsync(ex.Message);
 		}
 	}
 }

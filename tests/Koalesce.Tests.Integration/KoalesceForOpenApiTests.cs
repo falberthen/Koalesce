@@ -1,4 +1,6 @@
-﻿namespace Koalesce.Tests.Integration;
+﻿using Koalesce.Core.Exceptions;
+
+namespace Koalesce.Tests.Integration;
 
 [Collection("Koalesce Integration Tests")]
 public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
@@ -8,6 +10,8 @@ public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 
 	const string apiGatewaySettings = "appsettings.apigateway.json";
 	const string mergedApiGatewayPath = "/swagger/v1/apigateway.json";
+
+	const string identicalPathSettings = "appsettings.identicalpaths.json";
 
 	[Fact]
 	public async Task Koalesce_WhenForOpenAPI_ShouldMergeOpenAPIRoutes()
@@ -178,6 +182,28 @@ public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 			.Substring(mergedResult.IndexOf("\"/api/customers\": {", StringComparison.Ordinal)));
 		Assert.DoesNotContain("\"servers\":", mergedResult
 			.Substring(mergedResult.IndexOf("\"/api/products\": {", StringComparison.Ordinal)));
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task Koalesce_WhenIdenticalPathsExist_AndSkipIdenticalPathsIsFalse_ShouldReturnHttp500()
+	{
+		// Arrange
+		var koalescingApi = await StartWebApplicationAsync(identicalPathSettings, builder =>
+		{
+			builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI();
+		});
+
+		// Act
+		var response = await _httpClient.GetAsync(mergedApiGatewayPath);
+		var responseContent = await response.Content.ReadAsStringAsync();
+
+		// Assert
+		Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+		Assert.Contains("Identical paths detected:", responseContent);
 
 		await koalescingApi.StopAsync();
 	}

@@ -46,6 +46,13 @@ public class KoalesceOptions : IValidatableObject
 	public string ApiGatewayBaseUrl { get; set; }
 
 	/// <summary>
+	/// Determines whether Koalesce skips identical paths.
+	/// When set to true (default), identical paths are ignored/skipped.
+	/// When set to false, Koalesce throws an exception at build time.
+	/// </summary>
+	public bool SkipIdenticalPaths { get; set; } = true;
+
+	/// <summary>
 	/// Custom validation logic for required fields.
 	/// </summary>
 	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

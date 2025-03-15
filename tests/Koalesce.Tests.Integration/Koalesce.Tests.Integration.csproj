@@ -34,6 +34,9 @@
     <Using Include="Xunit" />
   </ItemGroup>
   <ItemGroup>
+	<None Update="appsettings.identicalpaths.json">
+	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+	</None>
 	<None Update="appsettings.apigateway.json">
 	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 	</None>
