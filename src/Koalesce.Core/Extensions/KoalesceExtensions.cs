@@ -1,4 +1,4 @@
-﻿namespace Koalesce.Core;
+﻿namespace Koalesce.Core.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Koalesce.
@@ -20,17 +20,14 @@ public static class KoalesceExtensions
 		if (!koalesceSection.Exists())
 			throw new KoalesceConfigurationNotFoundException();
 
-		// Checking if KoalesceOptions is already bound
-		if (!services.Any(s => s.ServiceType == typeof(IOptions<KoalesceOptions>)))
-		{
-			// then bind it
-			services.Configure<KoalesceOptions>(koalesceSection);
-		}
-
-		// Validating configuration before service registration
-		using var provider = services.BuildServiceProvider();
-		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
-		ValidateKoalesceOptions(options);
+		services
+			.AddOptions<KoalesceOptions>()
+			.Bind(koalesceSection)
+			.ValidateDataAnnotations()
+			.PostConfigure(options =>
+			{
+				options.Validate();
+			});
 
 		services.AddSingleton<IKoalesceBuilder>(builder);
 		services.AddMemoryCache();
@@ -87,25 +84,5 @@ public static class KoalesceExtensions
 			koalesceBuilder.EnableMiddleware();
 
 		return builder;
-	}
-
-	/// <summary>
-	/// Validation method for required configuration fields
-	/// </summary>
-	/// <param name="options"></param>
-	/// <exception cref="KoalesceRequiredConfigurationValuesNotFoundException"></exception>
-	private static void ValidateKoalesceOptions(KoalesceOptions options)
-	{
-		var validationResults = new List<ValidationResult>();
-		var context = new ValidationContext(options);
-		bool isValid = Validator.TryValidateObject(options, context, validationResults, true);
-
-		if (!isValid)
-		{
-			var errorMessages = string.Join("; ", validationResults.Select(v => v.ErrorMessage));
-			throw new KoalesceRequiredConfigurationValuesNotFoundException(
-				$"Koalesce configuration is invalid: {errorMessages}"
-			);
-		}
 	}
 }

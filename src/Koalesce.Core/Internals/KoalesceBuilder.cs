@@ -1,4 +1,6 @@
-﻿namespace Koalesce.Core.Internals;
+﻿using Koalesce.Core.Extensions;
+
+namespace Koalesce.Core.Internals;
 
 /// <summary>
 /// Internal builder for Koalesce services and middleware.

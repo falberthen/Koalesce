@@ -13,6 +13,7 @@
 		<RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	</PropertyGroup>
 
@@ -21,6 +22,9 @@
 			<Pack>True</Pack>
 			<PackagePath>\</PackagePath>
 		</None>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\README.nuget.md" Pack="true" PackagePath="\" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />

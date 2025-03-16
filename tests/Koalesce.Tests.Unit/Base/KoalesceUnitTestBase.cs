@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 namespace Koalesce.Tests.Unit;
 
@@ -6,14 +8,21 @@ namespace Koalesce.Tests.Unit;
 /// Base class for Koalesce unit tests.
 /// </summary>
 [Collection("Koalesce Unit Tests")]
-public abstract class KoalesceUnitTestBase 
+public abstract class KoalesceUnitTestBase
 {
-	/// <summary>
-	/// Loads a test JSON configuration file.
-	/// </summary>
-	public IConfiguration LoadConfigurations(string fileName) =>
-		new ConfigurationBuilder()
-			.SetBasePath(Directory.GetCurrentDirectory())
-			.AddJsonFile(fileName, optional: false, reloadOnChange: true)
-			.Build();
+	protected readonly IServiceCollection Services = new ServiceCollection();
+
+	protected HttpContext CreateHttpContext(string requestPath)
+	{
+		var context = new DefaultHttpContext();
+		context.Request.Path = requestPath;
+		context.Response.Body = new MemoryStream(); // Required for response writing
+		return context;
+	}
+
+	protected ILogger<T> CreateLogger<T>()
+	{
+		using var loggerFactory = LoggerFactory.Create(builder => builder.AddDebug());
+		return loggerFactory.CreateLogger<T>();
+	}
 }

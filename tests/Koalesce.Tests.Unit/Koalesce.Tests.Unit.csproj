@@ -19,25 +19,11 @@
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3" />
 	<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />  </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <ProjectReference Include="..\..\src\Koalesce.Core\Koalesce.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+	<ItemGroup>
     <Using Include="Xunit" />
-  </ItemGroup>
-  <ItemGroup>
-	<None Update="appsettings-missing-required-values.json">
-	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	</None>
-	<None Update="appsettings-missing-koalesce.json">
-	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	</None>
-	<None Update="appsettings.only-required-values.json">
-	  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	</None>
-	<None Update="appsettings.json">
-		<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	</None>
   </ItemGroup>
 </Project>

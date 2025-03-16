@@ -1,4 +1,5 @@
 ﻿using Koalesce.Core.Exceptions;
+using Koalesce.Core.Extensions;
 
 namespace Koalesce.Tests.Integration;
 

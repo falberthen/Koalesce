@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Koalesce.Core.Options;
+using Microsoft.AspNetCore.Http;
 
 namespace Koalesce.Core;
 
@@ -12,10 +13,9 @@ public class KoalesceMiddleware
 	private readonly ILogger<KoalesceMiddleware> _logger;
 	private readonly RequestDelegate _next;
 
-	// Fields for caching
+	// Caching	
 	private readonly IMemoryCache _cache;
-	private readonly TimeSpan _cacheDuration;
-	private readonly bool _disableCache;
+	private readonly KoalesceCacheOptions _cacheOptions;
 
 	public KoalesceMiddleware(
 		IOptions<KoalesceOptions> options,
@@ -35,8 +35,7 @@ public class KoalesceMiddleware
 		_cache = cache;
 
 		var opts = options.Value;
-		_cacheDuration = TimeSpan.FromSeconds(opts.CacheDurationSeconds);
-		_disableCache = opts.DisableCache;
+		_cacheOptions = opts.Cache;
 		_mergedOpenApiPath = opts.MergedOpenApiPath;
 	}
 
@@ -54,7 +53,7 @@ public class KoalesceMiddleware
 			_logger.LogInformation($"Handling Koalesced API request: {_mergedOpenApiPath}.");
 
 			// If cache is disabled, always recompute
-			if (_disableCache)
+			if (_cacheOptions.DisableCache)
 			{
 				_logger.LogInformation("Cache is disabled. Always recomputing Koalesced document.");
 				await RecomputeAndRespond(context);
@@ -97,10 +96,13 @@ public class KoalesceMiddleware
 			}
 
 			// Store result in cache if caching is enabled
-			if (!_disableCache)
+			if (!_cacheOptions.DisableCache)
 			{
 				_cache.Set(_mergedOpenApiPath, mergedDocument,
-					new MemoryCacheEntryOptions().SetAbsoluteExpiration(_cacheDuration));
+					new MemoryCacheEntryOptions()
+						.SetAbsoluteExpiration(TimeSpan.FromSeconds(_cacheOptions.AbsoluteExpirationSeconds))
+						.SetSlidingExpiration(TimeSpan.FromSeconds(_cacheOptions.SlidingExpirationSeconds))
+				);
 			}
 
 			context.Response.ContentType = "application/json";

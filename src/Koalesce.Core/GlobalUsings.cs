@@ -9,6 +9,7 @@ global using System.Collections.Generic;
 global using System.Threading.Tasks;
 global using Koalesce.Core.Exceptions;
 global using System.Linq;
+global using Koalesce.Core.Options;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
 global using System.ComponentModel.DataAnnotations;
 global using Microsoft.Extensions.Caching.Memory;

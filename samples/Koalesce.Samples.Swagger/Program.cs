@@ -1,4 +1,4 @@
-﻿using Koalesce.Core;
+﻿using Koalesce.Core.Extensions;
 using Koalesce.OpenAPI;
 using Microsoft.Extensions.Options;
 

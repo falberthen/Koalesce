@@ -1,6 +1,3 @@
-
-![CI Status](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg)
-
 # 🐨 Koalesce
 
 **Koalesce** is a .NET library designed to merge multiple OpenAPI definitions into a unified document to enable seamless API Gateway integration and simplify frontend client generation for microservices-based architectures.
@@ -23,7 +20,6 @@
 - ✅ Streamlines API client generation since it results in one unified schema.
 - ✅ Extensible architecture to support new API aggregation strategies.
   
-<br>
 
 ### ⚙️  Basic Configuration
   
@@ -39,7 +35,6 @@
 - 💡The file extension `[.json, .yaml]` defined in **MergedOpenApiPath** will define the merged output format.
 - 💡Koalesce respects the order of SourceOpenApiUrls. This affects how identical paths are handled based on the `SkipIdenticalPaths` setting.
 
-<br>
 
 ```json
 {
@@ -62,7 +57,6 @@
 }
 ```
 
-<br>
 
 #### 🛠️ Caching Configuration (`Koalesce.Cache`)
 
@@ -94,19 +88,15 @@
 }
 ```
 
-<br>
 
 ## 📦 Installation
 
 ### **🟢 For OpenAPI**
 
-![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg)
-
 ```sh
 dotnet add package Koalesce.OpenAPI
 ```
 
-<br>
 
 #### ⚙️ Package-specific Configuration
 
@@ -132,7 +122,6 @@ dotnet add package Koalesce.OpenAPI
 }
 ```
 
-<br>
 
 ## 🛠️ Usage with .NET pipeline
 
@@ -152,7 +141,6 @@ builder.Services.AddKoalesce()
 app.UseKoalesce();
 ```
 
-<br>
 
 ## 🔥 Running an Application (using Swagger.UI)
 
@@ -174,47 +162,8 @@ app.UseKoalesce();
    https://localhost:[port]/[MergedOpenApiPath]
    ```
 
-<br>
 
-## ⚠️ Important Considerations and Limitations
+## 📝 License & Contribution
 
-### 🔐 Security Schemes & Authorization
-
-Koalesce merges authentication schemes found in different API definitions. If multiple APIs define different security schemes (e.g., OAuth2, API Key, Bearer Tokens),
-these will be preserved in the final Koalesced API document.
-
-- ⚠️ Each API's operations retain their respective security requirements, ensuring that authorization logic remains per API group.
-- ⚠️ When using tools like Swagger UI, the Authorize prompt will display authentication inputs for **all security schemes found across the merged document**.
-
-### 🔀 Handling Identical Routes
-
-🔹 At the moment, what Happens when using Koalesce?
-
-- ⚠️ **The order of SourceOpenApiUrls** determines which API takes merging precedence.
-- ⚠️ By default, Koalesce is configured with **SkipIdenticalPaths** set to `true`, meaning it will ignore duplicate paths, keeping only the first occurrence.
-If set to `false`, Koalesce will throw an exception when detecting identical paths across merged APIs.
-- ⚠️ **Only one path definition will be retained in the Koalesced document**, as OpenAPI does not support multiple definitions for the same path.
-
-🔹 How to Avoid This?
-
-- ✅ Ensure unique routes across APIs before merging.
-- ✅ Use API-specific servers in Swagger UI to differentiate endpoints.
-- ✅ Restructure APIs if merging them into a single OpenAPI document is necessary.
-
----
-
-### 📝 License
-
-Koalesce is licensed under the [**MIT License**](https://github.com/falberthen/Koalesce/blob/master/LICENSE).
-
-### ❤️ Contributing
-
-Contributions are welcome! Feel free to open issues and submit PRs.
-
-### 📧 Contact
-
-For support or inquiries, reach out via **GitHub Issues**.
-
-### 📜 Changelog
-
-See the full changelog [here](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md).
+**Koalesce** is licensed under the [MIT License](https://github.com/falberthen/Koalesce/blob/master/LICENSE).  
+Contributions are welcome! Feel free to submit issues and PRs on GitHub.

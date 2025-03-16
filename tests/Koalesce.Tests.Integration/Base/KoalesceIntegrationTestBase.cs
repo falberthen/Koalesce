@@ -1,4 +1,6 @@
-﻿namespace Koalesce.Tests.Integration;
+﻿using Koalesce.Core.Extensions;
+
+namespace Koalesce.Tests.Integration;
 
 /// <summary>
 /// Base class for Koalesce integration tests.
