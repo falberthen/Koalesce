@@ -20,7 +20,7 @@
 - ✅ Streamlines API client generation since it results in one unified schema.
 - ✅ Extensible architecture to support new API aggregation strategies.
   
-
+---
 ### ⚙️  Basic Configuration
   
 | Setting                      | Type       | Default Value | Description |
@@ -87,16 +87,21 @@
   }
 }
 ```
-
-
+---
 ## 📦 Installation
 
 ### **🟢 For OpenAPI**
 
-```sh
-dotnet add package Koalesce.OpenAPI
-```
+![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg)
 
+```sh
+# Package Manager
+NuGet\Install-Package Koalesce.OpenAPI -Version 0.1.0-alpha
+```
+```sh
+# .NET CLI
+dotnet add package Koalesce.OpenAPI --version 0.1.0-alpha
+```
 
 #### ⚙️ Package-specific Configuration
 
@@ -121,7 +126,7 @@ dotnet add package Koalesce.OpenAPI
   }
 }
 ```
-
+---
 
 ## 🛠️ Usage with .NET pipeline
 
@@ -140,7 +145,7 @@ builder.Services.AddKoalesce()
 ```csharp
 app.UseKoalesce();
 ```
-
+---
 
 ## 🔥 Running an Application (using Swagger.UI)
 
@@ -152,17 +157,17 @@ app.UseKoalesce();
 
 - Access the **Koalesced API** via Swagger UI:
 
-   ```json
+   ```
    https://localhost:[port]/swagger/index.html
    ```
 
 - The merged OpenAPI definition should be available at:
 
-   ```json
+   ```
    https://localhost:[port]/[MergedOpenApiPath]
    ```
 
-
+---
 ## 📝 License & Contribution
 
 **Koalesce** is licensed under the [MIT License](https://github.com/falberthen/Koalesce/blob/master/LICENSE).  

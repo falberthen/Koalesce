@@ -25,7 +25,7 @@
   
 <br>
 
-### ⚙️  Basic Configuration
+### ⚙️ Basic Configuration
   
 | Setting                      | Type       | Default Value | Description |
 |------------------------------|-----------|--------------|-------------|
@@ -37,7 +37,7 @@
 
 - 💡Parameters listed with 🔺 are required.
 - 💡The file extension `[.json, .yaml]` defined in **MergedOpenApiPath** will define the merged output format.
-- 💡Koalesce respects the order of SourceOpenApiUrls. This affects how identical paths are handled based on the `SkipIdenticalPaths` setting.
+- 💡Koalesce respects the order of **SourceOpenApiUrls**. This affects how identical paths are handled based on the `SkipIdenticalPaths` setting.
 
 <br>
 
@@ -103,7 +103,12 @@
 ![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg)
 
 ```sh
-dotnet add package Koalesce.OpenAPI
+# Package Manager
+NuGet\Install-Package Koalesce.OpenAPI -Version 0.1.0-alpha
+```
+```sh
+# .NET CLI
+dotnet add package Koalesce.OpenAPI --version 0.1.0-alpha
 ```
 
 <br>
@@ -164,13 +169,13 @@ app.UseKoalesce();
 
 - Access the **Koalesced API** via Swagger UI:
 
-   ```json
+   ```
    https://localhost:[port]/swagger/index.html
    ```
 
 - The merged OpenAPI definition should be available at:
 
-   ```json
+   ```
    https://localhost:[port]/[MergedOpenApiPath]
    ```
 
