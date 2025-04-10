@@ -1,10 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+		<TargetFramework>net8.0</TargetFramework>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>Koalesce.Core</PackageId>
 		<IsPackable>true</IsPackable>
-		<Version>0.1.0-alpha</Version>
+		<Version>0.1.1-alpha.1</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The Core library for Koalesce packages.</Description>
@@ -16,15 +16,14 @@
 		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
 	</PropertyGroup>
-
 	<ItemGroup>
-		<None Include="..\..\LICENSE">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
 	</ItemGroup>
 	<ItemGroup>
-		<None Include="..\..\README.nuget.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\README.nuget.md" Pack="true" PackagePath="\"/>
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\CHANGELOG.md" Pack="false" PackagePath="\" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
