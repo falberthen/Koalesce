@@ -2,11 +2,9 @@ name: Run Koalesce Tests
 
 on:
   push:
-    branches:
-      - '**' # Runs on push to any branch
+    branches: [ '**' ]
   pull_request:
-    branches:
-      - master # Also run on PRs to main
+    branches: [ master ]
 
 jobs:
   build-and-test:
@@ -16,23 +14,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up .NET
+      - name: Set up .NET 8 SDK
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: '8.0.x'
 
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Restore dependencies
         run: dotnet restore
 
-      - name: Build the solution
+      - name: Build entire solution
         run: dotnet build --no-restore --configuration Release
 
-      - name: Run tests
-        run: dotnet test --no-build --configuration Release --logger trx --results-directory TestResults
+      - name: Build CLI project (needed for CLI integration tests)
+        run: dotnet build src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --configuration Release
+
+      - name: Run unit tests
+        run: dotnet test tests/Koalesce.Tests.Unit --no-build --configuration Release --logger trx --results-directory TestResults/Unit
+
+      - name: Run integration tests
+        run: dotnet test tests/Koalesce.Tests.Integration --no-build --configuration Release --logger trx --results-directory TestResults/Integration
+        env:
+          CONFIGURATION: Release
 
       - name: Upload test results (if failure)
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: TestResults
+          path: TestResults/**/*.trx

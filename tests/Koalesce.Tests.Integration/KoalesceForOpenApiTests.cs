@@ -1,18 +1,15 @@
-﻿using Koalesce.Core.Exceptions;
-using Koalesce.Core.Extensions;
-
-namespace Koalesce.Tests.Integration;
+﻿namespace Koalesce.Tests.Integration;
 
 [Collection("Koalesce Integration Tests")]
 public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 {
-	const string appSettings = "appsettings.openapi.json";
+	const string appSettings = "RestAPIs/appsettings.openapi.json";
 	const string mergedOpenApiPath = "/swagger/v1/swagger.json";
 
-	const string apiGatewaySettings = "appsettings.apigateway.json";
+	const string apiGatewaySettings = "RestAPIs/appsettings.apigateway.json";
 	const string mergedApiGatewayPath = "/swagger/v1/apigateway.json";
 
-	const string identicalPathSettings = "appsettings.identicalpaths.json";
+	const string identicalPathSettings = "RestAPIs/appsettings.identicalpaths.json";
 
 	[Fact]
 	public async Task Koalesce_WhenForOpenAPI_ShouldMergeOpenAPIRoutes()
@@ -128,7 +125,7 @@ public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		var mergedResult = await _httpClient.GetStringAsync(mergedOpenApiPath);
 
 		// Assert top-level servers exist
-		Assert.Contains("tags", mergedResult, StringComparison.OrdinalIgnoreCase);		
+		Assert.Contains("tags", mergedResult, StringComparison.OrdinalIgnoreCase);
 
 		await koalescingApi.StopAsync();
 	}

@@ -1,4 +1,4 @@
-global using Koalesce.Core;
+global using Koalesce.Core.Extensions;
 global using Koalesce.OpenAPI;
 global using Koalesce.Tests.Integration.RestAPIs;
 global using Microsoft.AspNetCore.Builder;
