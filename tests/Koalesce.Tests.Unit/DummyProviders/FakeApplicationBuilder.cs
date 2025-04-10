@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Features;
-
-namespace Koalesce.Tests.Unit.DummyProviders;
+﻿namespace Koalesce.Tests.Unit.DummyProviders;
 
 // Fake middleware application builder
 internal class FakeApplicationBuilder : IApplicationBuilder

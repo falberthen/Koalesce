@@ -1,0 +1,15 @@
+global using Koalesce.Core;
+global using Microsoft.AspNetCore.Builder;
+global using Microsoft.AspNetCore.Http;
+global using Microsoft.Extensions.Configuration;
+global using Koalesce.Core.Providers;
+global using Microsoft.AspNetCore.Http.Features;
+global using Koalesce.Core.Exceptions;
+global using Koalesce.Core.Options;
+global using Koalesce.Tests.Unit.DummyProviders;
+global using Microsoft.Extensions.Caching.Memory;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Options;
+global using Koalesce.Core.Extensions;
+global using Koalesce.Core.Internals;
+global using Microsoft.Extensions.Logging;

@@ -1,11 +1,4 @@
-﻿using Koalesce.Core.Exceptions;
-using Koalesce.Core.Extensions;
-using Koalesce.Tests.Unit.DummyProviders;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-
-namespace Koalesce.Tests.Unit;
+﻿namespace Koalesce.Tests.Unit;
 
 public class KoalesceOptionsTests : KoalesceUnitTestBase
 {

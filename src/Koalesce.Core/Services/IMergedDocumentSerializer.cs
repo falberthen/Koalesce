@@ -7,7 +7,7 @@ public interface IMergedDocumentSerializer<TMergeResult>
 	where TMergeResult : class
 {
 	/// <summary>
-	/// Serializes the merged document.
+	/// Serializes an OpenAPI document using the configured format and version.
 	/// </summary>
 	string Serialize(TMergeResult mergedDocument);
 }

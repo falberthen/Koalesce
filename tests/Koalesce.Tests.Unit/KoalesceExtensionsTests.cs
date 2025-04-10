@@ -1,10 +1,3 @@
-using Koalesce.Core.Internals;
-using Koalesce.Tests.Unit.DummyProviders;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
-using Koalesce.Core.Extensions;
-
 namespace Koalesce.Tests.Unit;
 
 public class KoalesceExtensionsTests : KoalesceUnitTestBase

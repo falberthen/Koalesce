@@ -17,9 +17,7 @@ public class OpenApiDocumentSerializer : IMergedDocumentSerializer<OpenApiDocume
 		ValidateOpenApiVersion();
 	}
 
-	/// <summary>
-	/// Serializes an OpenAPI document using the configured format and version.
-	/// </summary>
+	/// <inheritdoc/>
 	public string Serialize(OpenApiDocument document)
 	{
 		OpenApiSpecVersion version = GetOpenApiSpecVersion();

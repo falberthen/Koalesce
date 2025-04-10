@@ -1,8 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-
-namespace Koalesce.Tests.Unit;
+﻿namespace Koalesce.Tests.Unit;
 
 /// <summary>
 /// Base class for Koalesce unit tests.

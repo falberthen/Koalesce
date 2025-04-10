@@ -29,9 +29,7 @@ public abstract class KoalesceProviderBase<TOptions, TMergeResult> : IKoalescePr
 		MergedDocumentSerializer = mergedDocumentSerializer;
 	}
 
-	/// <summary>
-	/// Executes the merge process and ensures serialization.
-	/// </summary>
+	/// <inheritdoc/>
 	public async Task<string> ProvideMergedDocumentAsync()
 	{
 		string providerName = GetType().Name;

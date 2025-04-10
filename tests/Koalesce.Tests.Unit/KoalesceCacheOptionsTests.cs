@@ -1,13 +1,3 @@
-using Koalesce.Core;
-using Koalesce.Core.Exceptions;
-using Koalesce.Core.Options;
-using Koalesce.Tests.Unit.DummyProviders;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Configuration;
-using Koalesce.Core.Extensions;
-
 namespace Koalesce.Tests.Unit;
 
 public class KoalesceCacheOptionsTests : KoalesceUnitTestBase
