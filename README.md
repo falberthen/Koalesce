@@ -23,9 +23,8 @@
 - ✅ Streamlines API client generation since it results in one unified schema.
 - ✅ Extensible architecture to support new API aggregation strategies.
   
-<br>
-
-### ⚙️  Basic Configuration
+---
+### ⚙️ Basic Configuration
   
 | Setting                      | Type       | Default Value | Description |
 |------------------------------|-----------|--------------|-------------|
@@ -37,7 +36,7 @@
 
 - 💡Parameters listed with 🔺 are required.
 - 💡The file extension `[.json, .yaml]` defined in **MergedOpenApiPath** will define the merged output format.
-- 💡Koalesce respects the order of SourceOpenApiUrls. This affects how identical paths are handled based on the `SkipIdenticalPaths` setting.
+- 💡Koalesce respects the order of **SourceOpenApiUrls**. This affects how identical paths are handled based on the `SkipIdenticalPaths` setting.
 
 <br>
 
@@ -61,8 +60,6 @@
   }
 }
 ```
-
-<br>
 
 #### 🛠️ Caching Configuration (`Koalesce.Cache`)
 
@@ -94,21 +91,7 @@
 }
 ```
 
-<br>
-
-## 📦 Installation
-
-### **🟢 For OpenAPI**
-
-![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg)
-
-```sh
-dotnet add package Koalesce.OpenAPI
-```
-
-<br>
-
-#### ⚙️ Package-specific Configuration
+#### ⚙️ Koalesce.OpenAPI Configuration
 
 🔺 This configuration extends the basic settings. Ensure that your Koalesce section includes all required base options.
 
@@ -132,13 +115,45 @@ dotnet add package Koalesce.OpenAPI
 }
 ```
 
-<br>
+---
 
-## 🛠️ Usage with .NET pipeline
+## 📦 Installation
 
-### **1️⃣ Register Koalesce.[ForProvider()]**
+### **🟢 Koalesce for OpenAPI** Middleware
 
-In `Program.cs`:
+![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg)
+
+```sh
+# Package Manager
+NuGet\Install-Package Koalesce.OpenAPI -Version 0.1.1-alpha.1
+```
+```sh
+# .NET CLI
+dotnet add package Koalesce.OpenAPI --version 0.1.1-alpha.1
+```
+
+
+### **🟢 Koalesce.OpenAPI.CLI**
+
+![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
+
+To install the **Koalesce.OpenAPI.CLI** globally, use the following command:
+
+```bash
+dotnet tool install --global Koalesce.OpenAPI.CLI --version 0.1.0-alpha
+```
+
+To update the tool to the latest version:
+
+```bash
+dotnet tool update --global Koalesce.OpenAPI.CLI
+```
+
+---
+
+## 🛠️ Using with .NET pipeline
+
+#### **1️⃣ Register Koalesce.[ForProvider()]**
 
 ```csharp
 builder.Services.AddKoalesce()
@@ -146,7 +161,7 @@ builder.Services.AddKoalesce()
   .ForOpenAPI();
 ```
 
-### **2️⃣ Enable Middleware**
+#### **2️⃣ Enable Middleware**
 
 ```csharp
 app.UseKoalesce();
@@ -154,27 +169,26 @@ app.UseKoalesce();
 
 <br>
 
-## 🔥 Running an Application (using Swagger.UI)
+### 🛠️ Using with Command Line Interface (CLI)
 
-- Start the application:
+##### Basic Command Structure
 
-   ```sh
-   dotnet run
-   ```
+```bash
+koalesce --config <path-to-appsettings.json> --output <path-to-output-spec>
+```
 
-- Access the **Koalesced API** via Swagger UI:
+##### Example
 
-   ```json
-   https://localhost:[port]/swagger/index.html
-   ```
+```bash
+koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml
+```
 
-- The merged OpenAPI definition should be available at:
+In this example:
 
-   ```json
-   https://localhost:[port]/[MergedOpenApiPath]
-   ```
+- `--config` specifies the path to your `appsettings.json` configuration file with Koalesce settings.
+- `--output` defines the path where the merged OpenAPI specification file will be saved.
 
-<br>
+---
 
 ## ⚠️ Important Considerations and Limitations
 
@@ -203,18 +217,22 @@ If set to `false`, Koalesce will throw an exception when detecting identical pat
 
 ---
 
-### 📝 License
+#### 📝 License
 
 Koalesce is licensed under the [**MIT License**](https://github.com/falberthen/Koalesce/blob/master/LICENSE).
 
-### ❤️ Contributing
+#### ❤️ Contributing
 
 Contributions are welcome! Feel free to open issues and submit PRs.
 
-### 📧 Contact
+#### 📧 Contact
 
 For support or inquiries, reach out via **GitHub Issues**.
 
-### 📜 Changelog
+#### 📜 Koalesce Changelog
 
 See the full changelog [here](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md).
+
+#### 📜 Koalesce.OpenAPI.CLI Changelog
+
+See the full changelog [here](https://github.com/falberthen/Koalesce/tree/master/src/Koalesce.OpenAPI.CLI/CHANGELOG.md).

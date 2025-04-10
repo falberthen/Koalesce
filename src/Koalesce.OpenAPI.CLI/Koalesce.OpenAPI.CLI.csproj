@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>koalesce</ToolCommandName>
+		<PackageId>Koalesce.OpenAPI.CLI</PackageId>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<IsPackable>true</IsPackable>
+		<Version>0.1.0-alpha</Version>
+		<Authors>Felipe Henrique (Falberthen)</Authors>
+		<Company>falberthen.github.io</Company>
+		<Description>The CLI for Koalesce.OpenAPI.</Description>
+		<RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
+		<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Koalesce.Core" Version="0.1.1-alpha.1" />
+		<PackageReference Include="Koalesce.OpenAPI" Version="0.1.1-alpha.1" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="9.0.3" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.3" />
+		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.24" />
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="9.0.3" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="README.nuget.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Include="CHANGELOG.md" Pack="false" PackagePath="\" />
+	</ItemGroup>
+
+</Project>

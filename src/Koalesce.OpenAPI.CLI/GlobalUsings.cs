@@ -1,0 +1,11 @@
+global using System.Text;
+global using Koalesce.Core.Extensions;
+global using Koalesce.OpenAPI.CLI.Runners;
+global using Koalesce.OpenAPI.CLI.Services;
+global using Microsoft.Extensions.Configuration;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Logging;
+global using Microsoft.Extensions.Options;
+global using System.CommandLine;
+global using System.Reflection;
+global using System.CommandLine.Invocation;
