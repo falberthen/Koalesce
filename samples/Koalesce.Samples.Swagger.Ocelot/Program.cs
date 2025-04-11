@@ -1,6 +1,5 @@
 ﻿using Koalesce.Core.Extensions;
 using Koalesce.OpenAPI;
-using Koalesce.Samples.Kiota;
 using Microsoft.Extensions.Options;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
@@ -59,18 +58,5 @@ app.UseSwaggerUI(c =>
 	c.SwaggerEndpoint(koalesceOptions.MergedOpenApiPath, koalesceOptions.Title);
 });
 
-// Ensure Ocelot is fully initialized before generating the client
 await app.UseOcelot();
-
-app.RunAsync(); // Start the API in the background
-				// Wait a few seconds before generating the Kiota client
-await Task.Delay(500);
-
-// Wrapper to call Koalesced API and return results
-var wrapper = new ApiWrapper(koalesceOptions);
-
-/// Fetch customers and products
-bool generateNewClient = false;  // Set it to true to rebuild the API client.
-await wrapper.ShowKoalescedResultAsync(generateNewClient);
-
-await app.WaitForShutdownAsync();
+await app.RunAsync();
