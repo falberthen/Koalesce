@@ -1,6 +1,4 @@
-﻿using Koalesce.Core.Extensions;
-
-namespace Koalesce.Tests.Integration;
+﻿namespace Koalesce.Tests.Integration;
 
 /// <summary>
 /// Base class for Koalesce integration tests.

@@ -1,39 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-	  <TargetFramework>net8.0</TargetFramework>
-	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageId>Koalesce.OpenAPI</PackageId>
-    <IsPackable>true</IsPackable>
-	  <Version>0.1.1-alpha.1</Version>
-	  <Authors>Felipe Henrique (Falberthen)</Authors>
-    <Company>falberthen.github.io</Company>
-    <Description>The OpenAPI Provider for Koalesce.</Description>
-    <PackageTags>Koalesce, API, OpenAPI, Swagger, Microservices</PackageTags>
-    <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
-	<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>	  
-	<PackageLicenseFile>LICENSE</PackageLicenseFile>
-	<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
-	<PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-  </PropertyGroup>
-    <ItemGroup>
-	    <None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
-    </ItemGroup>    
-    <ItemGroup>
-		<None Include="..\..\README.nuget.md" Pack="true" PackagePath="\"/>
-	</ItemGroup>
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageId>Koalesce.OpenAPI</PackageId>
+		<IsPackable>true</IsPackable>
+		<Version>0.1.1-alpha.2</Version>
+		<Authors>Felipe Henrique (Falberthen)</Authors>
+		<Company>falberthen.github.io</Company>
+		<Description>The OpenAPI Provider for Koalesce.</Description>
+		<PackageTags>Koalesce, API, OpenAPI, Swagger, Microservices</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
 	<ItemGroup>
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+		<None Include="..\..\README.nuget.md" Pack="true" PackagePath="\" />
 		<None Include="..\..\CHANGELOG.md" Pack="false" PackagePath="\" />
 	</ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Configuration" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
-    <PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.23" />
-    <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />  
-  </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.24" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" />
+	</ItemGroup>
+
 </Project>

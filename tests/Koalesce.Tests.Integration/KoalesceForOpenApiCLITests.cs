@@ -1,6 +1,4 @@
-﻿using System.Diagnostics;
-
-namespace Koalesce.Tests.Integration;
+﻿namespace Koalesce.Tests.Integration;
 
 public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 {
@@ -59,13 +57,43 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 		};
 
 		using var process = Process.Start(psi)!;
-
 		string output = await process.StandardOutput.ReadToEndAsync();
 		string error = await process.StandardError.ReadToEndAsync();
 
 		await process.WaitForExitAsync();
 
 		return (process.ExitCode, output + error);
+	}
+
+	[Fact]
+	public async Task KoalesceCli_WhenRunWithVersionCommand_ShouldDisplayVersionAndExit()
+	{
+		var cliDllPath = GetCliDllPath();
+
+		var psi = new ProcessStartInfo
+		{
+			FileName = "dotnet",
+			Arguments = $"\"{cliDllPath}\" --v",
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			UseShellExecute = false,
+			CreateNoWindow = true,
+		};
+
+		using var process = Process.Start(psi)!;
+
+		string output = await process.StandardOutput.ReadToEndAsync();
+		string error = await process.StandardError.ReadToEndAsync();
+
+		await process.WaitForExitAsync();
+		var combinedOutput = output + error;
+
+		var expectedVersion = typeof(KoalesceCliApp).Assembly
+			.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+			.InformationalVersion?
+			.Split('+')[0];
+
+		Assert.Contains(expectedVersion, combinedOutput);
 	}
 
 	private static string GetCliDllPath()

@@ -67,8 +67,8 @@ public class OpenApiDocumentSerializer : IMergedDocumentSerializer<OpenApiDocume
 	/// <summary>
 	/// Extracts the major OpenAPI version.
 	/// </summary>
-	private string GetMajorVersion() =>	
-		_options.OpenApiVersion?.Trim().Split('.')[0] 
+	private string GetMajorVersion() =>
+		_options.OpenApiVersion?.Trim().Split('.')[0]
 			?? throw new ArgumentException("Invalid OpenAPI version");
 
 	/// <summary>

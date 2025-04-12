@@ -1,7 +1,4 @@
-﻿using Koalesce.Core.Options;
-using Microsoft.AspNetCore.Http;
-
-namespace Koalesce.Core;
+﻿namespace Koalesce.Core;
 
 /// <summary>
 /// Middleware to handle API requests.

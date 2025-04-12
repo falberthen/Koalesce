@@ -1,6 +1,4 @@
-﻿using Koalesce.Core.Exceptions;
-
-namespace Koalesce.OpenAPI.Services;
+﻿namespace Koalesce.OpenAPI.Services;
 
 /// <summary>
 /// Merges multiple API sources into a single OpenApiDocument

@@ -1,4 +1,6 @@
-﻿namespace Koalesce.Core.Extensions;
+﻿using Microsoft.AspNetCore.Builder;
+
+namespace Koalesce.Core.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Koalesce.

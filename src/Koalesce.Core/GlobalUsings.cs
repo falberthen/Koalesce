@@ -16,3 +16,4 @@ global using Microsoft.Extensions.Caching.Memory;
 global using Koalesce.Core.Providers;
 global using Koalesce.Core.Services;
 global using Koalesce.Core.Internals;
+global using Koalesce.Core.Extensions;

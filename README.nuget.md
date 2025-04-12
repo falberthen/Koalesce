@@ -20,8 +20,9 @@
 - ✅ Streamlines API client generation since it results in one unified schema.
 - ✅ Extensible architecture to support new API aggregation strategies.
   
+---
 
-### ⚙️  Basic Configuration
+### ⚙️ Basic Configuration
   
 | Setting                      | Type       | Default Value | Description |
 |------------------------------|-----------|--------------|-------------|
@@ -33,7 +34,7 @@
 
 - 💡Parameters listed with 🔺 are required.
 - 💡The file extension `[.json, .yaml]` defined in **MergedOpenApiPath** will define the merged output format.
-- 💡Koalesce respects the order of SourceOpenApiUrls. This affects how identical paths are handled based on the `SkipIdenticalPaths` setting.
+- 💡Koalesce respects the order of **SourceOpenApiUrls**. This affects how identical paths are handled based on the `SkipIdenticalPaths` setting.
 
 
 ```json
@@ -56,7 +57,6 @@
   }
 }
 ```
-
 
 #### 🛠️ Caching Configuration (`Koalesce.Cache`)
 
@@ -88,17 +88,7 @@
 }
 ```
 
-
-## 📦 Installation
-
-### **🟢 For OpenAPI**
-
-```sh
-dotnet add package Koalesce.OpenAPI
-```
-
-
-#### ⚙️ Package-specific Configuration
+#### ⚙️ Koalesce.OpenAPI Configuration
 
 🔺 This configuration extends the basic settings. Ensure that your Koalesce section includes all required base options.
 
@@ -122,12 +112,11 @@ dotnet add package Koalesce.OpenAPI
 }
 ```
 
+---
 
-## 🛠️ Usage with .NET pipeline
+## 🛠️ Using with .NET pipeline
 
-### **1️⃣ Register Koalesce.[ForProvider()]**
-
-In `Program.cs`:
+#### **1️⃣ Register Koalesce.[ForProvider()]**
 
 ```csharp
 builder.Services.AddKoalesce()
@@ -135,35 +124,77 @@ builder.Services.AddKoalesce()
   .ForOpenAPI();
 ```
 
-### **2️⃣ Enable Middleware**
+#### **2️⃣ Enable Middleware**
 
 ```csharp
 app.UseKoalesce();
 ```
 
 
-## 🔥 Running an Application (using Swagger.UI)
+## 🛠️ Using with Command Line Interface (CLI)
 
-- Start the application:
+#### **Basic Command Structure**
 
-   ```sh
-   dotnet run
-   ```
+```bash
+koalesce --config <path-to-appsettings.json> --output <path-to-output-spec>
+```
 
-- Access the **Koalesced API** via Swagger UI:
+#### **Example**
 
-   ```json
-   https://localhost:[port]/swagger/index.html
-   ```
+```bash
+koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml
+```
 
-- The merged OpenAPI definition should be available at:
+In this example:
 
-   ```json
-   https://localhost:[port]/[MergedOpenApiPath]
-   ```
+- `--config` specifies the path to your `appsettings.json` configuration file with Koalesce settings.
+- `--output` defines the path where the merged OpenAPI specification file will be saved.
 
+---
 
-## 📝 License & Contribution
+## ⚠️ Important Considerations and Limitations
 
-**Koalesce** is licensed under the [MIT License](https://github.com/falberthen/Koalesce/blob/master/LICENSE).  
-Contributions are welcome! Feel free to submit issues and PRs on GitHub.
+### 🔐 Security Schemes & Authorization
+
+Koalesce merges authentication schemes found in different API definitions. If multiple APIs define different security schemes (e.g., OAuth2, API Key, Bearer Tokens),
+these will be preserved in the final Koalesced API document.
+
+- ⚠️ Each API's operations retain their respective security requirements, ensuring that authorization logic remains per API group.
+- ⚠️ When using tools like Swagger UI, the Authorize prompt will display authentication inputs for **all security schemes found across the merged document**.
+
+### 🔀 Handling Identical Routes
+
+🔹 At the moment, what Happens when using Koalesce?
+
+- ⚠️ **The order of SourceOpenApiUrls** determines which API takes merging precedence.
+- ⚠️ By default, Koalesce is configured with **SkipIdenticalPaths** set to `true`, meaning it will ignore duplicate paths, keeping only the first occurrence.
+If set to `false`, Koalesce will throw an exception when detecting identical paths across merged APIs.
+- ⚠️ **Only one path definition will be retained in the Koalesced document**, as OpenAPI does not support multiple definitions for the same path.
+
+🔹 How to Avoid This?
+
+- ✅ Ensure unique routes across APIs before merging.
+- ✅ Use API-specific servers in Swagger UI to differentiate endpoints.
+- ✅ Restructure APIs if merging them into a single OpenAPI document is necessary.
+
+---
+
+#### 📝 License
+
+Koalesce is licensed under the [**MIT License**](https://github.com/falberthen/Koalesce/blob/master/LICENSE).
+
+#### ❤️ Contributing
+
+Contributions are welcome! Feel free to open issues and submit PRs.
+
+#### 📧 Contact
+
+For support or inquiries, reach out via **GitHub Issues**.
+
+#### 📜 Koalesce Changelog
+
+See the full changelog [here](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md).
+
+#### 📜 Koalesce.OpenAPI.CLI Changelog
+
+See the full changelog [here](https://github.com/falberthen/Koalesce/tree/master/src/Koalesce.OpenAPI.CLI/CHANGELOG.md).
