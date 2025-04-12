@@ -8,4 +8,5 @@ global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
 global using System.CommandLine;
 global using System.Reflection;
+global using Koalesce.OpenAPI.CLI.UI;
 global using System.CommandLine.Invocation;

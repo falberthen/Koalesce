@@ -4,33 +4,15 @@
 
 ---
 
-## 🚀 Installation
-
-To install the **Koalesce.OpenAPI.CLI** globally, use the following command:
-
-```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 0.1.0-alpha
-```
-
-To update the tool to the latest version:
-
-```bash
-dotnet tool update --global Koalesce.OpenAPI.CLI
-```
-
----
-
 ## 🛠️ Usage
 
-The **Koalesce.OpenAPI.CLI** merges multiple OpenAPI source files into a single specification file based on the configurations provided.
-
-#### Basic Command Structure
+#### **Basic Command Structure**
 
 ```bash
 koalesce --config <path-to-appsettings.json> --output <path-to-output-spec>
 ```
 
-### Example
+### **Example**
 
 ```bash
 koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml

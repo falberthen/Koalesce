@@ -19,6 +19,9 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+
+		<!-- Detect USE_PROJECT_REFS constant -->
+		<UseProjectRefs Condition="'$(DefineConstants)' != '' and '$(DefineConstants)' != '$(DefineConstants:USE_PROJECT_REFS=)'">true</UseProjectRefs>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -27,14 +30,14 @@
 		<None Include="CHANGELOG.md" Pack="false" PackagePath="\" />
 	</ItemGroup>
 
-	<!-- Use ProjectReferences if building locally -->
-	<ItemGroup Condition=" '$(BuildingInsideVisualStudio)' == 'true' ">
+	<!-- Use project references if USE_PROJECT_REFS is defined -->
+	<ItemGroup Condition="'$(UseProjectRefs)' == 'true'">
 		<ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" />
 		<ProjectReference Include="..\Koalesce.OpenAPI\Koalesce.OpenAPI.csproj" />
 	</ItemGroup>
 
-	<!-- Use NuGet references if consuming as package -->
-	<ItemGroup Condition=" '$(BuildingInsideVisualStudio)' != 'true' ">
+	<!-- Use NuGet packages otherwise (e.g., during global install or publish) -->
+	<ItemGroup Condition="'$(UseProjectRefs)' != 'true'">
 		<PackageReference Include="Koalesce.Core" Version="0.1.1-alpha.2" />
 		<PackageReference Include="Koalesce.OpenAPI" Version="0.1.1-alpha.2" />
 	</ItemGroup>

@@ -7,20 +7,19 @@ public static class KoalesceCliApp
 {
 	public static async Task<int> RunAsync(string[] args)
 	{
+		Console.OutputEncoding = Encoding.UTF8;
 		RootCommand rootCommand = BuildRootCommand();
 
 		// Options
 		var outputOption = new Option<string>(
 			"--output",
-			description: "Path to write the merged OpenAPI spec to (e.g. apigateway.yaml)")
-		{
-			IsRequired = false
-		};
+			description: "Path to write the merged OpenAPI spec (e.g. apigateway.yaml)"
+		);
 
 		var configOption = new Option<string>(
 			"--config",
-			description: "Path to the appsettings.json file to load Koalesce configuration from",
-			getDefaultValue: () => "appsettings.json"
+			getDefaultValue: () => "appsettings.json",
+			description: "Path to the Koalesce configuration file (default: appsettings.json)"
 		);
 
 		var versionOption = new Option<bool>(
@@ -38,7 +37,7 @@ public static class KoalesceCliApp
 			var showVersion = context.ParseResult.GetValueForOption(versionOption);
 			if (showVersion)
 			{
-				Console.WriteLine($"Koalesce CLI {GetVersionFromAssembly()}");
+				KoalesceConsoleUI.PrintInfo($"Koalesce CLI v{GetVersionFromAssembly()}");								
 				context.ExitCode = 0;
 				return;
 			}
@@ -48,7 +47,7 @@ public static class KoalesceCliApp
 
 			if (string.IsNullOrWhiteSpace(output))
 			{
-				Console.Error.WriteLine("❌ Error: --output is required unless --v is specified.");
+				KoalesceConsoleUI.PrintError("Error: --output is required unless --v is specified");
 				context.ExitCode = 1;
 				return;
 			}
@@ -65,24 +64,14 @@ public static class KoalesceCliApp
 	/// <summary>
 	/// Builds and returns the root command for the Koalesce CLI, including help text and usage examples.
 	/// </summary>
-	private static RootCommand BuildRootCommand()
-	{
-		var rootCommand = new RootCommand("""
-			🐨 Koalesce CLI for OpenAPI
-
-			Examples:
-			  koalesce --config appsettings.json --output merged.yaml
-			  koalesce --v
-			""");
-
-		return rootCommand;
-	}
+	private static RootCommand BuildRootCommand() => 
+		new RootCommand(KoalesceConsoleUI.GetRootCommandDescription());		
 
 	/// <summary>
 	/// Retrieves the CLI version from the assembly's informational version attribute.
 	/// </summary>
 	/// <returns>The version string of the Koalesce CLI.</returns>
-	private static string GetVersionFromAssembly()
+	public static string GetVersionFromAssembly()
 	{
 		var version = Assembly
 			.GetExecutingAssembly()

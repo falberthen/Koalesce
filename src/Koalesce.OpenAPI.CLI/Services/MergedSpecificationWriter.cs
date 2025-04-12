@@ -12,12 +12,37 @@ public class MergedSpecificationWriter : IMergedSpecificationWriter
 		if (string.IsNullOrWhiteSpace(outputPath) || Path.GetInvalidPathChars().Any(outputPath.Contains))
 			throw new InvalidOperationException($"Invalid output path: '{outputPath}'");
 
-		Directory.CreateDirectory(directory);
-		await File.WriteAllTextAsync(outputPath, 
-			content, 
-			new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)
-		);
+		try
+		{
+			if (!string.IsNullOrWhiteSpace(directory))
+				Directory.CreateDirectory(directory);
 
-		Console.WriteLine($"\n🐨 Koalesced OpenAPI  written to: {Path.GetFullPath(outputPath)}");
+			await File.WriteAllTextAsync(
+				outputPath,
+				content,
+				new UTF8Encoding(encoderShouldEmitUTF8Identifier: false)
+			);			
+
+			KoalesceConsoleUI
+				.PrintSuccess($"Koalesced OpenAPI written to: {Path.GetFullPath(outputPath)}");
+		}
+		catch (UnauthorizedAccessException ex)
+		{
+			KoalesceConsoleUI
+				.PrintFileWrittingError("Permission denied when writing output file.", outputPath, ex);
+			throw;
+		}
+		catch (IOException ex)
+		{
+			KoalesceConsoleUI
+				.PrintFileWrittingError("I/O error occurred while writing output file.", outputPath, ex);
+			throw;
+		}
+		catch (Exception ex)
+		{
+			KoalesceConsoleUI
+				.PrintFileWrittingError("Unexpected error while writing output file.", outputPath, ex);
+			throw;
+		}
 	}
 }
