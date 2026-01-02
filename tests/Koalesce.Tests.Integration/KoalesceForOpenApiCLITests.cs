@@ -73,7 +73,7 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 		var psi = new ProcessStartInfo
 		{
 			FileName = "dotnet",
-			Arguments = $"\"{cliDllPath}\" --v",
+			Arguments = $"\"{cliDllPath}\" --version",
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
@@ -105,14 +105,14 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 		{
 			var candidate = Path.Combine(
 				repoRoot,
-				"src", "Koalesce.OpenAPI.CLI", "bin", config, "net8.0", "Koalesce.OpenAPI.CLI.dll"
+				"src", "Koalesce.OpenAPI.CLI", "bin", config, "net10.0", "Koalesce.OpenAPI.CLI.dll"
 			);
 
 			if (File.Exists(candidate))
 				return candidate;
 		}
 
-		throw new FileNotFoundException("❌ Could not locate Koalesce.OpenAPI.CLI.dll in either Release or Debug configuration.");
+		throw new FileNotFoundException("Could not locate Koalesce.OpenAPI.CLI.dll in either Release or Debug configuration.");
 	}
 
 	private static string GetSolutionRoot()
@@ -125,14 +125,8 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 		}
 
 		if (dir == null)
-			throw new DirectoryNotFoundException("❌ Could not locate the solution root (.sln file).");
+			throw new DirectoryNotFoundException("Could not locate the solution root (.sln file).");
 
 		return dir.FullName;
-	}
-
-	private static string GetProjectRootRelativePath(string relativePath)
-	{
-		var repoRoot = GetSolutionRoot();
-		return Path.GetFullPath(Path.Combine(repoRoot, "tests", relativePath));
 	}
 }

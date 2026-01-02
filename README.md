@@ -125,11 +125,13 @@
 
 ```sh
 # Package Manager
-NuGet\Install-Package Koalesce.OpenAPI -Version 0.1.1-alpha.2
+[.NET 10.0] NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.1
+[.NET 8.0]  NuGet\Install-Package Koalesce.OpenAPI -Version 0.1.1-alpha.2
 ```
 ```sh
 # .NET CLI
-dotnet add package Koalesce.OpenAPI --version 0.1.1-alpha.2
+[.NET 10.0] dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.1
+[.NET 8.0]  dotnet add package Koalesce.OpenAPI --version 0.1.1-alpha.2
 ```
 
 
@@ -140,7 +142,9 @@ dotnet add package Koalesce.OpenAPI --version 0.1.1-alpha.2
 To install the **Koalesce.OpenAPI.CLI** globally, use the following command:
 
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 0.1.1-alpha.1
+[.NET 10.0] dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.1
+[.NET 8.0]  dotnet tool install --global Koalesce.OpenAPI.CLI --version 0.1.1-alpha.1
+
 ```
 
 To update the tool to the latest version:
