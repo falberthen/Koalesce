@@ -6,6 +6,14 @@
 
 ## 🛠️ Usage
 
+#### **Arguments**:
+
+- `--config` specifies the path to your `appsettings.json` configuration file with Koalesce settings.
+- `--output` defines the path where the merged OpenAPI specification file will be saved.
+- `--version` displays the current version of the Koalesce.OpenAPI.CLI tool.
+- `--verbose` enables detailed logging output for debugging purposes.
+
+
 #### **Basic Command Structure**
 
 ```bash
@@ -17,11 +25,6 @@ koalesce --config <path-to-appsettings.json> --output <path-to-output-spec>
 ```bash
 koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml
 ```
-
-In this example:
-
-- `--config` specifies the path to your `appsettings.json` configuration file with Koalesce settings.
-- `--output` defines the path where the merged OpenAPI specification file will be saved.
 
 ---
 
