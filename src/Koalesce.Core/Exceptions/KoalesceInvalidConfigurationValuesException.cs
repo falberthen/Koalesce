@@ -6,5 +6,4 @@
 public class KoalesceInvalidConfigurationValuesException : Exception
 {
 	public KoalesceInvalidConfigurationValuesException(string message) : base(message) { }
-
 }

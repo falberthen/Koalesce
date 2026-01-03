@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<PackAsTool>true</PackAsTool>
@@ -10,7 +10,7 @@
 		<PackageId>Koalesce.OpenAPI.CLI</PackageId>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IsPackable>true</IsPackable>
-		<Version>0.1.1-alpha.1</Version>
+		<Version>1.0.0-alpha.1</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The CLI for Koalesce.OpenAPI.</Description>
@@ -19,6 +19,7 @@
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 
 		<!-- Detect USE_PROJECT_REFS constant -->
 		<UseProjectRefs Condition="'$(DefineConstants)' != '' and '$(DefineConstants)' != '$(DefineConstants:USE_PROJECT_REFS=)'">true</UseProjectRefs>
@@ -38,19 +39,20 @@
 
 	<!-- Use NuGet packages otherwise (e.g., during global install or publish) -->
 	<ItemGroup Condition="'$(UseProjectRefs)' != 'true'">
-		<PackageReference Include="Koalesce.Core" Version="0.1.1-alpha.2" />
-		<PackageReference Include="Koalesce.OpenAPI" Version="0.1.1-alpha.2" />
+		<PackageReference Include="Koalesce.Core" Version="1.0.0-alpha.1" />
+		<PackageReference Include="Koalesce.OpenAPI" Version="1.0.0-alpha.1" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
-		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.1" />
-		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="8.0.1" />
-		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.24" />
+		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
+		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.28" />
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+		
 	</ItemGroup>
 
 </Project>

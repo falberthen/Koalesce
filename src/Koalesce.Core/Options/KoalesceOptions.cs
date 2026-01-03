@@ -4,7 +4,7 @@
 public class KoalesceOptions : IValidatableObject
 {
 	public const string ConfigurationSectionName = "Koalesce";
-	public const string TitleDefaultValue = "My 🐨Koalesced API";
+	public const string TitleDefaultValue = "My Koalesced API";
 
 	/// <summary>
 	/// Source OpenAPI URLs. At least one source is required.

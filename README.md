@@ -125,11 +125,13 @@
 
 ```sh
 # Package Manager
-NuGet\Install-Package Koalesce.OpenAPI -Version 0.1.1-alpha.2
+[.NET 10.0] NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.1
+[.NET 8.0]  NuGet\Install-Package Koalesce.OpenAPI -Version 0.1.1-alpha.2
 ```
 ```sh
 # .NET CLI
-dotnet add package Koalesce.OpenAPI --version 0.1.1-alpha.2
+[.NET 10.0] dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.1
+[.NET 8.0]  dotnet add package Koalesce.OpenAPI --version 0.1.1-alpha.2
 ```
 
 
@@ -140,7 +142,9 @@ dotnet add package Koalesce.OpenAPI --version 0.1.1-alpha.2
 To install the **Koalesce.OpenAPI.CLI** globally, use the following command:
 
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 0.1.1-alpha.1
+[.NET 10.0] dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.1
+[.NET 8.0]  dotnet tool install --global Koalesce.OpenAPI.CLI --version 0.1.1-alpha.1
+
 ```
 
 To update the tool to the latest version:
@@ -171,6 +175,13 @@ app.UseKoalesce();
 
 ## 🛠️ Using with Command Line Interface (CLI)
 
+#### **Arguments**:
+
+- `--config` specifies the path to your `appsettings.json` configuration file with Koalesce settings.
+- `--output` defines the path where the merged OpenAPI specification file will be saved.
+- `--version` displays the current version of the Koalesce.OpenAPI.CLI tool.
+- `--verbose` enables detailed logging output for debugging purposes.
+
 #### **Basic Command Structure**
 
 ```bash
@@ -182,11 +193,6 @@ koalesce --config <path-to-appsettings.json> --output <path-to-output-spec>
 ```bash
 koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml
 ```
-
-In this example:
-
-- `--config` specifies the path to your `appsettings.json` configuration file with Koalesce settings.
-- `--output` defines the path where the merged OpenAPI specification file will be saved.
 
 ---
 
@@ -234,5 +240,6 @@ For support or inquiries, reach out via **GitHub Issues**.
 See the full changelog [here](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md).
 
 #### 📜 Koalesce.OpenAPI.CLI Changelog
+
 
 See the full changelog [here](https://github.com/falberthen/Koalesce/tree/master/src/Koalesce.OpenAPI.CLI/CHANGELOG.md).

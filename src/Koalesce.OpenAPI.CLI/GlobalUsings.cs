@@ -10,3 +10,4 @@ global using System.CommandLine;
 global using System.Reflection;
 global using Koalesce.OpenAPI.CLI.UI;
 global using System.CommandLine.Invocation;
+global using System.CommandLine.Parsing;
