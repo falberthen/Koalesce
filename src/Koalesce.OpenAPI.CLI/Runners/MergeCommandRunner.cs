@@ -5,6 +5,13 @@
 /// </summary>
 public class MergeCommandRunner
 {
+	private readonly ILoggerFactory _loggerFactory;
+
+	public MergeCommandRunner(ILoggerFactory loggerFactory)
+	{
+		_loggerFactory = loggerFactory;
+	}
+
 	/// <summary>
 	/// Runs the OpenAPI merge process and writes the result to the specified output path.
 	/// </summary>
@@ -31,7 +38,9 @@ public class MergeCommandRunner
 
 			var services = new ServiceCollection();
 			services.AddSingleton<IMergedSpecificationWriter, MergedSpecificationWriter>();
-			services.AddLogging(builder => builder.AddConsole());
+			services.AddSingleton<ILoggerFactory>(_loggerFactory);
+			services.AddLogging();
+
 			services.AddKoalesce(configuration).ForOpenAPI();
 
 			using var provider = services.BuildServiceProvider();
@@ -51,7 +60,7 @@ public class MergeCommandRunner
 		}
 		catch (Exception)
 		{
-			return 2;    
-		}		
+			return 2;
+		}
 	}
 }
