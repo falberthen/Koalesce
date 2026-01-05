@@ -12,6 +12,8 @@ public static class KoalesceConsoleUI
 	public const string Cyan = "\x1b[36m";
 	public const string Green = "\x1b[32m";
 	public const string Yellow = "\x1b[33m";
+	public const string Magenta = "\x1b[35m";
+	public const string Bold = "\x1b[1m";
 	public const string Reset = "\x1b[0m";
 
 	/// <summary>
@@ -66,12 +68,23 @@ public static class KoalesceConsoleUI
 	/// <summary>
 	/// Prints the list of OpenAPI source document URLs loaded from configuration.
 	/// </summary>
-	/// <param name="urls">The list of OpenAPI URLs.</param>
-	public static void PrintSourceList(IEnumerable<string> urls)
+	/// <param name="sources">The list of OpenAPI URLs.</param>
+	public static void PrintSourceList(IEnumerable<OpenApiSourceDefinition> sources)
 	{
-		Console.WriteLine($"{Cyan}🔍 Loaded {urls.Count()} source OpenAPI docs from config:{Reset}\n");
-		foreach (var url in urls)
-			Console.WriteLine($"{Green} • {url}");
+		Console.WriteLine($"{Cyan}🔍 Loaded {sources.Count()} source OpenAPI docs from config:{Reset}\n");
+		foreach (var source in sources)
+		{			
+			string displayPrefix = "";
+
+			if (!string.IsNullOrEmpty(source.VirtualPrefix))
+			{
+				var cleanPrefix = source.VirtualPrefix.Trim('/');
+				displayPrefix = $"{Magenta}[/{cleanPrefix}]{Reset} ";
+			}
+			
+			Console.WriteLine($" {Green}•{Reset} {displayPrefix}{source.Url}");
+		}
+
 		Console.WriteLine();
 	}
 
