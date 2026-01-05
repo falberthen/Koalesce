@@ -30,6 +30,7 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 		Assert.Contains("openapi", content);
 		Assert.Contains("/api/customers", content);
 		Assert.Contains("/api/products", content);
+		Assert.Contains("/inventory/api/products", content);
 	}
 
 	[Fact]
@@ -49,20 +50,29 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 		var psi = new ProcessStartInfo
 		{
 			FileName = "dotnet",
-			Arguments = $"\"{cliDllPath}\" --config \"{configPath}\" --output \"{outputPath}\"",
+			ArgumentList =
+			{
+				cliDllPath,
+				"--config", configPath,
+				"--output", outputPath
+			},
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,
 			UseShellExecute = false,
 			CreateNoWindow = true,
 		};
 
-		using var process = Process.Start(psi)!;
-		string output = await process.StandardOutput.ReadToEndAsync();
-		string error = await process.StandardError.ReadToEndAsync();
+		psi.EnvironmentVariables["NO_COLOR"] = "true";
+		psi.EnvironmentVariables["DOTNET_NOLOGO"] = "true";
 
+		using var process = Process.Start(psi)!;
+		var outputTask = process.StandardOutput.ReadToEndAsync();
+		var errorTask = process.StandardError.ReadToEndAsync();
+
+		await Task.WhenAll(outputTask, errorTask);
 		await process.WaitForExitAsync();
 
-		return (process.ExitCode, output + error);
+		return (process.ExitCode, outputTask.Result + errorTask.Result);
 	}
 
 	[Fact]
@@ -93,7 +103,7 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 			.InformationalVersion?
 			.Split('+')[0];
 
-		Assert.Contains(expectedVersion, combinedOutput);
+		Assert.Contains(expectedVersion!, combinedOutput);
 	}
 
 	private static string GetCliDllPath()

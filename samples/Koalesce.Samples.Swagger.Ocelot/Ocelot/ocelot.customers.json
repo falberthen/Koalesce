@@ -11,6 +11,18 @@
         }
       ],
       "UpstreamHttpMethod": [ "GET", "POST" ]
-    }    
+    },
+    {
+      "DownstreamPathTemplate": "/api/customers/{id}",
+      "UpstreamPathTemplate": "/api/customers/{id}",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 8001
+        }
+      ],
+      "UpstreamHttpMethod": [ "GET" ]
+    }
   ]
 }

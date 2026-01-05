@@ -38,9 +38,7 @@ public class MergeCommandRunner
 
 			var services = new ServiceCollection();
 			services.AddSingleton<IMergedSpecificationWriter, MergedSpecificationWriter>();
-			services.AddSingleton<ILoggerFactory>(_loggerFactory);
 			services.AddLogging();
-
 			services.AddKoalesce(configuration).ForOpenAPI();
 
 			using var provider = services.BuildServiceProvider();
@@ -51,15 +49,16 @@ public class MergeCommandRunner
 			if (string.IsNullOrWhiteSpace(Path.GetExtension(outputPath)))
 				outputPath += Path.GetExtension(koalesceOptions.MergedOpenApiPath ?? ".yaml");
 
-			KoalesceConsoleUI.PrintSourceList(koalesceOptions.SourceOpenApiUrls ?? Enumerable.Empty<string>());
+			KoalesceConsoleUI.PrintSourceList(koalesceOptions.OpenApiSources ?? Enumerable.Empty<OpenApiSourceDefinition>());
 
 			var mergedSpec = await openApiProvider.ProvideMergedDocumentAsync();
 			await writer.WriteAsync(outputPath, mergedSpec);
 
 			return 0;
 		}
-		catch (Exception)
+		catch (Exception ex)
 		{
+			Console.WriteLine(ex.Message);
 			return 2;
 		}
 	}

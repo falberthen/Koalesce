@@ -32,4 +32,16 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <None Update="RestAPIs\appsettings.apigateway.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="RestAPIs\appsettings.identicalpaths.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	  <None Update="RestAPIs\appsettings.openapi.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
+
 </Project>

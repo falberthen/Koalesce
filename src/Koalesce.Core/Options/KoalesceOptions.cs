@@ -10,13 +10,13 @@ public class KoalesceOptions : IValidatableObject
 	/// Source OpenAPI URLs. At least one source is required.
 	/// </summary>
 	[Required]
-	public List<string> SourceOpenApiUrls { get; set; }
+	public List<OpenApiSourceDefinition> OpenApiSources { get; set; } = new();
 
 	/// <summary>
 	/// The logical path where the merged API definition should be exposed.
 	/// </summary>
 	[Required]
-	public string MergedOpenApiPath { get; set; }
+	public string MergedOpenApiPath { get; set; } = default!;
 
 	/// <summary>
 	/// Koalesced API title
@@ -31,7 +31,7 @@ public class KoalesceOptions : IValidatableObject
 	/// <summary>
 	/// BaseUrl if using an API Gateway
 	/// </summary>
-	public string ApiGatewayBaseUrl { get; set; }
+	public string ApiGatewayBaseUrl { get; set; } = default!;
 
 	/// <summary>
 	/// Determines whether Koalesce skips identical paths.
@@ -46,12 +46,12 @@ public class KoalesceOptions : IValidatableObject
 	/// </summary>	
 	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 	{
-		// Validating SourceOpenApiUrls
-		if (SourceOpenApiUrls == null || !SourceOpenApiUrls.Any())
+		// Validating OpenApiSources
+		if (OpenApiSources == null || !OpenApiSources.Any())
 		{
 			yield return new ValidationResult(
-				"At least one source API URL must be defined in SourceOpenApiUrls.",
-				new[]{ nameof(SourceOpenApiUrls) });
+				"At least one source API URL must be defined in OpenApiSources.",
+				[nameof(OpenApiSources)]);
 		}
 
 		// Validating MergedOpenApiPath
@@ -59,14 +59,14 @@ public class KoalesceOptions : IValidatableObject
 		{
 			yield return new ValidationResult(
 				"MergedOpenApiPath cannot be empty.",
-				new[] { nameof(MergedOpenApiPath) });
+				[nameof(MergedOpenApiPath)]);
 		}
 
 		if (!MergedOpenApiPath.StartsWith("/"))
 		{
 			yield return new ValidationResult(
 				"MergedOpenApiPath must start with '/'.",
-				new[] { nameof(MergedOpenApiPath) });
+				[nameof(MergedOpenApiPath)]);
 		}
 
 		// Caching Validations
@@ -74,28 +74,28 @@ public class KoalesceOptions : IValidatableObject
 		{
 			yield return new ValidationResult(
 				"MinExpirationSeconds must be a positive value.",
-				new[] { nameof(Cache.MinExpirationSeconds) });
+				[nameof(Cache.MinExpirationSeconds)]);
 		}
 
 		if (Cache.AbsoluteExpirationSeconds < Cache.MinExpirationSeconds)
 		{
 			yield return new ValidationResult(
 				$"AbsoluteExpirationSeconds ({Cache.AbsoluteExpirationSeconds}) must be at least MinExpirationSeconds ({Cache.MinExpirationSeconds}).",
-				new[] { nameof(Cache.AbsoluteExpirationSeconds) });
+				[nameof(Cache.AbsoluteExpirationSeconds)]);
 		}
 
 		if (Cache.SlidingExpirationSeconds < Cache.MinExpirationSeconds)
 		{
 			yield return new ValidationResult(
 				$"SlidingExpirationSeconds ({Cache.SlidingExpirationSeconds}) must be at least MinExpirationSeconds ({Cache.MinExpirationSeconds}).",
-				new[] { nameof(Cache.SlidingExpirationSeconds) });
+				[nameof(Cache.SlidingExpirationSeconds)]);
 		}
 
 		if (Cache.SlidingExpirationSeconds > Cache.AbsoluteExpirationSeconds)
 		{
 			yield return new ValidationResult(
 				$"SlidingExpirationSeconds ({Cache.SlidingExpirationSeconds}) cannot be greater than AbsoluteExpirationSeconds ({Cache.AbsoluteExpirationSeconds}).",
-				new[] { nameof(Cache.SlidingExpirationSeconds) });
+				[nameof(Cache.SlidingExpirationSeconds)]);
 		}
 	}
 }
