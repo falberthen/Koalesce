@@ -40,7 +40,7 @@ public abstract class KoalesceProviderBase<TOptions, TMergeResult> : IKoalescePr
 			.MergeIntoSingleDefinitionAsync();
 
 		Logger.LogInformation("Koalescing complete using {Provider} for merging {ApiCount} API definitions.",
-			providerName, Options.SourceOpenApiUrls.Count);
+			providerName, Options.OpenApiSources.Count);
 
 		return MergedDocumentSerializer
 			.Serialize(mergedDocument);

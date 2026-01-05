@@ -33,11 +33,17 @@ public class KoalesceCacheOptionsTests : KoalesceUnitTestBase
 		// Arrange
 		var options = new KoalesceOptions
 		{
-			SourceOpenApiUrls = ["http://fakeapi.com/v1/apidefinition.json"],
+			OpenApiSources = new List<OpenApiSourceDefinition>
+			{
+				new OpenApiSourceDefinition
+				{
+					Url = "http://fakeapi.com/v1/apidefinition.json" 
+				}
+			},
 			MergedOpenApiPath = "/swagger/v1/swagger.json",
 			Cache = new KoalesceCacheOptions
 			{
-				AbsoluteExpirationSeconds = 10, // Invalid (Below MinExpirationSeconds)
+				AbsoluteExpirationSeconds = 10,
 				MinExpirationSeconds = 30
 			}
 		};
@@ -55,7 +61,13 @@ public class KoalesceCacheOptionsTests : KoalesceUnitTestBase
 		// Arrange
 		var options = new KoalesceOptions
 		{
-			SourceOpenApiUrls = ["http://fakeapi.com/v1/apidefinition.json"],
+			OpenApiSources = new List<OpenApiSourceDefinition>
+			{
+				new OpenApiSourceDefinition
+				{
+					Url = "http://fakeapi.com/v1/apidefinition.json",
+				}
+			},
 			MergedOpenApiPath = "/swagger/v1/swagger.json",
 			Cache = new KoalesceCacheOptions
 			{

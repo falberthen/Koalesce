@@ -17,3 +17,6 @@ global using Koalesce.Core.Providers;
 global using Koalesce.Core.Services;
 global using Koalesce.Core.Internals;
 global using Koalesce.Core.Extensions;
+global using Koalesce.Core.Constants;
+global using System.Net;
+global using System.Net.Http;
