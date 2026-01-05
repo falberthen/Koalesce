@@ -21,8 +21,7 @@ public class InventoryApi
                 "paths": { 
                     "/api/products": { 
                         "get": { 
-                            "summary": "Get Products",
-                            "tags": ["Products"]
+                            "summary": "Get Inventory Products",
                         } 
                     }
                 },

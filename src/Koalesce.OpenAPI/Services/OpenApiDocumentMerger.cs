@@ -9,6 +9,9 @@ public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	private readonly ILogger<OpenApiDocumentMerger> _logger;
 	private readonly IHttpClientFactory _httpClientFactory;
 
+	// Regex optimized for performance (compiled) to extract version from paths
+	private static readonly Regex VersionRegex = new(@"/(?<version>v\d+)(/|$)", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
 	public OpenApiDocumentMerger(
 		IOptions<OpenApiOptions> options,
 		ILogger<OpenApiDocumentMerger> logger,
@@ -28,15 +31,14 @@ public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	/// </summary>
 	public async Task<OpenApiDocument> MergeIntoSingleDefinitionAsync()
 	{
-		if (!_options.SourceOpenApiUrls.Any())
-			throw new ArgumentException("API URL list cannot be empty.");
+		if (_options.OpenApiSources?.Any() != true)
+			throw new ArgumentException("API source list cannot be empty.");
 
-		_logger.LogInformation("Starting API Koalescing process with {SourceDefinitionsCount} APIs",
-			_options.SourceOpenApiUrls.Count());
+		_logger.LogInformation("Starting API Koalescing process with {Count} APIs", _options.OpenApiSources.Count);
 
 		try
 		{
-			var httpClient = _httpClientFactory.CreateClient();
+			var httpClient = _httpClientFactory.CreateClient(CoreConstants.KoalesceClient); 
 			var detectedApiVersion = ExtractVersionFromPath(_options.MergedOpenApiPath);
 
 			var mergedDocument = new OpenApiDocument
@@ -49,28 +51,38 @@ public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 				Paths = new OpenApiPaths(),
 				Components = new OpenApiComponents
 				{
-					SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>()
+					SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>(),
+					Schemas = new Dictionary<string, OpenApiSchema>()
 				},
 				Servers = new List<OpenApiServer>(),
-				SecurityRequirements = new List<OpenApiSecurityRequirement>()
+				// Keep global security empty to prevent scope leakage between microservices
+				SecurityRequirements = new List<OpenApiSecurityRequirement>(),
+				Tags = new List<OpenApiTag>()
 			};
 
 			// Fetch all API definitions concurrently
-			var fetchResults = await Task.WhenAll(_options.SourceOpenApiUrls.Select(url =>
-				FetchApiDefinitionAsync(httpClient, url))
-			);
-
-			// Merge results sequentially in the order of definitionUrls
-			foreach (var (url, apiDoc) in _options.SourceOpenApiUrls.Zip(fetchResults))
+			// Mapping the tasks to the source definition to pair them later
+			var fetchTasks = _options.OpenApiSources.Select(async source =>
 			{
-				if (apiDoc != null)
-					MergeApiDefinition(apiDoc, mergedDocument, url);
+				var doc = await FetchApiDefinitionAsync(httpClient, source.Url);
+				return (SourceConfig: source, Document: doc);
+			});
+
+			var results = await Task.WhenAll(fetchTasks);
+
+			// Merge results sequentially
+			foreach (var (sourceConfig, apiDoc) in results)
+			{
+				if (apiDoc is not null)
+				{
+					MergeApiDefinition(apiDoc, mergedDocument, sourceConfig);
+				}
 			}
 
-			// Ensure at least one fallback server exists
+			// Ensure a fallback server exists if none were found
 			if (!mergedDocument.Servers.Any())
 			{
-				_logger.LogWarning("No valid servers found in API definitions. Adding fallback '/'");
+				_logger.LogWarning("No valid servers found. Adding fallback '/'");
 				mergedDocument.Servers.Add(new OpenApiServer { Url = "/" });
 			}
 
@@ -85,37 +97,46 @@ public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	}
 
 	/// <summary>
-	/// Fetches and process API definition provided in SourceOpenApiUrls
+	/// Fetches and parses the OpenAPI definition from a URL
 	/// </summary>
 	private async Task<OpenApiDocument?> FetchApiDefinitionAsync(HttpClient httpClient, string definitionUrl)
 	{
 		try
 		{
 			_logger.LogInformation("Fetching OpenAPI spec from: {Url}", definitionUrl);
-			using var responseStream = await httpClient.GetStreamAsync(definitionUrl);
 
+			// Using ResponseHeadersRead for efficiency with large streams
+			using var response = await httpClient.GetAsync(definitionUrl, HttpCompletionOption.ResponseHeadersRead);
+			response.EnsureSuccessStatusCode();
+
+			using var responseStream = await response.Content.ReadAsStreamAsync();
 			var readResult = await new OpenApiStreamReader().ReadAsync(responseStream);
-			return readResult.OpenApiDocument?.Paths.Any() == true
+
+			return readResult.OpenApiDocument?.Paths?.Any() == true
 				? readResult.OpenApiDocument
 				: null;
 		}
 		catch (Exception ex) when (ex is HttpRequestException || ex is OpenApiException)
 		{
-			_logger.LogError(ex,
-				"Failed to fetch or parse OpenAPI from {Url}. Skipping.", definitionUrl);
+			_logger.LogError(ex, "Failed to fetch or parse OpenAPI from {Url}. Skipping.", definitionUrl);
 			return null;
 		}
 	}
 
 	/// <summary>
-	/// Merges an API definition into the target merged document.
-	/// </summary>    
-	private void MergeApiDefinition(OpenApiDocument sourceDocument, OpenApiDocument targetDocument, string definitionUrl)
+	/// Merges a specific API definition into the target document, applying prefixes and isolation rules
+	/// </summary>
+	private void MergeApiDefinition(
+		OpenApiDocument sourceDocument,
+		OpenApiDocument targetDocument,
+		OpenApiSourceDefinition sourceConfig)
 	{
 		string apiName = sourceDocument.Info?.Title ?? "Unknown API";
 		string apiVersion = sourceDocument.Info?.Version ?? "v1";
+
+		// Determine Base URL (Gateway override or Source origin)
 		string baseUrl = _options.ApiGatewayBaseUrl
-			?? new Uri(definitionUrl).GetLeftPart(UriPartial.Authority);
+			?? new Uri(sourceConfig.Url).GetLeftPart(UriPartial.Authority);
 
 		var serverEntry = new OpenApiServer
 		{
@@ -125,138 +146,184 @@ public class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 				: string.Empty
 		};
 
+		// Register Server if unique
 		if (!targetDocument.Servers.Any(s => s.Url == baseUrl))
 			targetDocument.Servers.Add(serverEntry);
 
-		MergePaths(sourceDocument.Paths, targetDocument.Paths, serverEntry, apiName);
+		// Merge Core Structures (Paths, Components, Tags)
+		// Note: Security Isolation logic is integrated into MergePaths
+		MergePaths(
+			sourceDocument.Paths,
+			targetDocument.Paths,
+			serverEntry,
+			apiName,
+			sourceConfig.VirtualPrefix,
+			sourceDocument.SecurityRequirements
+		);
+
 		MergeComponents(sourceDocument.Components, targetDocument.Components);
-		MergeSecuritySchemes(sourceDocument, targetDocument);
 		MergeTags(sourceDocument, targetDocument, serverEntry);
 	}
 
 	/// <summary>
-	/// Merges API paths while preserving per-operation security and summaries.
+	/// Merges paths, applies route prefixes, and enforces security isolation
 	/// </summary>
-	/// <summary>
-	private void MergePaths(OpenApiPaths sourcePaths, OpenApiPaths targetPaths, OpenApiServer server, string apiName)
+	private void MergePaths(
+		OpenApiPaths sourcePaths,
+		OpenApiPaths targetPaths,
+		OpenApiServer server,
+		string apiName,
+		string? pathPrefix,
+		IList<OpenApiSecurityRequirement>? globalSourceSecurity)
 	{
-		var identicalPaths = new List<(string Path, string ApiName)>();
-
-		foreach (var (pathKey, pathItem) in sourcePaths)
+		foreach (var (originalPath, pathItem) in sourcePaths)
 		{
-			if (!targetPaths.TryGetValue(pathKey, out var existingPath))
-				targetPaths[pathKey] = existingPath = new OpenApiPathItem();
-			else if (!_options.SkipIdenticalPaths)
-				identicalPaths.Add((pathKey, apiName)); // Collect duplicate paths
-			else
-				_logger.LogWarning("Identical path '{Path}' from API '{ApiName}' found. " +
-					"Skipping due to SkipIdenticalPaths being enabled.", pathKey, apiName);
+			// Construct the new path key with optional prefix
+			// Logic: "/api/apiname" + Prefix => "/prefix/api/apiname"
+			string newPathKey = string.IsNullOrEmpty(pathPrefix)
+				? originalPath
+				: $"/{pathPrefix.Trim('/')}/{originalPath.TrimStart('/')}";
 
-			foreach (var (operationType, operation) in pathItem.Operations)
+			// Check for collisions
+			if (targetPaths.ContainsKey(newPathKey))
 			{
-				if (!existingPath.Operations.ContainsKey(operationType))
+				if (!_options.SkipIdenticalPaths)
 				{
-					// If an API Gateway is used, remove per-path servers to ensure all requests go through the gateway
-					if (!string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
+					throw new KoalesceIdenticalPathFoundException(newPathKey, apiName);
+				}
+				_logger.LogWarning("Skipping identical path '{Path}' from '{ApiName}'.", newPathKey, apiName);
+				continue;
+			}
+
+			// Copy path-level metadata and parameters			
+			var newPathItem = new OpenApiPathItem
+			{
+				Summary = pathItem.Summary,
+				Description = pathItem.Description,
+				Parameters = pathItem.Parameters?.Select(p => p).ToList() ?? new List<OpenApiParameter>()
+			};
+
+			targetPaths[newPathKey] = newPathItem;
+
+			foreach (var (opType, operation) in pathItem.Operations)
+			{
+				// Handle Servers (Gateway vs Direct)
+				if (!string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
+				{
+					operation.Servers?.Clear(); // Gateway handles routing
+				}
+				else
+				{
+					operation.Servers ??= new List<OpenApiServer>();
+
+					// Avoid duplication if the server is already listed
+					if (!operation.Servers.Any(s => s.Url == server.Url))
 					{
-						// Avoids redundant servers, as the gateway handles routing
-						operation.Servers?.Clear();
-					}
-					else
-					{
-						// Use the specific API server if no gateway is defined
-						operation.Servers ??= new List<OpenApiServer>();
 						operation.Servers.Add(server);
 					}
-
-					operation.Summary ??= string.Empty;
-					existingPath.Operations[operationType] = operation;
 				}
+
+				// Security Isolation:
+				// If the operation has no specific security, inject the global security from the source.
+				// This prevents global security from one API leaking into others in the merged doc.
+				if ((operation.Security is null || !operation.Security.Any())
+					&& globalSourceSecurity is not null && globalSourceSecurity.Any())
+				{
+					// Clone the list to avoid reference issues
+					operation.Security = [.. globalSourceSecurity];
+				}
+
+				operation.Summary ??= string.Empty;
+				newPathItem.Operations[opType] = operation;
 			}
 		}
-
-		// Throw an exception after merging if duplicates were found
-		if (identicalPaths.Any() && !_options.SkipIdenticalPaths)
-			throw new KoalesceIdenticalPathFoundException(identicalPaths);
 	}
 
 	/// <summary>
-	/// Merges API tags while preserving existing ones.
+	/// Merges tags prioritizing: Operation Tags > Document Global Tags > URL Fallback
 	/// </summary>
 	private void MergeTags(OpenApiDocument sourceDocument, OpenApiDocument targetDocument, OpenApiServer serverEntry)
 	{
-		targetDocument.Tags ??= new List<OpenApiTag>();
+		// Ensure source global definitions are copied (preserves descriptions)
+		if (sourceDocument.Tags is not null)
+		{
+			foreach (var tag in sourceDocument.Tags)
+			{
+				if (!targetDocument.Tags.Any(t => t.Name == tag.Name))
+					targetDocument.Tags.Add(tag);
+			}
+		}
 
-		string defaultTagName = new Uri(serverEntry.Url).Host.Replace(".", "-");
-		var defaultTag = new OpenApiTag { Name = defaultTagName };
+		var defaultTagName = new Uri(serverEntry.Url).Host.Replace(".", "-");
 
+		// Assign tags to operations
 		foreach (var path in sourceDocument.Paths.Values)
 		{
 			foreach (var operation in path.Operations.Values)
 			{
-				if (operation.Tags == null || !operation.Tags.Any())
+				operation.Tags ??= new List<OpenApiTag>();
+
+				if (!operation.Tags.Any())
 				{
-					operation.Tags = new List<OpenApiTag> { defaultTag };
+					// Fallback Strategy:
+					// Use Global Source Tags if available
+					if (sourceDocument.Tags?.Any() == true)
+					{
+						foreach (var docTag in sourceDocument.Tags)
+							operation.Tags.Add(new OpenApiTag { Name = docTag.Name });
+					}
+					// Use URL Hostname if no tags exist anywhere
+					else
+					{
+						operation.Tags.Add(new OpenApiTag { Name = defaultTagName });
+					}
 				}
 
+				// Ensure all operation tags are registered in the target global list
 				foreach (var tag in operation.Tags)
 				{
-					if (targetDocument.Tags.All(t => t.Name != tag.Name))
-					{
+					if (!targetDocument.Tags.Any(t => t.Name == tag.Name))
 						targetDocument.Tags.Add(tag);
-					}
 				}
 			}
 		}
 	}
 
 	/// <summary>
-	/// Merges components (schemas).
+	/// Merges schemas and security scheme definitions
 	/// </summary>
 	private void MergeComponents(OpenApiComponents sourceComponents, OpenApiComponents targetComponents)
 	{
-		if (sourceComponents?.Schemas == null) return;
+		if (sourceComponents is null) return;
 
-		_logger.LogInformation("Merging {Count} component schemas...",
-			sourceComponents.Schemas.Count);
+		_logger.LogInformation("Merging {Count} schemas and security schemes...",
+			sourceComponents.Schemas?.Count ?? 0);
 
-		foreach (var (key, schema) in sourceComponents.Schemas)
-			targetComponents.Schemas.TryAdd(key, schema);
-	}
-
-	/// <summary>
-	/// Merges security schemes and security requirements.
-	/// </summary>
-	private void MergeSecuritySchemes(OpenApiDocument sourceDocument, OpenApiDocument targetDocument)
-	{
-		if (sourceDocument.Components?.SecuritySchemes != null)
+		// Merge Schemas
+		if (sourceComponents.Schemas is not null)
 		{
-			_logger.LogInformation("Merging {Count} security schemes...",
-				sourceDocument.Components.SecuritySchemes.Count);
-
-			foreach (var securityScheme in sourceDocument.Components.SecuritySchemes)
+			foreach (var (key, schema) in sourceComponents.Schemas)
 			{
-				if (!targetDocument.Components.SecuritySchemes.ContainsKey(securityScheme.Key))
-					targetDocument.Components.SecuritySchemes[securityScheme.Key] = securityScheme.Value;
+				// TryAdd ensures we don't overwrite existing schemas, but we should log collisions
+				if (!targetComponents.Schemas.TryAdd(key, schema))
+				{
+					_logger.LogDebug("Schema '{SchemaKey}' already exists in target. Skipping merge from source to prevent overwrites.", key);
+				}
 			}
 		}
 
-		if (sourceDocument.SecurityRequirements != null)
+		// Merge Security Schemes (Definitions only, not requirements)
+		if (sourceComponents.SecuritySchemes is not null)
 		{
-			foreach (var securityRequirement in sourceDocument.SecurityRequirements)
-			{
-				if (!targetDocument.SecurityRequirements.Contains(securityRequirement))
-					targetDocument.SecurityRequirements.Add(securityRequirement);
-			}
+			foreach (var (key, scheme) in sourceComponents.SecuritySchemes)
+				targetComponents.SecuritySchemes.TryAdd(key, scheme);
 		}
 	}
 
-	/// <summary>
-	/// Extracts a version from the MergedOpenApiPath if provided.
-	/// </summary>
 	private string ExtractVersionFromPath(string path)
 	{
-		var match = Regex.Match(path, @"/(?<version>v\d+)(/|$)", RegexOptions.IgnoreCase);
+		if (string.IsNullOrEmpty(path)) return "v1";
+		var match = VersionRegex.Match(path);
 		return match.Success ? match.Groups["version"].Value : "v1";
 	}
 }

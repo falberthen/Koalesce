@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net10.0</TargetFramework>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>Koalesce.OpenAPI</PackageId>
 		<IsPackable>true</IsPackable>
-		<Version>1.0.0-alpha.1</Version>
+		<Nullable>enable</Nullable>
+		<Version>1.0.0-alpha.2</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The OpenAPI Provider for Koalesce.</Description>
@@ -25,12 +26,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.OpenApi" Version="1.6.28" />
 		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.28" />
-		<PackageReference Include="Microsoft.Extensions.Http" Version="10.0.1" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" />
 	</ItemGroup>
-
 </Project>

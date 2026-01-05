@@ -9,7 +9,7 @@ public class KoalesceOptionsTests : KoalesceUnitTestBase
 		var configuration = new ConfigurationBuilder()
 			.AddInMemoryCollection(new Dictionary<string, string?>
 			{
-				{ "Koalesce:SourceOpenApiUrls:0", "https://localhost:5001/swagger.json" },
+				{ "Koalesce:OpenApiSources:0:Url", "https://localhost:5001/swagger.json" },
 				{ "Koalesce:MergedOpenApiPath", "/swagger/v1/merged.json" }
 			})
 			.Build();
@@ -36,8 +36,8 @@ public class KoalesceOptionsTests : KoalesceUnitTestBase
 			{
 				{ "Koalesce:Title", "My Koalesced API" },
 				{ "Koalesce:MergedOpenApiPath", "/swagger/v1/apigateway.yaml" },
-				{ "Koalesce:SourceOpenApiUrls:0", "https://localhost:5001/swagger/v1/swagger.json" },
-				{ "Koalesce:SourceOpenApiUrls:1", "https://localhost:5002/swagger/v1/swagger.json" }
+				{ "Koalesce:OpenApiSources:0:Url", "https://localhost:5001/swagger/v1/swagger.json" },
+				{ "Koalesce:OpenApiSources:1:Url", "https://localhost:5002/swagger/v1/swagger.json" }
 			})
 			.Build();
 
@@ -46,10 +46,10 @@ public class KoalesceOptionsTests : KoalesceUnitTestBase
 
 		var provider = Services.BuildServiceProvider();
 
-		var expectedRoutes = new List<string>()
+		var expectedRoutes = new List<OpenApiSourceDefinition>()
 		{
-			"https://localhost:5001/swagger/v1/swagger.json",
-			"https://localhost:5002/swagger/v1/swagger.json"
+			new OpenApiSourceDefinition { Url = "https://localhost:5001/swagger/v1/swagger.json" },
+			new OpenApiSourceDefinition { Url = "https://localhost:5002/swagger/v1/swagger.json" }
 		};
 
 		// Act
@@ -59,7 +59,7 @@ public class KoalesceOptionsTests : KoalesceUnitTestBase
 		Assert.NotNull(options);
 		Assert.Equal("My Koalesced API", options.Title);
 		Assert.Equal("/swagger/v1/apigateway.yaml", options.MergedOpenApiPath);
-		Assert.Equal(expectedRoutes, options.SourceOpenApiUrls);
+		Assert.Equal(expectedRoutes, options.OpenApiSources);
 	}
 
 	[Fact]

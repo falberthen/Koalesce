@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Builder;
-
-namespace Koalesce.Core.Extensions;
+﻿namespace Koalesce.Core.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Koalesce.
@@ -67,19 +65,27 @@ public static class KoalesceExtensions
 			.GetSection(KoalesceOptions.ConfigurationSectionName);
 
 		// Binding provider-specific options
-		if (!services.Any(s => s.ServiceType == typeof(IOptions<TOptions>)))
+		if (typeof(TOptions) != typeof(KoalesceOptions))
 		{
 			services.Configure<TOptions>(koalesceSection);
 		}
 
-		// Using PostConfigure to avoid overriding existing values
-		services.PostConfigure<TOptions>(options =>
+		// Configuring HttpClient for Koalesce
+		services.AddHttpClient(CoreConstants.KoalesceClient, client =>
 		{
-			options.SourceOpenApiUrls = options.SourceOpenApiUrls
-				.Distinct().ToList();
+			client.DefaultRequestVersion = HttpVersion.Version11;
+			client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
+			client.Timeout = TimeSpan.FromSeconds(15);
+		})
+		.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+		{
+			SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+			{
+				// Allow untrusted/self-signed certificates (common in dev/localhost)
+				RemoteCertificateValidationCallback = delegate { return true; }
+			},
+			AutomaticDecompression = DecompressionMethods.All
 		});
-
-		services.AddHttpClient();
 
 		// Enabling Middleware
 		if (builder is KoalesceBuilder koalesceBuilder)

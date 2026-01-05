@@ -131,7 +131,7 @@ public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldMergeSecuritySchemes()
+	public async Task Koalesce_WhenForOpenAPI_ShouldKeepSecuritySchemesIsolated()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(appSettings,
@@ -152,7 +152,7 @@ public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingApiGateway_ShouldMergeProductsAndCustomersWithSingleServer()
+	public async Task Koalesce_WhenUsingApiGateway_ShouldMergeAllDefinitionsIntoSingle()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(apiGatewaySettings,
@@ -170,17 +170,20 @@ public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		Assert.Contains("\"url\": \"http://localhost:5000\"", mergedResult);
 		Assert.DoesNotContain("\"url\": \"http://localhost:8001\"", mergedResult);
 		Assert.DoesNotContain("\"url\": \"http://localhost:8002\"", mergedResult);
+		Assert.DoesNotContain("\"url\": \"http://localhost:8003\"", mergedResult);
 
-		// Ensure `/api/customers` and `/api/products` exist in the merged document
+		// Ensure `/api/customers` and `/api/products` and `/api/inventory` exist in the merged document
 		Assert.Contains("\"/api/customers\": {", mergedResult);
 		Assert.Contains("\"/api/products\": {", mergedResult);
+		Assert.Contains("\"/inventory/api/products\": {", mergedResult);
 
 		// Ensure each path does not have individual `servers` (since it's using API Gateway)
 		Assert.DoesNotContain("\"servers\":", mergedResult
 			.Substring(mergedResult.IndexOf("\"/api/customers\": {", StringComparison.Ordinal)));
 		Assert.DoesNotContain("\"servers\":", mergedResult
 			.Substring(mergedResult.IndexOf("\"/api/products\": {", StringComparison.Ordinal)));
-
+		Assert.DoesNotContain("\"servers\":", mergedResult
+			.Substring(mergedResult.IndexOf("\"/inventory/api/products\": {", StringComparison.Ordinal)));
 		await koalescingApi.StopAsync();
 	}
 
@@ -201,7 +204,7 @@ public class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 
 		// Assert
 		Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-		Assert.Contains("Identical paths detected:", responseContent);
+		Assert.Contains("Identical path", responseContent);
 
 		await koalescingApi.StopAsync();
 	}
