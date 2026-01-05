@@ -10,7 +10,7 @@
 		<PackageId>Koalesce.OpenAPI.CLI</PackageId>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IsPackable>true</IsPackable>
-		<Version>1.0.0-alpha.1</Version>
+		<Version>1.0.0-alpha.2</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The CLI for Koalesce.OpenAPI.</Description>
@@ -26,6 +26,12 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Img\**" />
+	  <EmbeddedResource Remove="Img\**" />
+	  <None Remove="Img\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
 		<None Include="README.nuget.md" Pack="true" PackagePath="\" />
 		<None Include="CHANGELOG.md" Pack="false" PackagePath="\" />
@@ -37,12 +43,6 @@
 		<ProjectReference Include="..\Koalesce.OpenAPI\Koalesce.OpenAPI.csproj" />
 	</ItemGroup>
 
-	<!-- Use NuGet packages otherwise (e.g., during global install or publish) -->
-	<ItemGroup Condition="'$(UseProjectRefs)' != 'true'">
-		<PackageReference Include="Koalesce.Core" Version="1.0.0-alpha.1" />
-		<PackageReference Include="Koalesce.OpenAPI" Version="1.0.0-alpha.1" />
-	</ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.1" />
@@ -51,8 +51,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
 		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.28" />
-		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-		
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />		
 	</ItemGroup>
 
 </Project>
