@@ -18,21 +18,33 @@ public class ProductsApi
             {
                 "openapi": "3.0.1",
                 "info": { "title": "Products API", "version": "v1" },
-                "paths": { 
-                    "/api/products": { 
-                        "get": { 
+                "paths": {
+                    "/api/products": {
+                        "get": {
                             "summary": "Get Products",
                             "tags": ["Products"]
-                        } 
+                        }
                     }
                 },
-                "tags": [
-                    { 
-                        "name": "Products", 
-                        "description": "Operations related to products"
+                "components": {
+                    "securitySchemes": {
+                        "api_key": {
+                            "type": "apiKey",
+                            "name": "X-API-Key",
+                            "in": "header"
+                        }
                     }
-                ]
-            }
+                },
+                "security": [
+                  { "api_key": [] }
+                ],
+                "tags": [
+                { 
+                    "name": "Products", 
+                    "description": "Operations related to products"
+                }
+               ]
+            }            
             """;
 			return Results.Text(json, "application/json");
 		});

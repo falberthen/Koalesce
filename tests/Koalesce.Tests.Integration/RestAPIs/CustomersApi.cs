@@ -21,22 +21,28 @@ public class CustomersApi
                 "paths": {
                     "/api/customers": {
                         "get": {
-                            "summary": "Get Customers",
-                            "security": [
-                                { "api_key": [] } 
-                            ]
+                            "summary": "Get Customers"                            
                         }
                     }
                 },
                 "components": {
                     "securitySchemes": {
-                        "api_key": {
-                            "type": "apiKey",
-                            "name": "X-API-Key",
-                            "in": "header"
+                        "bearerAuth": {
+                            "type": "http",
+                            "scheme": "bearer",
+                            "bearerFormat": "JWT"
                         }
                     }
-                }
+                },
+                "security": [ 
+                    { "bearerAuth": [] } 
+                ],
+                "tags": [
+                   {
+                      "name": "Customers",
+                      "description": "Operations related to customers"
+                   }
+                ]
             }
             """;
 			return Results.Text(json, "application/json");
