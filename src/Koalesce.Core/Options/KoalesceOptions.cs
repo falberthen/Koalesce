@@ -7,16 +7,16 @@ public class KoalesceOptions : IValidatableObject
 	public const string TitleDefaultValue = "My Koalesced API";
 
 	/// <summary>
-	/// Source OpenAPI URLs. At least one source is required.
+	/// Source URLs. At least one source is required.
 	/// </summary>
 	[Required]
-	public List<OpenApiSourceDefinition> OpenApiSources { get; set; } = new();
+	public List<SourceDefinition> Sources { get; set; } = new();
 
 	/// <summary>
-	/// The logical path where the merged API definition should be exposed.
+	/// The logical path where the merged definition should be exposed.
 	/// </summary>
 	[Required]
-	public string MergedOpenApiPath { get; set; } = default!;
+	public string MergedDocumentPath { get; set; } = default!;
 
 	/// <summary>
 	/// Koalesced API title
@@ -29,11 +29,6 @@ public class KoalesceOptions : IValidatableObject
 	public KoalesceCacheOptions Cache { get; set; } = new();
 
 	/// <summary>
-	/// BaseUrl if using an API Gateway
-	/// </summary>
-	public string ApiGatewayBaseUrl { get; set; } = default!;
-
-	/// <summary>
 	/// Determines whether Koalesce skips identical paths.
 	/// When set to true (default), identical paths are ignored/skipped.
 	/// When set to false, Koalesce throws an exception when detecting identical
@@ -44,29 +39,34 @@ public class KoalesceOptions : IValidatableObject
 	/// <summary>
 	/// Custom validation logic for required fields.
 	/// </summary>	
-	public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+	public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 	{
-		// Validating OpenApiSources
-		if (OpenApiSources == null || !OpenApiSources.Any())
+		// Validating Sources
+		if (Sources == null || !Sources.Any())
 		{
 			yield return new ValidationResult(
-				"At least one source API URL must be defined in OpenApiSources.",
-				[nameof(OpenApiSources)]);
+				"At least one source must be defined in Sources.",
+				[nameof(Sources)]);
+		}
+		else
+		{			
+			foreach (var validationResult in ValidateSourceUrls()) 
+				yield return validationResult;			
 		}
 
-		// Validating MergedOpenApiPath
-		if (string.IsNullOrWhiteSpace(MergedOpenApiPath))
+		// Validating MergedDocumentPath
+		if (string.IsNullOrWhiteSpace(MergedDocumentPath))
 		{
 			yield return new ValidationResult(
-				"MergedOpenApiPath cannot be empty.",
-				[nameof(MergedOpenApiPath)]);
+				"MergedDocumentPath cannot be empty.",
+				[nameof(MergedDocumentPath)]);
 		}
 
-		if (!MergedOpenApiPath.StartsWith("/"))
+		if (!MergedDocumentPath.StartsWith("/"))
 		{
 			yield return new ValidationResult(
-				"MergedOpenApiPath must start with '/'.",
-				[nameof(MergedOpenApiPath)]);
+				"MergedDocumentPath must start with '/'.",
+				[nameof(MergedDocumentPath)]);
 		}
 
 		// Caching Validations
@@ -96,6 +96,35 @@ public class KoalesceOptions : IValidatableObject
 			yield return new ValidationResult(
 				$"SlidingExpirationSeconds ({Cache.SlidingExpirationSeconds}) cannot be greater than AbsoluteExpirationSeconds ({Cache.AbsoluteExpirationSeconds}).",
 				[nameof(Cache.SlidingExpirationSeconds)]);
+		}
+	}
+
+	private IEnumerable<ValidationResult> ValidateSourceUrls()
+	{
+		for (int i = 0; i < Sources.Count; i++)
+		{
+			var source = Sources[i];
+
+			if (string.IsNullOrWhiteSpace(source.Url))
+			{
+				yield return new ValidationResult(
+					$"The Source URL at index {i} cannot be empty.",
+					[$"{nameof(Sources)}[{i}].Url"]);
+				continue;
+			}
+
+			// Note: if Koalesce supports non-HTTP protocols in the future (e.g., amqp://, file://),
+			// this validation will need to be relaxed or moved to the specific Provider.
+			// I'm keeping HTTP/HTTPS for now, as the Core uses HttpClient for now.
+			bool isUriValid = Uri.TryCreate(source.Url, UriKind.Absolute, out Uri? uriResult)
+				&& (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
+
+			if (!isUriValid)
+			{
+				yield return new ValidationResult(
+					$"The Source URL at index {i} ('{source.Url}') must be a valid absolute URL (starting with http:// or https://).",
+					[$"{nameof(Sources)}[{i}].Url"]);
+			}
 		}
 	}
 }

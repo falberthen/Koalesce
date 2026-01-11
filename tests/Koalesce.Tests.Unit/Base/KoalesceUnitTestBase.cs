@@ -3,7 +3,6 @@
 /// <summary>
 /// Base class for Koalesce unit tests.
 /// </summary>
-[Collection("Koalesce Unit Tests")]
 public abstract class KoalesceUnitTestBase
 {
 	protected readonly IServiceCollection Services = new ServiceCollection();

@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Koalesce.Core\Koalesce.Core.csproj" />
+    <ProjectReference Include="..\..\src\Koalesce.OpenAPI\Koalesce.OpenAPI.csproj" />
   </ItemGroup>
 
 	<ItemGroup>
