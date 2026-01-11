@@ -3,10 +3,10 @@
 /// <summary>
 /// Represents a single API source to be merged.
 /// </summary>
-public record class OpenApiSourceDefinition
+public record class SourceDefinition
 {
 	/// <summary>
-	/// The source URL of the OpenAPI definition (JSON).
+	/// The source URL of the source API definition (JSON).
 	/// </summary>
 	public required string Url { get; set; }
 
