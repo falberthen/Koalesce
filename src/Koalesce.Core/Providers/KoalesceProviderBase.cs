@@ -39,8 +39,8 @@ public abstract class KoalesceProviderBase<TOptions, TMergeResult> : IKoalescePr
 		TMergeResult mergedDocument = await DocumentMerger
 			.MergeIntoSingleDefinitionAsync();
 
-		Logger.LogInformation("Koalescing complete using {Provider} for merging {ApiCount} API definitions.",
-			providerName, Options.OpenApiSources.Count);
+		Logger.LogInformation("Koalescing complete using {Provider} for merging {SourcesCount} definitions.",
+			providerName, Options.Sources.Count);
 
 		return MergedDocumentSerializer
 			.Serialize(mergedDocument);
