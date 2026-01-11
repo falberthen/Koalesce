@@ -1,8 +1,10 @@
+global using Koalesce.Core.Constants;
 global using Koalesce.Core.Exceptions;
 global using Koalesce.Core.Internals;
 global using Koalesce.Core.Options;
 global using Koalesce.Core.Providers;
 global using Koalesce.Core.Services;
+global using Koalesce.OpenAPI.Constants;
 global using Koalesce.OpenAPI.Services;
 global using Microsoft.Extensions.DependencyInjection.Extensions;
 global using Microsoft.Extensions.Logging;
@@ -19,4 +21,5 @@ global using System.Linq;
 global using System.Net.Http;
 global using System.Text.RegularExpressions;
 global using System.Threading.Tasks;
-global using Koalesce.Core.Constants;
+global using Microsoft.Extensions.DependencyInjection;
+global using System.ComponentModel.DataAnnotations;
