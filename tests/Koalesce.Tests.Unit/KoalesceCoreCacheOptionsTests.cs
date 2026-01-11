@@ -1,6 +1,7 @@
 namespace Koalesce.Tests.Unit;
 
-public class KoalesceCacheOptionsTests : KoalesceUnitTestBase
+[Collection("Koalesce Core Cache Options Unit Tests")]
+public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 {
 	[Fact]
 	public void KoalesceCache_WhenConfigured_ShouldBindCacheOptions()
@@ -33,14 +34,14 @@ public class KoalesceCacheOptionsTests : KoalesceUnitTestBase
 		// Arrange
 		var options = new KoalesceOptions
 		{
-			OpenApiSources = new List<OpenApiSourceDefinition>
+			Sources = new List<SourceDefinition>
 			{
-				new OpenApiSourceDefinition
+				new SourceDefinition
 				{
 					Url = "http://fakeapi.com/v1/apidefinition.json" 
 				}
 			},
-			MergedOpenApiPath = "/swagger/v1/swagger.json",
+			MergedDocumentPath = "/swagger/v1/swagger.json",
 			Cache = new KoalesceCacheOptions
 			{
 				AbsoluteExpirationSeconds = 10,
@@ -61,14 +62,14 @@ public class KoalesceCacheOptionsTests : KoalesceUnitTestBase
 		// Arrange
 		var options = new KoalesceOptions
 		{
-			OpenApiSources = new List<OpenApiSourceDefinition>
+			Sources = new List<SourceDefinition>
 			{
-				new OpenApiSourceDefinition
+				new SourceDefinition
 				{
 					Url = "http://fakeapi.com/v1/apidefinition.json",
 				}
 			},
-			MergedOpenApiPath = "/swagger/v1/swagger.json",
+			MergedDocumentPath = "/swagger/v1/swagger.json",
 			Cache = new KoalesceCacheOptions
 			{
 				AbsoluteExpirationSeconds = 600,
@@ -91,7 +92,7 @@ public class KoalesceCacheOptionsTests : KoalesceUnitTestBase
 		var cache = new MemoryCache(new MemoryCacheOptions());
 		var options = Options.Create(new KoalesceOptions
 		{
-			MergedOpenApiPath = mergedOpenApiPath,
+			MergedDocumentPath = mergedOpenApiPath,
 			Cache = new KoalesceCacheOptions
 			{
 				DisableCache = false,
@@ -124,7 +125,7 @@ public class KoalesceCacheOptionsTests : KoalesceUnitTestBase
 		var cache = new MemoryCache(new MemoryCacheOptions());
 		var options = Options.Create(new KoalesceOptions
 		{
-			MergedOpenApiPath = mergedOpenApiPath,
+			MergedDocumentPath = mergedOpenApiPath,
 			Cache = new KoalesceCacheOptions { DisableCache = true }
 		});
 

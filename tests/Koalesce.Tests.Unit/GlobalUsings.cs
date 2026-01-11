@@ -13,3 +13,5 @@ global using Microsoft.Extensions.Options;
 global using Koalesce.Core.Extensions;
 global using Koalesce.Core.Internals;
 global using Microsoft.Extensions.Logging;
+global using Koalesce.OpenAPI;
+global using Koalesce.OpenAPI.Extensions;

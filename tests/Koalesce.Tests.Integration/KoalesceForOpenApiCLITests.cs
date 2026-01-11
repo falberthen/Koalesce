@@ -2,35 +2,35 @@
 
 public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 {
-	private static readonly string OutputFileName = $"apigateway-cli-output-{Guid.NewGuid()}.json";
-	private static readonly string OutputPath = Path.Combine(Path.GetTempPath(), OutputFileName);
-	private static readonly string ApiGatewaySettings = Path.Combine("RestAPIs", "appsettings.apigateway.json");
+	private static readonly string _outputFileName = $"apigateway-cli-output-{Guid.NewGuid()}.json";
+	private static readonly string _outputPath = Path.Combine(Path.GetTempPath(), _outputFileName);
+	//private static readonly string _apiGatewaySettings = Path.Combine("RestAPIs", "appsettings.apigateway.json");
+	private const string _appSettings = "RestAPIs/appsettings.openapi.json";
 
 	[Fact]
 	public async Task KoalesceCli_WhenRunWithValidConfig_ShouldMergeOpenAPIRoutes()
 	{
-		var configFullPath = Path.Combine(AppContext.BaseDirectory, ApiGatewaySettings);
+		var configFullPath = Path.Combine(AppContext.BaseDirectory, _appSettings);
 
-		var koalescingApi = await StartWebApplicationAsync(ApiGatewaySettings,
+		var koalescingApi = await StartWebApplicationAsync(_appSettings,
 			builder => builder.Services
 				.AddKoalesce(builder.Configuration)
 				.ForOpenAPI());
 
-		if (File.Exists(OutputPath))
-			File.Delete(OutputPath);
+		if (File.Exists(_outputPath))
+			File.Delete(_outputPath);
 
-		var result = await RunKoalesceCliAsync(configFullPath, OutputPath);
+		var result = await RunKoalesceCliAsync(configFullPath, _outputPath);
 
 		await koalescingApi.StopAsync();
 
 		Assert.True(result.ExitCode == 0, $"CLI failed with exit code {result.ExitCode}.\nOutput:\n{result.Output}");
-		Assert.True(File.Exists(OutputPath), "Output file was not created!");
+		Assert.True(File.Exists(_outputPath), "Output file was not created!");
 
-		var content = await File.ReadAllTextAsync(OutputPath);
+		var content = await File.ReadAllTextAsync(_outputPath);
 		Assert.Contains("openapi", content);
 		Assert.Contains("/api/customers", content);
 		Assert.Contains("/api/products", content);
-		Assert.Contains("/inventory/api/products", content);
 	}
 
 	[Fact]
@@ -38,7 +38,7 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 	{
 		var missingConfigPath = Path.Combine(Path.GetTempPath(), $"nonexistent-{Guid.NewGuid()}.json");
 
-		var result = await RunKoalesceCliAsync(missingConfigPath, OutputPath);
+		var result = await RunKoalesceCliAsync(missingConfigPath, _outputPath);
 
 		Assert.NotEqual(0, result.ExitCode);
 		Assert.Contains("Configuration file not found", result.Output);

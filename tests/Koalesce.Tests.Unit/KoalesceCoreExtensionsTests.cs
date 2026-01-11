@@ -1,6 +1,7 @@
 namespace Koalesce.Tests.Unit;
 
-public class KoalesceExtensionsTests : KoalesceUnitTestBase
+[Collection("Koalesce Core Extension Unit Tests")]
+public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 {
 	[Fact]
 	public void AddKoalesce_WhenServicesAndConfigurationProvided_ShouldRegisterDependencies()
@@ -60,12 +61,12 @@ public class KoalesceExtensionsTests : KoalesceUnitTestBase
 			.AddInMemoryCollection(new Dictionary<string, string?>
 			{
 				{ "Koalesce:MergedOpenApiPath", "/swagger/v1/swagger.json" },
-				{ "Koalesce:SourceOpenApiUrls:0", "https://api1.com/swagger/v1/swagger.json" }
+				{ "Koalesce:OpenApiSources:0:Url", "https://api1.com/swagger/v1/swagger.json" }
 			})
 			.Build();
 
 		var builder = Services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, KoalesceOptions>();
+			.AddProvider<DummyProvider, DummyOptions>();
 
 		var provider = builder.Services.BuildServiceProvider();
 		var app = new FakeApplicationBuilder(provider);
