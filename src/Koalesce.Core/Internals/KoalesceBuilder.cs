@@ -26,14 +26,43 @@ internal sealed class KoalesceBuilder : IKoalesceBuilder
 		where TProvider : class, IKoalesceProvider
 		where TOptions : KoalesceOptions, new()
 	{
-		this.RegisterKoalesceProvider<TProvider, TOptions>();
+		// Registers the provider
+		Services.TryAddSingleton<TProvider>();
+		Services.TryAddSingleton<IKoalesceProvider>(sp => sp.GetRequiredService<TProvider>());
+
+		// Registers options with active validation		
+		Services.AddOptions<TOptions>()
+			.Bind(Configuration.GetSection(KoalesceOptions.ConfigurationSectionName))
+			.ValidateDataAnnotations() // Validate attributes like [Required]
+			.ValidateOnStart();        // Forces validation at app startup
+
+		// Configure a named HttpClient for Koalesce		
+		Services.AddHttpClient(CoreConstants.KoalesceClient, client =>
+		{
+			client.DefaultRequestVersion = HttpVersion.Version11;
+			client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
+			client.Timeout = TimeSpan.FromSeconds(15);
+		})
+		.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
+		{
+			SslOptions = new System.Net.Security.SslClientAuthenticationOptions
+			{
+				// Allow untrusted/self-signed certificates (common in dev/localhost)
+				RemoteCertificateValidationCallback = delegate { return true; }
+			},
+			AutomaticDecompression = DecompressionMethods.All
+		});
+
+		// Enable middleware registration
+		EnableMiddleware();
+
 		return this;
 	}
 
 	/// <summary>
 	/// Enable middleware registration
 	/// </summary>
-	internal void EnableMiddleware()
+	private void EnableMiddleware()
 	{
 		UseMiddlewareEnabled = true;
 	}

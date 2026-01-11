@@ -5,11 +5,11 @@
 /// </summary>
 public class MergeCommandRunner
 {
-	private readonly ILoggerFactory _loggerFactory;
+	private readonly bool _verbose;
 
-	public MergeCommandRunner(ILoggerFactory loggerFactory)
+	public MergeCommandRunner(bool verbose)
 	{
-		_loggerFactory = loggerFactory;
+		_verbose = verbose;
 	}
 
 	/// <summary>
@@ -37,6 +37,18 @@ public class MergeCommandRunner
 				.Build();
 
 			var services = new ServiceCollection();
+
+			services.AddLogging(builder =>
+			{
+				builder.AddConsole();				
+				builder.SetMinimumLevel(_verbose ? LogLevel.Information : LogLevel.Warning);
+
+				// Remote noisy logs unless in verbose mode
+				builder.AddFilter("Microsoft", LogLevel.Warning);
+				builder.AddFilter("System", LogLevel.Warning);
+				builder.AddFilter("Koalesce", _verbose ? LogLevel.Information : LogLevel.Warning);
+			});
+
 			services.AddSingleton<IMergedSpecificationWriter, MergedSpecificationWriter>();
 			services.AddLogging();
 			services.AddKoalesce(configuration).ForOpenAPI();
@@ -47,9 +59,9 @@ public class MergeCommandRunner
 			var writer = provider.GetRequiredService<IMergedSpecificationWriter>();
 
 			if (string.IsNullOrWhiteSpace(Path.GetExtension(outputPath)))
-				outputPath += Path.GetExtension(koalesceOptions.MergedOpenApiPath ?? ".yaml");
+				outputPath += Path.GetExtension(koalesceOptions.MergedDocumentPath ?? ".yaml");
 
-			KoalesceConsoleUI.PrintSourceList(koalesceOptions.OpenApiSources ?? Enumerable.Empty<OpenApiSourceDefinition>());
+			KoalesceConsoleUI.PrintSourceList(koalesceOptions.Sources ?? Enumerable.Empty<SourceDefinition>());
 
 			var mergedSpec = await openApiProvider.ProvideMergedDocumentAsync();
 			await writer.WriteAsync(outputPath, mergedSpec);

@@ -1,5 +1,6 @@
 ﻿using Koalesce.Core.Extensions;
 using Koalesce.OpenAPI;
+using Koalesce.OpenAPI.Extensions;
 using Microsoft.Extensions.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -41,7 +42,7 @@ app.UseKoalesce();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-	c.SwaggerEndpoint(openApiOptions.MergedOpenApiPath, openApiOptions.Title);
+	c.SwaggerEndpoint(openApiOptions.MergedDocumentPath, openApiOptions.Title);
 });
 
 app.Run();

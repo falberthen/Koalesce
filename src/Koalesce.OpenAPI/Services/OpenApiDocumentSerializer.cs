@@ -47,7 +47,7 @@ public class OpenApiDocumentSerializer : IMergedDocumentSerializer<OpenApiDocume
 	/// Determines the OpenAPI format from the file extension.
 	/// </summary>
 	private OpenApiFormat GetFormatFromPath() =>
-		Path.GetExtension(_options.MergedOpenApiPath).ToLowerInvariant() switch
+		Path.GetExtension(_options.MergedDocumentPath).ToLowerInvariant() switch
 		{
 			".yaml" => OpenApiFormat.Yaml,
 			_ => OpenApiFormat.Json, // Default to JSON

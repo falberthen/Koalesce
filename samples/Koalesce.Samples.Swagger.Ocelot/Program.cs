@@ -1,11 +1,16 @@
 ﻿using Koalesce.Core.Extensions;
-using Koalesce.OpenAPI;
+using Koalesce.OpenAPI.Extensions;
+using Koalesce.Samples.Swagger.Ocelot;
 using Microsoft.Extensions.Options;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 IServiceCollection services = builder.Services;
+
+// Detect which Security Scenario to run based on Environment Variable
+string securityScenario = builder.Configuration["KoalesceSample:SecurityMode"] ?? "None";
+Console.WriteLine($"🐨 Starting Koalesce Sample in mode: {securityScenario}");
 
 // Load merged ocelot.json
 builder.Configuration
@@ -28,7 +33,34 @@ services.AddOcelot(builder.Configuration);
 
 // 🐨 Add Koalesce for Ocelot
 services.AddKoalesce(builder.Configuration)
-	.ForOpenAPI();
+	.ForOpenAPI(options =>
+	{
+		switch (securityScenario.ToUpper())
+		{
+			case "JWT":
+				LocalAuthConfigurationHelpers.ConfigureJwtScenario(options);
+				break;
+			case "APIKEY":
+				LocalAuthConfigurationHelpers.ConfigureApiKeyScenario(options);
+				break;
+			case "BASIC":
+				LocalAuthConfigurationHelpers.ConfigureBasicAuthScenario(options);
+				break;
+			case "OAUTH2CLIENTCREDENTIALS":
+				LocalAuthConfigurationHelpers.ConfigureOAuth2ClientCredentialsGatewaySecurity(options);
+				break;
+			case "OAUTH2AUTHCODE":
+				LocalAuthConfigurationHelpers.ConfigureOAuth2AuthCodeScenario(options);
+				break;
+			case "OPENIDCONNECT":
+				LocalAuthConfigurationHelpers.ConfigureOpenIdConnectScenario(options);
+				break;
+			case "NONE":
+			default:
+				// No security extensions applied
+				break;
+		}
+	});
 
 // Build app
 var app = builder.Build();
@@ -55,7 +87,7 @@ app.UseKoalesce();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-	c.SwaggerEndpoint(koalesceOptions.MergedOpenApiPath, koalesceOptions.Title);
+	c.SwaggerEndpoint(koalesceOptions.MergedDocumentPath, koalesceOptions.Title);
 });
 
 await app.UseOcelot();

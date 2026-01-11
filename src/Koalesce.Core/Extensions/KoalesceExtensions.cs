@@ -48,49 +48,4 @@ public static class KoalesceExtensions
 
 		return app;
 	}
-
-	/// <summary>
-	/// Registers a Koalesce provider with specific options, ensuring no duplicate bindings.
-	/// </summary>
-	internal static IKoalesceBuilder RegisterKoalesceProvider<TProvider, TOptions>(this IKoalesceBuilder builder)
-		where TProvider : class, IKoalesceProvider
-		where TOptions : KoalesceOptions, new()
-	{
-		var services = builder.Services;
-
-		// Ensuring the provider is only added once
-		services.TryAddSingleton<IKoalesceProvider, TProvider>();
-
-		var koalesceSection = builder.Configuration
-			.GetSection(KoalesceOptions.ConfigurationSectionName);
-
-		// Binding provider-specific options
-		if (typeof(TOptions) != typeof(KoalesceOptions))
-		{
-			services.Configure<TOptions>(koalesceSection);
-		}
-
-		// Configuring HttpClient for Koalesce
-		services.AddHttpClient(CoreConstants.KoalesceClient, client =>
-		{
-			client.DefaultRequestVersion = HttpVersion.Version11;
-			client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
-			client.Timeout = TimeSpan.FromSeconds(15);
-		})
-		.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-		{
-			SslOptions = new System.Net.Security.SslClientAuthenticationOptions
-			{
-				// Allow untrusted/self-signed certificates (common in dev/localhost)
-				RemoteCertificateValidationCallback = delegate { return true; }
-			},
-			AutomaticDecompression = DecompressionMethods.All
-		});
-
-		// Enabling Middleware
-		if (builder is KoalesceBuilder koalesceBuilder)
-			koalesceBuilder.EnableMiddleware();
-
-		return builder;
-	}
 }

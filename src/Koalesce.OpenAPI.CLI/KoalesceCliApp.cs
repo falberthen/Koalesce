@@ -45,14 +45,7 @@ public static class KoalesceCliApp
 				return;
 			}
 
-			using var loggerFactory = LoggerFactory.Create(builder =>
-			{
-				builder
-					.AddConsole()
-					.SetMinimumLevel(verbose ? LogLevel.Information : LogLevel.Warning);
-			});
-
-			var runner = new MergeCommandRunner(loggerFactory);
+			var runner = new MergeCommandRunner(verbose);
 			var exitCode = await runner.RunAsync(output, config ?? string.Empty);
 			context.ExitCode = exitCode;
 		});
