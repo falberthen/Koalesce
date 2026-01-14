@@ -4,7 +4,6 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 {
 	private static readonly string _outputFileName = $"apigateway-cli-output-{Guid.NewGuid()}.json";
 	private static readonly string _outputPath = Path.Combine(Path.GetTempPath(), _outputFileName);
-	//private static readonly string _apiGatewaySettings = Path.Combine("RestAPIs", "appsettings.apigateway.json");
 	private const string _appSettings = "RestAPIs/appsettings.openapi.json";
 
 	[Fact]
