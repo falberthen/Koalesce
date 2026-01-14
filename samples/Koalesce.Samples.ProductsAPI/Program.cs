@@ -34,14 +34,14 @@ app.MapGet("/api/products", () =>
 {
 	return new List<Product>
 	{
-		new Product("Laptop"),
-		new Product("Joystick"),
-		new Product("Guitar")
+		new Product(Guid.NewGuid(), "Laptop"),
+		new Product(Guid.NewGuid(), "Joystick"),
+		new Product(Guid.NewGuid(), "Guitar")
 	};
 })
 .WithName("GetProducts");
 
-app.Run();
+await app.RunAsync();
 
-public record Product(string Name);
+public record Product(Guid Id, string Name);
 

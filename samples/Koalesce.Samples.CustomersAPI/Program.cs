@@ -33,8 +33,8 @@ app.UseRouting();
 // Customers list
 var customers = new List<Customer>
 {
-	new Customer(1, "John Doe"),
-	new Customer(2, "Jane Smith")
+	new Customer(Guid.NewGuid(), "John Doe"),
+	new Customer(Guid.NewGuid(), "Jane Smith")
 };
 
 // List all
@@ -42,9 +42,9 @@ app.MapGet("/api/customers", () => customers)
 	.WithName("ListCustomers");
 
 // Get by Id
-app.MapGet("/api/customers/{id:int}", (int id) =>
+app.MapGet("/api/customers/{id:guid}", (Guid id) =>
 {
-	var customer = customers.FirstOrDefault(c => c.Id == id);
+	var customer = customers.SingleOrDefault(c => c.Id == id);
 	return customer is not null ? Results.Ok(customer) : Results.NotFound();
 })
 .WithName("GetCustomerById");
@@ -52,16 +52,11 @@ app.MapGet("/api/customers/{id:int}", (int id) =>
 // Create a customer
 app.MapPost("/api/customers", (Customer newCustomer) =>
 {
-	if (newCustomer.Id == 0)
-	{
-		newCustomer = newCustomer with { Id = customers.Count + 1 }; // Auto-assign an ID
-	}
-
 	customers.Add(newCustomer);
 	return Results.Created($"/api/customers/{newCustomer.Id}", newCustomer);
 })
 .WithName("CreateCustomer");
 
-app.Run();
+await app.RunAsync();
 
-public record Customer(int Id, string Name);
+public record Customer(Guid Id, string Name);
