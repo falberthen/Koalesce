@@ -4,40 +4,66 @@ namespace Koalesce.Tests.Unit;
 public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 {
 	[Fact]
-	public void AddKoalesce_WhenServicesAndConfigurationProvided_ShouldRegisterDependencies()
+	public void AddKoalesce_WhenServicesAndConfigurationProvided_ShouldRegisterDependenciesAndBindOptions()
 	{
-		// Arrange
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		// Arrange		
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
 			{
-				{ "Koalesce:MergedOpenApiPath", "/swagger/v1/swagger.json" },
-				{ "Koalesce:SourceOpenApiUrls:0", "https://api1.com/swagger/v1/swagger.json" },
-				{ "Koalesce:SourceOpenApiUrls:1", "https://api2.com/swagger/v1/swagger.json" }
-			})
-			.Build();
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<SourceDefinition>
+				{
+					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" },
+					new SourceDefinition { Url = "https://api2.com/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		// Act
-		Services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, KoalesceOptions>();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Assert
+		// Checks for builder registry
 		Assert.NotNull(provider.GetService<IKoalesceBuilder>());
-		Assert.NotNull(provider.GetService<IOptions<KoalesceOptions>>());
+
+		// Getting the wrapper
+		var optionsWrapper = provider.GetService<IOptions<KoalesceOptions>>();
+		Assert.NotNull(optionsWrapper);
+
+		// Forcing binding and validation via .Value
+		var options = optionsWrapper.Value;
+
+		// Validating bound values
+		Assert.Equal("/v1/mergedapidefinition.json", options.MergedDocumentPath);
+		Assert.Equal(2, options.Sources.Count);
+		Assert.Equal("https://api1.com/v1/apidefinition.json", options.Sources[0].Url);
+		Assert.Equal("https://api2.com/v1/apidefinition.json", options.Sources[1].Url);
 	}
 
 	[Fact]
 	public void AddKoalesce_ShouldRegisterSingletonKoalesceBuilder()
 	{
 		// Arrange
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
 			{
-				{ "Koalesce:MergedOpenApiPath", "/swagger/v1/swagger.json" },
-				{ "Koalesce:SourceOpenApiUrls:0", "https://api1.com/swagger/v1/swagger.json" },
-				{ "Koalesce:SourceOpenApiUrls:1", "https://api2.com/swagger/v1/swagger.json" }
-			}).Build();
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<SourceDefinition>
+				{
+					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		Services.AddKoalesce(configuration)
 			.AddProvider<DummyProvider, KoalesceOptions>();
@@ -57,13 +83,20 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 	public void UseKoalesce_WhenAddProvider_ShouldEnableMiddleware()
 	{
 		// Arrange
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
 			{
-				{ "Koalesce:MergedOpenApiPath", "/swagger/v1/swagger.json" },
-				{ "Koalesce:OpenApiSources:0:Url", "https://api1.com/swagger/v1/swagger.json" }
-			})
-			.Build();
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<SourceDefinition>
+				{
+					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		var builder = Services.AddKoalesce(configuration)
 			.AddProvider<DummyProvider, DummyOptions>();

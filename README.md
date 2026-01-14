@@ -12,7 +12,7 @@
 - It then merges them using supported providers, generating a single schema at **MergedDocumentPath**.
 - The final *Koalesced* API definition is serialized and available in `JSON` or `YAML` format.
 
-### ⚡ Features
+### ⚡ Key Features
 
 - ✅ Coalesce multiple API definitions into one unified schema.
 - ✅ **Agnostic Core:** Designed to support future formats beyond OpenAPI.
@@ -25,12 +25,43 @@
 - ✅ **Multi-targeting:** Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
 
 ---
+## 📦 Installation
 
-## ⚙️ Configuration
+#### 🟢 Koalesce for OpenAPI Middleware (ASP.NET Core)
+
+![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg)
+
+```sh
+# Package Manager
+NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.4
+```
+```sh
+# .NET CLI
+dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.4
+```
+
+#### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
+
+![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
+
+To install the **Koalesce.OpenAPI.CLI** globally:
+
+```bash
+dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.4
+```
+
+---
+
+### ⚙️ Configuration
 
 Koalesce configuration is divided into **Core Options** and **Provider Options** (e.g., OpenAPI).
 
-### 1️⃣ Core Configuration (`Koalesce`)
+- 💡 Parameters listed with 🔺 are required.
+- 💡 The file extension `[.json, .yaml]` defined in **MergedDocumentPath** determines the output format.
+
+<br/>
+
+#### 1️⃣ Core Configuration (`Koalesce`)
 
 | Setting | Type | Default Value | Description |
 |---|---|---|---|
@@ -39,10 +70,20 @@ Koalesce configuration is divided into **Core Options** and **Provider Options**
 | `Title` | `string` | `"My 🐨Koalesced API"` | Title for the Koalesced API definition. |
 | `SkipIdenticalPaths` | `boolean` | `true` | If `false`, throws exception on duplicate paths. If `true`, logs warning and skips duplicates. |
 
-- 💡 Parameters listed with 🔺 are required.
-- 💡 The file extension `[.json, .yaml]` defined in **MergedDocumentPath** determines the output format.
+<br/>
 
-### 2️⃣ OpenAPI Provider Configuration
+#### Caching Configuration (`Koalesce.Cache`)
+
+| Setting | Type | Default Value | Description |
+|---|---|---|---|
+| `DisableCache` | `boolean` | `false` | If `true`, recomputes the merged document on every request. |
+| `AbsoluteExpirationSeconds` | `integer` | `86400` (24h) | Max duration before a forced refresh of merged result. |
+| `SlidingExpirationSeconds` | `integer` | `300` (5 min) | Resets expiration on every access. |
+| `MinExpirationSeconds` | `integer` | `30` | Minimum allowed expiration time. |
+
+<br/>
+
+#### 2️⃣ OpenAPI Provider Configuration
 
 These settings are specific to the `Koalesce.OpenAPI` provider.
 
@@ -55,7 +96,7 @@ These settings are specific to the `Koalesce.OpenAPI` provider.
 
 ---
 
-### 📝 Example `appsettings.json`
+##### 📝 `appsettings.json` for Koalesce.OpenAPI
 
 ```json
 {
@@ -80,8 +121,8 @@ These settings are specific to the `Koalesce.OpenAPI` provider.
     
     // Caching
     "Cache": {
-      "DisableCache": false,
-      "AbsoluteExpirationSeconds": 86400
+      "AbsoluteExpirationSeconds": 86400,
+      "SlidingExpirationSeconds": 300      
     }
   }
 }
@@ -91,26 +132,43 @@ These settings are specific to the `Koalesce.OpenAPI` provider.
 
 ---
 
-## 🔐 Security Configuration
+## How to use Koalesce?
 
-Koalesce supports a **Global Gateway Security**. You can configure this in two ways:
 
-#### A. Fluent API (Recommended for Web Apps)
+#### 🛠️ Using Koalesce as Middleware in your .NET Application
 
-Koalesce provides a set of fluent extension methods to easily configure common security scenarios. This keeps your `appsettings.json` clean and leverages C# type safety.
+In the `Program.cs` of your gateway project, register service and enable the middleware.
 
-**Available Extension Methods:**
+##### 1️⃣ Register Koalesce.[ForProvider()]
 
-| Method | Description |
-|---|---|
-| `UseJwtBearerGatewaySecurity` | Configures standard JWT Bearer Token authentication. |
-| `UseApiKeyGatewaySecurity` | Configures API Key authentication (Header or Query). |
-| `UseBasicAuthGatewaySecurity` | Configures HTTP Basic Authentication. |
-| `UseOAuth2ClientCredentialsGatewaySecurity` | Configures OAuth2 Client Credentials flow. |
-| `UseOAuth2AuthCodeGatewaySecurity` | Configures OAuth2 Authorization Code flow. |
-| `UseOpenIdConnectGatewaySecurity` | Configures OIDC via Discovery Document. |
+```csharp
+builder.Services.AddKoalesce(builder.Configuration)
+    .ForOpenAPI(); // Add options lambda here for fluent security config
+```
 
-**Usage Example:**
+##### 2️⃣ Enable Middleware
+
+```csharp
+app.UseKoalesce();
+```
+
+##### 🔐 Security Configuration through Fluent API
+
+Koalesce provides a set of fluent extension methods to easily configure common security scenarios. When `ApiGatewayBaseUrl` is set, you **must** define a `GatewaySecurityScheme` either via `appsettings.json` or the fluent API.
+Without it, Koalesce can't know how to document the authentication mechanism for your API Gateway and will throw an exception at startup.
+
+If using the Middleware, it's recommended you specify the security configuration inside the provider options to keep your `appsettings.json` clear of a GatewaySecurityScheme.
+
+##### Available Extension Methods
+
+- `UseJwtBearerGatewaySecurity`: Configures standard JWT Bearer Token authentication.
+- `UseApiKeyGatewaySecurity`: Configures API Key authentication (Header or Query).
+- `UseBasicAuthGatewaySecurity`: Configures HTTP Basic Authentication.
+- `UseOAuth2ClientCredentialsGatewaySecurity`: Configures OAuth2 Client Credentials flow.
+- `UseOAuth2AuthCodeGatewaySecurity`: Configures OAuth2 Authorization Code flow.
+- `UseOpenIdConnectGatewaySecurity`: Configures OIDC via Discovery Document.
+
+**Example:**
 
 ```csharp
 builder.Services.AddKoalesce(builder.Configuration)
@@ -144,69 +202,14 @@ builder.Services.AddKoalesce(builder.Configuration)
 
 > 💡 Check the **Koalesce.Samples.Swagger.Ocelot** project for a complete implementation of all these scenarios.
 
-#### B. JSON Configuration (Required for CLI)
 
-If you use the **CLI tool**, you **must** define the security scheme in `appsettings.json`, as the CLI cannot execute your C# startup code.
+<br/>
 
-```json
-"Koalesce": {
-  "ApiGatewayBaseUrl": "https://localhost:5000",
-  "GatewaySecurityScheme": {
-    "Type": "Http",
-    "Scheme": "bearer",
-    "BearerFormat": "JWT",
-    "Description": "JWT Authorization header using the Bearer scheme."
-  }
-}
-```
+#### 💻 Using Koalesce.OpenAPI through CLI (Command Line Interface)
 
----
+The `Koalesce.OpenAPI.CLI` tool was built specifically to allow the usage of Koalesce for merging OpenAPI definitions directly into a file in the disk, without the need for a .NET application hosting the middleware.
 
-## 📦 Installation
-
-#### 🟢 Koalesce for OpenAPI Middleware
-
-![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg)
-
-```sh
-# Package Manager
-NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.3
-```
-```sh
-# .NET CLI
-dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.3
-```
-
-#### 🟢 Koalesce.OpenAPI.CLI
-
-![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
-
-To install the **Koalesce.OpenAPI.CLI** globally:
-
-```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.3
-```
-
----
-
-## 🛠️ Using with .NET pipeline
-
-#### 1️⃣ Register Koalesce.[ForProvider()]
-
-```csharp
-builder.Services.AddKoalesce(builder.Configuration)
-    .ForOpenAPI(); // Add options lambda here for fluent security config
-```
-
-#### 2️⃣ Enable Middleware
-
-```csharp
-app.UseKoalesce();
-```
-
----
-
-## 💻 Using with Command Line Interface (CLI)
+<img src="img/Screenshot_CLI.png"/>
 
 #### Arguments:
 
@@ -221,10 +224,21 @@ app.UseKoalesce();
 koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml --verbose
 ```
 
-> **⚠️ CLI & Security:** If your `appsettings.json` defines an `ApiGatewayBaseUrl`, you **must** also provide a `GatewaySecurityScheme` section within the JSON file. The CLI validates this relationship strictly to ensure the generated document is valid.
+> **⚠️ Security:** If your `appsettings.json` defines an `ApiGatewayBaseUrl`, you **must** also provide a `GatewaySecurityScheme` section within the JSON file unless you set `IgnoreGatewaySecurity` to **true**. 
+Because the CLI cannot utilize the fluent API for security configuration, the security scheme must be explicitly defined in the configuration file.
 
-<br/>
-<img src="img/Screenshot_CLI.png"/>
+```json
+  "Koalesce": {
+    "OpenApiVersion": "3.0.1",        
+    "ApiGatewayBaseUrl": "https://localhost:5000",
+    "GatewaySecurityScheme": {  // sample using JWT
+      "Type": "Http",
+      "Scheme": "bearer",
+      "BearerFormat": "JWT",
+      "Description": "JWT Authorization header using the Bearer scheme."
+    }
+}
+```
 
 ---
 

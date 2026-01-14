@@ -1,8 +1,4 @@
-﻿using Koalesce.OpenAPI;
-using Koalesce.OpenAPI.Constants;
-using Koalesce.OpenAPI.Extensions;
-
-namespace Koalesce.Tests.Unit;
+﻿namespace Koalesce.Tests.Unit;
 
 [Collection("Koalesce ForOpenAPI Unit Tests")]
 public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
@@ -10,15 +6,23 @@ public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
 	[Fact]
 	public void Koalesce_WhenForOpenAPI_WhenUsingGateway_WithNoAuthSchemeDefined_ShouldThrowValidationException()
 	{
-		// Arrange
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		// Arrange		
+		var appSettingsStub = new
+		{
+			Koalesce = new
 			{
-				{ "Koalesce:MergedDocumentPath", "/swagger/v1/swagger.json" },
-				{ "Koalesce:Sources:0:Url", "https://api1.com/swagger/v1/swagger.json" },
-				{ "Koalesce:ApiGatewayBaseUrl", "http://localhost:5000" }
-			})
-			.Build();
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				},
+				ApiGatewayBaseUrl = "http://localhost:5000"
+				// GatewaySecurityScheme is omitted to cause the validation error
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		Services.AddKoalesce(configuration)
 			.ForOpenAPI();
@@ -38,16 +42,26 @@ public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
 	public void Koalesce_WhenForOpenAPI_WhenUsingGateway_WithInvalidGatewayUrl_ShouldThrowValidationException()
 	{
 		// Arrange
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		var appSettingsStub = new
+		{
+			Koalesce = new
 			{
-				{ "Koalesce:MergedDocumentPath", "/swagger/v1/swagger.json" },
-				{ "Koalesce:Sources:0:Url", "https://api1.com/swagger/v1/swagger.json" },
-				{ "Koalesce:GatewaySecurityScheme:Type", "Http" },
-				{ "Koalesce:GatewaySecurityScheme:Scheme", "bearer" },				
-				{ "Koalesce:ApiGatewayBaseUrl", "localhost:5000" } // Invalid URL (missing scheme)
-			})
-			.Build();
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				},
+				GatewaySecurityScheme = new
+				{
+					Type = SecuritySchemeType.Http.ToString(),
+					Scheme = "bearer"
+				},
+				ApiGatewayBaseUrl = "localhost:5000" // Invalid URL (no scheme http/https)
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		Services.AddKoalesce(configuration)
 			.ForOpenAPI();
