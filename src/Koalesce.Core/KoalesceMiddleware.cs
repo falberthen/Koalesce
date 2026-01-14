@@ -100,10 +100,22 @@ public class KoalesceMiddleware
 			// Store result in cache if caching is enabled
 			if (!_cacheOptions.DisableCache)
 			{
+				// Clamp expiration times to the configured minimum safety floor
+				var safeAbsoluteExpiration = Math.Max(
+					_cacheOptions.AbsoluteExpirationSeconds,
+					_cacheOptions.MinExpirationSeconds
+				);
+
+				var safeSlidingExpiration = Math.Max(
+					_cacheOptions.SlidingExpirationSeconds,
+					_cacheOptions.MinExpirationSeconds
+				);
+
+				// Setting cache entry
 				_cache.Set(_mergedDocumentPath, mergedDocument,
-					new MemoryCacheEntryOptions()
-						.SetAbsoluteExpiration(TimeSpan.FromSeconds(_cacheOptions.AbsoluteExpirationSeconds))
-						.SetSlidingExpiration(TimeSpan.FromSeconds(_cacheOptions.SlidingExpirationSeconds))
+				new MemoryCacheEntryOptions()
+					.SetAbsoluteExpiration(TimeSpan.FromSeconds(safeAbsoluteExpiration))
+					.SetSlidingExpiration(TimeSpan.FromSeconds(safeSlidingExpiration))
 				);
 			}
 

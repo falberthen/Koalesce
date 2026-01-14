@@ -7,13 +7,21 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 	public void AddKoalesce_WhenNonRequiredConfigValuesAreMissing_ShouldUseDefaultValues()
 	{
 		// Arrange
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
 			{
-				{ "Koalesce:Sources:0:Url", "https://localhost:5001/swagger.json" },
-				{ "Koalesce:MergedDocumentPath", "/swagger/v1/merged.json" }
-			})
-			.Build();
+				// Title omitido propositalmente para testar o default
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<SourceDefinition>
+				{
+					new SourceDefinition { Url = "https://localhost:5001/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		Services.AddKoalesce(configuration)
 			.AddProvider<DummyProvider, KoalesceOptions>();
@@ -25,22 +33,29 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 
 		// Assert
 		Assert.NotNull(options);
-		Assert.Equal(KoalesceOptions.TitleDefaultValue, options.Title); // Default title should be set		
+		Assert.Equal(KoalesceOptions.TitleDefaultValue, options.Title); // Default title should be set        
 	}
 
 	[Fact]
 	public void AddKoalesce_WhenValidConfiguration_ShouldBindKoalesceOptions()
 	{
 		// Arrange
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
 			{
-				{ "Koalesce:Title", "My Koalesced API" },
-				{ "Koalesce:MergedDocumentPath", "/swagger/v1/apigateway.yaml" },
-				{ "Koalesce:Sources:0:Url", "https://localhost:5001/swagger/v1/swagger.json" },
-				{ "Koalesce:Sources:1:Url", "https://localhost:5002/swagger/v1/swagger.json" }
-			})
-			.Build();
+				Title = "My Koalesced API",
+				MergedDocumentPath = "/v1/mergedapidefinition.yaml",
+				Sources = new List<SourceDefinition>
+				{
+					new SourceDefinition { Url = "https://localhost:5001/v1/apidefinition.json" },
+					new SourceDefinition { Url = "https://localhost:5002/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		Services.AddKoalesce(configuration)
 			.AddProvider<DummyProvider, DummyOptions>();
@@ -49,8 +64,8 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 
 		var expectedRoutes = new List<SourceDefinition>()
 		{
-			new SourceDefinition { Url = "https://localhost:5001/swagger/v1/swagger.json" },
-			new SourceDefinition { Url = "https://localhost:5002/swagger/v1/swagger.json" }
+			new SourceDefinition { Url = "https://localhost:5001/v1/apidefinition.json" },
+			new SourceDefinition { Url = "https://localhost:5002/v1/apidefinition.json" }
 		};
 
 		// Act
@@ -59,19 +74,26 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 		// Assert
 		Assert.NotNull(options);
 		Assert.Equal("My Koalesced API", options.Title);
-		Assert.Equal("/swagger/v1/apigateway.yaml", options.MergedDocumentPath);
-		Assert.Equal(expectedRoutes, options.Sources);
+		Assert.Equal("/v1/mergedapidefinition.yaml", options.MergedDocumentPath);
+
+		// Nota: Isso assume que SourceDefinition é um record ou implementa Equals corretamente
+		Assert.Equal(expectedRoutes.Count, options.Sources.Count);
+		Assert.Equal(expectedRoutes[0].Url, options.Sources[0].Url);
+		Assert.Equal(expectedRoutes[1].Url, options.Sources[1].Url);
 	}
 
 	[Fact]
 	public void AddKoalesce_WhenKoalesceSectionIsMissing_ShouldThrowKoalesceConfigurationNotFoundException()
 	{
-		// Arrange: Empty configuration (no "Koalesce" section)
-		var emptyConfiguration = new ConfigurationBuilder().Build();
+		// Arrange: Empty configuration (simulating appsettings.json without "Koalesce" section)
+		// Podemos usar um objeto vazio ou com outra seção irrelevante
+		var appSettingsStub = new { OtherSection = "Irrelevant" };
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		// Act & Assert: Expect custom exception when attempting to use Koalesce
 		Assert.Throws<KoalesceConfigurationNotFoundException>(() =>
-			Services.AddKoalesce(emptyConfiguration)
+			Services.AddKoalesce(configuration)
 				.AddProvider<DummyProvider, KoalesceOptions>());
 	}
 
@@ -79,14 +101,21 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 	public void Koalesce_WhenOpenApiSourcesContainInvalidSourceUrl_ShouldThrowValidationException()
 	{
 		// Arrange
-		var configuration = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
 			{
-				{ "Koalesce:MergedDocumentPath", "/swagger/v1/swagger.json" },
-				{ "Koalesce:Sources:0:Url", "https://api1.com/swagger/v1/swagger.json" },
-				{ "Koalesce:Sources:1:Url", "localhost:8002/swagger/v1/swagger.json" }
-			})
-			.Build();
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<SourceDefinition>
+				{
+					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" },
+					new SourceDefinition { Url = "localhost:8002/v1/apidefinition.json" } // Invalid URL (missing scheme)
+                }
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
 
 		Services.AddKoalesce(configuration)
 			.ForOpenAPI();
@@ -98,7 +127,7 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 		{
 			var options = provider.GetRequiredService<IOptions<OpenApiOptions>>().Value;
 		});
-		
+
 		Assert.Contains("must be a valid absolute URL", exception.Message);
 		Assert.Contains("index 1", exception.Message);
 	}

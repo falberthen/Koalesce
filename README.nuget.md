@@ -1,8 +1,16 @@
 # 🐨 Koalesce
 
-**Koalesce** is a .NET library designed to merge multiple API definitions into a unified document to enable seamless API Gateway integration and simplify frontend client generation for microservices-based architectures.
+**Koalesce** is a .NET library designed to merge multiple API definitions into a unified document. It enables seamless API Gateway integration and simplifies frontend client generation for microservices-based architectures.
 
-### ⚡ Features
+---
+
+## How It Works?
+
+- Koalesce fetches API definitions from the specified **Sources**.
+- It then merges them using supported providers, generating a single schema at **MergedDocumentPath**.
+- The final *Koalesced* API definition is serialized and available in `JSON` or `YAML` format.
+
+### ⚡ Key Features
 
 - ✅ Coalesce multiple API definitions into one unified schema.
 - ✅ **Agnostic Core:** Designed to support future formats beyond OpenAPI.
@@ -16,83 +24,73 @@
 
 ---
 
-## 📦 Installation
+### 📦 Installation
 
-### 🛠️ For Web Apps (Middleware)
+#### Koalesce for OpenAPI Middleware (ASP.NET Core)
 
-```sh
-NuGet\Install-Package Koalesce.OpenAPI
+```shell
+dotnet add package Koalesce.OpenAPI
 ```
 
-### 💻 CLI Tool
+#### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
 
-```sh
+```shell
 dotnet tool install --global Koalesce.OpenAPI.CLI
 ```
 
 ---
 
-## 🛠️ Quick Start (Middleware)
+### Configuration
 
-### 1. Register & Use (`Program.cs`)
+**1. Configure `appsettings.json`**
+
+```json
+"Koalesce": {
+  "Sources": [
+    { "Url": "https://service-a/swagger/v1/swagger.json" },
+    { "Url": "https://service-b/swagger/v1/swagger.json" }
+  ],
+  "MergedDocumentPath": "/swagger/v1/gateway.json",
+  "OpenApiVersion": "3.0.1",
+  "ApiGatewayBaseUrl": "https://localhost:5000"
+}
+```
+
+**2. Register Services**
 
 ```csharp
-// Register Services
+// Program.cs
 builder.Services.AddKoalesce(builder.Configuration)
-    .ForOpenAPI(options => {
-        // Optional: Configure Global Gateway Security
-        options.UseJwtBearerGatewaySecurity("Enter your JWT token", "JWT");
+    .ForOpenAPI(options => 
+    {
+        // Optional: Configure Gateway Security (e.g., JWT)
+        options.UseJwtBearerGatewaySecurity(
+            description: "Enter your JWT token",
+            bearerFormat: "JWT"
+        );
     });
+```
 
+**3. Enable Middleware**
+
+```csharp
 var app = builder.Build();
-
-// Enable Middleware
 app.UseKoalesce();
-
 app.Run();
 ```
 
 ---
 
-## 💻 Quick Start (CLI)
+### 💻 Using Koalesce.OpenAPI through CLI (Command Line Interface)
 
-Use the CLI to generate a static merged file without running the application.
+The `Koalesce.OpenAPI.CLI` tool was built specifically to allow the usage of Koalesce for merging OpenAPI definitions directly into a file in the disk, without the need for a .NET application hosting the middleware.
 
 ```bash
-koalesce --config appsettings.json --output apigateway.yaml --verbose
-```
-
-> **⚠️ Note:** When using the CLI, if your `appsettings.json` defines an `ApiGatewayBaseUrl`, you **must** manually include the `GatewaySecurityScheme` section in the JSON file, as the CLI cannot execute C# security configurations.
-
----
-
-### ⚙️ Configuration (`appsettings.json`)
-
-```json
-{
-  "Koalesce": {
-    "Sources": [
-      { "Url": "https://localhost:8001/swagger/v1/swagger.json", "VirtualPrefix": "customers" },
-      { "Url": "https://localhost:8002/swagger/v1/swagger.json", "VirtualPrefix": "inventory" }
-    ],
-    "MergedDocumentPath": "/swagger/v1/apigateway.json",
-    "Title": "My Koalesced API",
-    "OpenApiVersion": "3.0.1",
-    "ApiGatewayBaseUrl": "https://localhost:5000",
-    "GatewaySecurityScheme": {
-      "Type": "Http",
-      "Scheme": "bearer",
-      "BearerFormat": "JWT",
-      "Description": "JWT Authorization header using the Bearer scheme."
-    }
-  }
-}
+koalesce --config ./appsettings.json --output ./gateway.yaml --verbose
 ```
 
 ---
 
-## 🔗 Links
+### 📚 Documentation
 
-* [**Documentation & Source Code**](https://github.com/falberthen/Koalesce)
-* [**Changelog**](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md)
-* [**License (MIT)**](https://github.com/falberthen/Koalesce/blob/master/LICENSE)
+For a comprehensive guide and advanced configuration options, please visit the [**GitHub Repository**](https://github.com/falberthen/Koalesce).

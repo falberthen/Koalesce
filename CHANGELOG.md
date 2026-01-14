@@ -1,11 +1,24 @@
-> This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adheres to [Semantic Versioning](https://semver.org/).
-
 # Changelog
 
 All notable changes to this project will be documented in this file.
+> This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adheres to [Semantic Versioning](https://semver.org/).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+---
+
+## [1.0.0-alpha.4] - 2026-01-13
+
+### Changed
+
+- **Defensive Cache Middleware (Clamping):** The caching middleware logic has been hardened to strictly enforce the `MinExpirationSeconds` setting at runtime.
+  - Previously, `MinExpirationSeconds` was available in the options but not actively enforced by the middleware logic during cache entry creation.
+  - Now, if `AbsoluteExpirationSeconds` or `SlidingExpirationSeconds` are configured with values **lower** than the configured `MinExpirationSeconds`, the middleware automatically clamps them to that minimum value.
+  - *Note: The default value for `MinExpirationSeconds` is 30 seconds.*
+  
+### 🐛 Fixes
+
+- **Cache Reliability:** Resolved a stability issue where extremely short cache durations could cause excessive re-merging operations. The system now guarantees the cache duration respects the defined minimum floor.
+
+---
 
 ## [1.0.0-alpha.3] - 2026-01-11
 

@@ -7,29 +7,45 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 	public void KoalesceCache_WhenConfigured_ShouldBindCacheOptions()
 	{
 		// Arrange
-		var config = new ConfigurationBuilder()
-			.AddInMemoryCollection(new Dictionary<string, string?>
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
 			{
-				{ "Koalesce:Cache:AbsoluteExpirationSeconds", "86400" }, // 24h
-                { "Koalesce:Cache:SlidingExpirationSeconds", "300" }, // 5 min
-                { "Koalesce:Cache:MinExpirationSeconds", "30" } // 30 sec
-            })
+				Cache = new KoalesceCacheOptions
+				{
+					AbsoluteExpirationSeconds = 86400,
+					SlidingExpirationSeconds = 300,
+					MinExpirationSeconds = 60
+				}
+			}
+		};
+
+		// Serialize to JSON and load into ConfigurationBuilder via stream
+		var jsonString = JsonSerializer.Serialize(appSettingsStub);
+		var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(jsonString));
+
+		var config = new ConfigurationBuilder()
+			.AddJsonStream(memoryStream)
 			.Build();
 
 		Services.Configure<KoalesceOptions>(config.GetSection(KoalesceOptions.ConfigurationSectionName));
 		var provider = Services.BuildServiceProvider();
+
+		// Act
 		var options = provider.GetService<IOptions<KoalesceOptions>>()?.Value;
 
-		// Act & Assert
+		// Assert
 		Assert.NotNull(options);
 		Assert.NotNull(options.Cache);
+
+		// Verify values are correctly bound from the typed object configuration
 		Assert.Equal(86400, options.Cache.AbsoluteExpirationSeconds);
 		Assert.Equal(300, options.Cache.SlidingExpirationSeconds);
-		Assert.Equal(30, options.Cache.MinExpirationSeconds);
+		Assert.Equal(60, options.Cache.MinExpirationSeconds);
 	}
 
 	[Fact]
-	public void KoalesceCache_WhenAbsoluteExpirationTooShort_ShouldThrowException()
+	public void KoalesceCache_WhenAbsoluteExpirationBelowDefaultMin_ShouldThrowException()
 	{
 		// Arrange
 		var options = new KoalesceOptions
@@ -38,22 +54,46 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 			{
 				new SourceDefinition
 				{
-					Url = "http://fakeapi.com/v1/apidefinition.json" 
+					Url = "http://fakeapi.com/v1/apidefinition.json"
 				}
 			},
-			MergedDocumentPath = "/swagger/v1/swagger.json",
+			MergedDocumentPath = "/mergedapidefinition.json",
 			Cache = new KoalesceCacheOptions
 			{
-				AbsoluteExpirationSeconds = 10,
-				MinExpirationSeconds = 30
+				AbsoluteExpirationSeconds = 10, // < 30 (Default)
+												// Implicit MinExpirationSeconds is default value
 			}
 		};
 
 		// Act & Assert
-		var ex = Assert.Throws<KoalesceInvalidConfigurationValuesException>(() =>
+		Assert.Throws<KoalesceInvalidConfigurationValuesException>(() => 
 			options.Validate());
+	}
 
-		Assert.True(ex.Message.Length > 0);
+	[Fact]
+	public void KoalesceCache_WhenAbsoluteExpirationBelowCustomMin_ShouldThrowException()
+	{
+		// Arrange
+		var options = new KoalesceOptions
+		{
+			Sources = new List<SourceDefinition> 
+			{
+				new SourceDefinition
+				{
+					Url = "http://fakeapi.com/v1/apidefinition.json",
+				}
+			},
+			MergedDocumentPath = "/mergedapidefinition.json",
+			Cache = new KoalesceCacheOptions
+			{
+				MinExpirationSeconds = 600,
+				AbsoluteExpirationSeconds = 300  // Logical error
+			}
+		};
+
+		// Act & Assert
+		Assert.Throws<KoalesceInvalidConfigurationValuesException>(() => 
+			options.Validate());
 	}
 
 	[Fact]
@@ -62,37 +102,35 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 		// Arrange
 		var options = new KoalesceOptions
 		{
-			Sources = new List<SourceDefinition>
+			Sources = new List<SourceDefinition> 
 			{
 				new SourceDefinition
 				{
 					Url = "http://fakeapi.com/v1/apidefinition.json",
 				}
 			},
-			MergedDocumentPath = "/swagger/v1/swagger.json",
+			MergedDocumentPath = "/mergedapidefinition.json",
 			Cache = new KoalesceCacheOptions
 			{
 				AbsoluteExpirationSeconds = 600,
-				SlidingExpirationSeconds = 700 // Invalid (Exceeds Absolute Expiration)
+				SlidingExpirationSeconds = 700 // Logical error
 			}
 		};
 
 		// Act & Assert
-		var ex = Assert.Throws<KoalesceInvalidConfigurationValuesException>(() =>
+		Assert.Throws<KoalesceInvalidConfigurationValuesException>(() => 
 			options.Validate());
-
-		Assert.True(ex.Message.Length > 0);
 	}
 
 	[Fact]
 	public async Task KoalesceMiddleware_WhenCacheEnabled_ShouldCacheMergedDocument()
 	{
 		// Arrange
-		string mergedOpenApiPath = "/swagger/v1/swagger.json";
+		string mergedDocumentPath = "/mergedapidefinition.json";
 		var cache = new MemoryCache(new MemoryCacheOptions());
 		var options = Options.Create(new KoalesceOptions
 		{
-			MergedDocumentPath = mergedOpenApiPath,
+			MergedDocumentPath = mergedDocumentPath,
 			Cache = new KoalesceCacheOptions
 			{
 				DisableCache = false,
@@ -107,13 +145,13 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 		var middleware = new KoalesceMiddleware(
 			options, logger, provider, context => Task.CompletedTask, cache);
 
-		var context = CreateHttpContext(mergedOpenApiPath);
+		var context = CreateHttpContext(mergedDocumentPath);
 
 		// Act
 		await middleware.InvokeAsync(context);
 
 		// Assert
-		Assert.True(cache.TryGetValue(mergedOpenApiPath, out string cachedDocument));
+		Assert.True(cache.TryGetValue(mergedDocumentPath, out string cachedDocument));
 		Assert.False(string.IsNullOrWhiteSpace(cachedDocument));
 	}
 
@@ -121,11 +159,11 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 	public async Task KoalesceMiddleware_WhenCacheDisabled_ShouldNotCache()
 	{
 		// Arrange
-		string mergedOpenApiPath = "/swagger/v1/swagger.json";
+		string mergedDocumentPath = "/mergedapidefinition.json";
 		var cache = new MemoryCache(new MemoryCacheOptions());
 		var options = Options.Create(new KoalesceOptions
 		{
-			MergedDocumentPath = mergedOpenApiPath,
+			MergedDocumentPath = mergedDocumentPath,
 			Cache = new KoalesceCacheOptions { DisableCache = true }
 		});
 
@@ -135,12 +173,12 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 		var middleware = new KoalesceMiddleware(
 			options, logger, provider, context => Task.CompletedTask, cache);
 
-		var context = CreateHttpContext(mergedOpenApiPath);
+		var context = CreateHttpContext(mergedDocumentPath);
 
 		// Act
 		await middleware.InvokeAsync(context);
 
 		// Assert
-		Assert.False(cache.TryGetValue(mergedOpenApiPath, out _));
+		Assert.False(cache.TryGetValue(mergedDocumentPath, out _));
 	}
 }

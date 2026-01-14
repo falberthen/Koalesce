@@ -29,19 +29,24 @@ app.UseCors(corsPolicy);
 app.UseHttpsRedirection();
 app.UseRouting();
 
+
+var random = new Random();
+var maxQuantity = 1000;
+var inventoryProducts = new List<InventoryProduct>
+{
+	new InventoryProduct(Guid.NewGuid(), "Rocket", random.Next(maxQuantity)),
+	new InventoryProduct(Guid.NewGuid(), "Telescope", random.Next(maxQuantity)),
+	new InventoryProduct(Guid.NewGuid(), "Processor", random.Next(maxQuantity)),
+};
+
 // Get all products
 app.MapGet("/api/products", () =>
 {
-	return new List<Product>
-	{
-		new Product("Rocket"),
-		new Product("Telescope"),
-		new Product("Processor")
-	};
+	return inventoryProducts;
 })
 .WithName("GetProducts");
 
-app.Run();
+await app.RunAsync();
 
-public record Product(string Name);
+public record InventoryProduct(Guid Id, string Name, int QuantityInStock);
 
