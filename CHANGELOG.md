@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.5] - 2026-01-15
+
+### Added
+
+- **NuGet Metadata:** Added official project icon.
+
+---
+
 ## [1.0.0-alpha.4] - 2026-01-13
 
 ### Changed
@@ -112,7 +120,6 @@ Due to the agnostic refactoring of the core options, you must update your config
 ### Changed
 - **HTTP Client:** The internal `HttpClient` now enforces **HTTP/1.1** protocol.
 - **Dev Experience:** The internal HTTP handler now bypasses SSL certificate validation for development environments, fixing issues with self-signed certificates on `https://localhost`.
-- **Koalesce.OpenAPI.CLI:** Improved the CLI output format. `VirtualPrefix` is now highlighted in **Magenta** to visually distinguish the virtual path from the physical source URL.
 
 ### Fixed
 - **Security Isolation:** Fixed an issue where global security schemes could leak across different APIs in the merged document. Global security requirements are now injected into individual operations during the merge to ensure strict security context isolation.

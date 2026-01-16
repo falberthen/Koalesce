@@ -1,8 +1,8 @@
 ![CI Status](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg)
 
-# 🐨 Koalesce
+<img src="img/koalesce_small.png" /> 
 
-**Koalesce** is a .NET library designed to merge multiple API definitions into a unified document to enable seamless API Gateway integration and simplify frontend client generation for microservices-based architectures.
+**Koalesce** is a .NET library designed to merge multiple API definitions into a unified document. It enables seamless API Gateway integration and simplifies frontend client generation for microservices-based architectures.
 
 ---
 
@@ -33,11 +33,11 @@
 
 ```sh
 # Package Manager
-NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.4
+NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.5
 ```
 ```sh
 # .NET CLI
-dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.4
+dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.5
 ```
 
 #### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
@@ -47,7 +47,7 @@ dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.4
 To install the **Koalesce.OpenAPI.CLI** globally:
 
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.4
+dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.5
 ```
 
 ---
