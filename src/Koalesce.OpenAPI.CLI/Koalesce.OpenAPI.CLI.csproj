@@ -10,13 +10,14 @@
 		<PackageId>Koalesce.OpenAPI.CLI</PackageId>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IsPackable>true</IsPackable>
-		<Version>1.0.0-alpha.4</Version>
+		<Version>1.0.0-alpha.5</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The CLI for Koalesce.OpenAPI.</Description>
 		<RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageIcon>cli_icon_256x256.png</PackageIcon>
 		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
@@ -35,6 +36,7 @@
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
 		<None Include="README.nuget.md" Pack="true" PackagePath="\" />
 		<None Include="CHANGELOG.md" Pack="false" PackagePath="\" />
+		<None Include="..\..\img\cli_icon_256x256.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
 	<!-- Use project references if USE_PROJECT_REFS is defined -->
