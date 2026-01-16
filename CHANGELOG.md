@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.5] - 2026-01-15
+
+### Added
+
+- **NuGet Metadata:** Added official project icon.
+
+---
+
 ## [1.0.0-alpha.4] - 2026-01-13
 
 ### Changed

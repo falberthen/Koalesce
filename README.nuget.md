@@ -1,6 +1,6 @@
-# 🐨 Koalesce
+<img src="https://raw.githubusercontent.com/falberthen/Koalesce/master/img/koalesce_small.png"/>
 
-**Koalesce** is a .NET library designed to merge multiple API definitions into a unified document. It enables seamless API Gateway integration and simplifies frontend client generation for microservices-based architectures.
+**Koalesce** is a .NET library designed to merge multiple API definitions into a unified document to enable seamless API Gateway integration and simplify frontend client generation for microservices-based architectures.
 
 ---
 
