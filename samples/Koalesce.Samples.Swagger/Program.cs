@@ -1,6 +1,6 @@
 ﻿using Koalesce.Core.Extensions;
-using Koalesce.OpenAPI;
 using Koalesce.OpenAPI.Extensions;
+using Koalesce.OpenAPI.Options;
 using Microsoft.Extensions.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -21,11 +21,11 @@ services.AddKoalesce(builder.Configuration)
 var app = builder.Build();
 
 // 🐨 Accessing the automatically registered OpenApiOptions based on your appsettings.json
-OpenApiOptions openApiOptions;
+KoalesceOpenApiOptions openApiOptions;
 using (var scope = app.Services.CreateScope())
 {
 	openApiOptions = scope.ServiceProvider
-		.GetRequiredService<IOptions<OpenApiOptions>>().Value;
+		.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
 }
 
 // Add pipeline

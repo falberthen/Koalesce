@@ -3,7 +3,7 @@
 /// <summary>
 /// Extension methods for configuring Koalesce with OpenAPI
 /// </summary>
-public static class OpenApiExtensions
+public static class KoalesceForOpenApiBuilderExtensions
 {
 	/// <summary>
 	/// Registers the OpenAPI provider and required services for Koalesce
@@ -12,7 +12,7 @@ public static class OpenApiExtensions
 	/// <param name="configureOptions">Optional delegate to configure OpenApiOptions</param>
 	public static IKoalesceBuilder ForOpenAPI(
 		this IKoalesceBuilder builder,
-		Action<OpenApiOptions>? configureOptions = null)
+		Action<KoalesceOpenApiOptions>? configureOptions = null)
 	{
 		var services = builder.Services;
 
@@ -21,8 +21,8 @@ public static class OpenApiExtensions
 		services.TryAddSingleton(typeof(IMergedDocumentSerializer<OpenApiDocument>), typeof(OpenApiDocumentSerializer));
 
 		// Registering provider
-		services.TryAddSingleton<OpenApiProvider>();
-		services.TryAddSingleton<IKoalesceProvider, OpenApiProvider>();
+		services.TryAddSingleton<KoalesceOpenApiProvider>();
+		services.TryAddSingleton<IKoalesceProvider, KoalesceOpenApiProvider>();
 
 		// Apply Code-based Configuration (Extension Methods)
 		// PostConfigure runs AFTER the JSON binding invoked by AddProvider
@@ -32,6 +32,6 @@ public static class OpenApiExtensions
 		}
 
 		// Registers the provider and binds the base JSON section
-		return builder.AddProvider<OpenApiProvider, OpenApiOptions>();
+		return builder.AddProvider<KoalesceOpenApiProvider, KoalesceOpenApiOptions>();
 	}
 }

@@ -32,11 +32,11 @@ app.UseRouting();
 
 var random = new Random();
 var maxQuantity = 1000;
-var inventoryProducts = new List<InventoryProduct>
+var inventoryProducts = new List<Product>
 {
-	new InventoryProduct(Guid.NewGuid(), "Rocket", random.Next(maxQuantity)),
-	new InventoryProduct(Guid.NewGuid(), "Telescope", random.Next(maxQuantity)),
-	new InventoryProduct(Guid.NewGuid(), "Processor", random.Next(maxQuantity)),
+	new Product(Guid.NewGuid(), "Rocket", random.Next(maxQuantity)),
+	new Product(Guid.NewGuid(), "Telescope", random.Next(maxQuantity)),
+	new Product(Guid.NewGuid(), "Processor", random.Next(maxQuantity)),
 };
 
 // Get all products
@@ -48,5 +48,5 @@ app.MapGet("/api/products", () =>
 
 await app.RunAsync();
 
-public record InventoryProduct(Guid Id, string Name, int QuantityInStock);
+public record Product(Guid Id, string Name, int QuantityInStock);
 

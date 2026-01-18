@@ -15,7 +15,33 @@ services.AddCors(o =>
 );
 
 services.AddEndpointsApiExplorer();
-services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(c =>
+{
+	c.AddSecurityDefinition("ApiKey", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+	{
+		Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+		In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+		Name = "X-API-KEY",
+		Description = "API Key authentication using X-API-KEY header"
+	});
+
+	c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+	{
+		{
+			new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+			{
+				Reference = new Microsoft.OpenApi.Models.OpenApiReference
+				{
+					Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+					Id = "ApiKey"
+				}
+			},
+			Array.Empty<string>()
+		}
+	});
+});
+
 
 var app = builder.Build();
 

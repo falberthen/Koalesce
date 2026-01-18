@@ -1,13 +1,13 @@
 ﻿namespace Koalesce.OpenAPI.Services;
 
-public class OpenApiDocumentSerializer : IMergedDocumentSerializer<OpenApiDocument>
+internal class OpenApiDocumentSerializer : IMergedDocumentSerializer<OpenApiDocument>
 {
 	private readonly ILogger<OpenApiDocumentSerializer> _logger;
-	private readonly OpenApiOptions _options;
+	private readonly KoalesceOpenApiOptions _options;
 
 	public OpenApiDocumentSerializer(
 		ILogger<OpenApiDocumentSerializer> logger,
-		IOptions<OpenApiOptions> options)
+		IOptions<KoalesceOpenApiOptions> options)
 	{
 		ArgumentNullException.ThrowIfNull(logger);
 		ArgumentNullException.ThrowIfNull(options?.Value);
