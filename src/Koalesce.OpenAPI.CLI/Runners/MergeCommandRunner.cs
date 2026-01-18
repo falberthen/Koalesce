@@ -40,7 +40,7 @@ public class MergeCommandRunner
 
 			services.AddLogging(builder =>
 			{
-				builder.AddConsole();				
+				builder.AddConsole();
 				builder.SetMinimumLevel(_verbose ? LogLevel.Information : LogLevel.Warning);
 
 				// Remote noisy logs unless in verbose mode
@@ -54,7 +54,7 @@ public class MergeCommandRunner
 			services.AddKoalesce(configuration).ForOpenAPI();
 
 			using var provider = services.BuildServiceProvider();
-			var openApiProvider = provider.GetRequiredService<OpenApiProvider>();
+			var openApiProvider = provider.GetRequiredService<KoalesceOpenApiProvider>();
 			var koalesceOptions = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 			var writer = provider.GetRequiredService<IMergedSpecificationWriter>();
 
