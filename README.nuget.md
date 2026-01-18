@@ -13,14 +13,14 @@
 ### ⚡ Key Features
 
 - ✅ Coalesce multiple API definitions into one unified schema.
-- ✅ **Agnostic Core:** Designed to support future formats beyond OpenAPI.
-- ✅ **Fail-Fast Validation:** Validates URLs and paths at startup to prevent runtime errors.
-- ✅ **Gateway Security Integration:** Define a single authentication source of truth for your API Gateway.
 - ✅ Fully configurable via `appsettings.json` or Fluent API.
+- ✅ Fail-Fast Validation: Validates URLs and paths at startup to prevent runtime errors.
+- ✅ Flexible Security Handling: Apply global Gateway security or preserve downstream API security configurations.
 - ✅ Aligns perfectly with API Gateways (**Ocelot**, **YARP**).
 - ✅ Allows output a `json` or `yaml` merged document regardless the document type of the source APIs.
 - ✅ Streamlines API client generation (e.g., **NSwag**, **Kiota**) since it results in one unified schema.
-- ✅ **Multi-targeting:** Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
+- ✅ Multi-targeting: Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
+- ✅ Agnostic Core: Designed to support future providers implementing other API specification formats (e.g., gRPC, GraphQL).
 
 ---
 
@@ -61,12 +61,12 @@ dotnet tool install --global Koalesce.OpenAPI.CLI
 ```csharp
 // Program.cs
 builder.Services.AddKoalesce(builder.Configuration)
-    .ForOpenAPI(options => 
+    .ForOpenAPI(options =>
     {
-        // Optional: Configure Gateway Security (e.g., JWT)
-        options.UseJwtBearerGatewaySecurity(
-            description: "Enter your JWT token",
-            bearerFormat: "JWT"
+        // Optional: Configure global Gateway security (e.g., JWT)
+        options.ApplyGlobalJwtBearerSecurityScheme(
+            schemeName: "Bearer",
+            description: "Enter your JWT token"
         );
     });
 ```

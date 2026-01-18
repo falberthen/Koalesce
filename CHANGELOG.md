@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.6] - 2026-01-18
+
+### Changed
+
+- **Validation Logic:** `OpenApiSecurityScheme` is now fully optional. This allows:
+  - Mixed public/private Gateway scenarios
+  - Pure security passthrough from downstream APIs
+  - Explicit security when needed
+
+### 🐛 Fixes
+
+- **Security Requirements Preservation:** Operations that inherit security from document-level `security` (per OpenAPI spec) now have those requirements explicitly materialized during merge. 
+This ensures downstream API security is properly preserved in the merged document.
+
+### ⚠️ Breaking Changes
+
+- **Validation Changes:** `ApiGatewayBaseUrl` no longer requires `OpenApiSecurityScheme` to be configured. Both are now independent, optional settings.
+- **Removed `IgnoreGatewaySecurity` property:** This property is no longer needed. Simply omit `OpenApiSecurityScheme` to preserve downstream security.
+- **Renamed `GatewaySecurityScheme`property:** to `OpenApiSecurityScheme` and seamlessly align with Microsoft.OpenApi.Models, since itis of that type.
+- **Renamed all method in `KoalesceOpenApiOptionsExtensions`:** to better reflect the purpose of applying a global security to the merged definition.  
+
+### 🔄 Migration Guide
+
+**Simplified configuration:** The new model is much simpler - just configure `OpenApiSecurityScheme` if you want global Gateway security, or omit it to preserve downstream security.
+
+---
+
 ## [1.0.0-alpha.5] - 2026-01-15
 
 ### Added
@@ -37,14 +64,14 @@ All notable changes to this project will be documented in this file.
   - **Gateway URL:** `ApiGatewayBaseUrl` (in OpenAPI options) must be a valid absolute URI.
   - **Paths:** `MergedDocumentPath` must start with `/`.
 - **Global Security Options:**
-  - Added `GatewaySecurityScheme` to `OpenApiOptions`, enabling configuration of global security schemes directly within the API Gateway context.
+  - Added `OpenApiSecurityScheme` to `OpenApiOptions`, enabling configuration of global security schemes directly within the API Gateway context.
   - Added `IgnoreGatewaySecurity` to `OpenApiOptions`, allowing downstream services to retain their own security definitions instead of being overridden by the Gateway's global scheme.
 - **Gateway Security Extensions:** Introduced a comprehensive suite of fluent extension methods to configure global security schemes.
   - Methods supported: `UseJwtBearerGatewaySecurity`, `UseApiKeyGatewaySecurity`, `UseBasicAuthGatewaySecurity`, `UseOAuth2ClientCredentialsGatewaySecurity`, `UseOAuth2AuthCodeGatewaySecurity`, and `UseOpenIdConnectGatewaySecurity`.
 
-> **Note 1:** When using Koalesce as a pipeline Middleware, to keep your `appsettings.json` simple, it is recommended to use `OpenApiSecurityExtensions` methods via `.ForOpenAPI(options => ... )` instead of manually configuring the `GatewaySecurityScheme` section.
+> **Note 1:** When using Koalesce as a pipeline Middleware, to keep your `appsettings.json` simple, it is recommended to use `OpenApiSecurityExtensions` methods via `.ForOpenAPI(options => ... )` instead of manually configuring the `OpenApiSecurityScheme` section.
 >
-> **Note 2:** When using Koalesce through **Koalesce.OpenAPI.CLI**, you **must** include a `GatewaySecurityScheme` section in the `appsettings.json` if `ApiGatewayBaseUrl` is defined, as the CLI cannot see configurations defined in C# code.
+> **Note 2:** When using Koalesce through **Koalesce.OpenAPI.CLI**, you **must** include a `OpenApiSecurityScheme` section in the `appsettings.json` if `ApiGatewayBaseUrl` is defined, as the CLI cannot see configurations defined in C# code.
 
 ### ⚠️ Breaking Changes
 
@@ -56,7 +83,7 @@ All notable changes to this project will be documented in this file.
     - `OpenApiSourceDefinition` → **`SourceDefinition`**
 - **Configuration Moving:**
   - `ApiGatewayBaseUrl` was moved from `KoalesceOptions` **(Core)** to `OpenApiOptions` **(OpenAPI Extension)** to ensure proper separation of concerns.
-- **Security Enforcement:** When `ApiGatewayBaseUrl` is set in `OpenApiOptions`, a `GatewaySecurityScheme` is now **required** (unless `IgnoreGatewaySecurity` is true). Startup will fail if the gateway URL is present but no security scheme is defined.
+- **Security Enforcement:** When `ApiGatewayBaseUrl` is set in `OpenApiOptions`, a `OpenApiSecurityScheme` is now **required** (unless `IgnoreGatewaySecurity` is true). Startup will fail if the gateway URL is present but no security scheme is defined.
 
 ### 🐛 Fixes
 
@@ -96,8 +123,8 @@ Due to the agnostic refactoring of the core options, you must update your config
   ],
   "MergedDocumentPath": "/swagger/v1/swagger.json",
   "ApiGatewayBaseUrl": "https://localhost:5000",
-  // GatewaySecurityScheme is REQUIRED here for CLI usage if ApiGatewayBaseUrl is set
-  "GatewaySecurityScheme": {
+  // OpenApiSecurityScheme is REQUIRED here for CLI usage if ApiGatewayBaseUrl is set
+  "OpenApiSecurityScheme": {
     "Type": "Http",
     "Scheme": "bearer",
     "BearerFormat": "JWT", 

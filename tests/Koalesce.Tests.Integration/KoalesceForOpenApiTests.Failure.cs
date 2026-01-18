@@ -25,4 +25,37 @@ public partial class KoalesceForOpenApiTests
 
 		await koalescingApi.StopAsync();
 	}
+
+	#region TESTS USING OpenApiSecurityScheme
+	[Fact]
+	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithEmptyName_ShouldReturn500()
+	{
+		// Arrange
+		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
+		{
+			builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI(options =>
+				{
+					options.OpenApiSecurityScheme = new OpenApiSecurityScheme
+					{
+						Name = string.Empty, // Invalid - empty name
+						Type = SecuritySchemeType.Http,
+						Scheme = "bearer"
+					};
+				});
+		});
+
+		// Act & Assert - Should get HTTP 500 because validation fails during merge
+		var exception = await Assert.ThrowsAsync<HttpRequestException>(async () =>
+		{
+			await _httpClient.GetStringAsync(_mergedApiGatewayPath);
+		});
+
+		// Verify it's a 500 error caused by InvalidOperationException during merge
+		Assert.Contains("500", exception.Message);
+
+		await koalescingApi.StopAsync();
+	}
+	#endregion
 }

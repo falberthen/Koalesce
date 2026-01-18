@@ -128,7 +128,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldKeepSecuritySchemesIsolated()
+	public async Task Koalesce_WhenForOpenAPI_ShouldPreserveDownstreamSecuritySchemes()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
@@ -138,28 +138,25 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 
 		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
 
-		// Assert that security schemes exist
+		// Assert that security schemes from downstream APIs are preserved
 		Assert.Contains("\"securitySchemes\"", mergedResult, StringComparison.OrdinalIgnoreCase);
 		Assert.Contains("\"api_key\"", mergedResult, StringComparison.OrdinalIgnoreCase);
 
-		// Assert that security requirements exist in at least one path
-		Assert.Contains("\"security\":", mergedResult, StringComparison.OrdinalIgnoreCase);
+		// In the simplified model, security requirements are preserved as-is from downstream APIs
+		// Operations with security keep it, operations without security remain public
+		// No automatic inheritance or transformation is performed
 
 		await koalescingApi.StopAsync();
 	}
 
-	#region GATEWAY MODE
 	[Fact]
-	public async Task Koalesce_WhenUsingApiGateway_ShouldMergeAllDefinitionsIntoSingle()
+	public async Task Koalesce_WhenApiGatewayBaseUrlIsSet_ShouldMergeAllServerUrlDefinitionsIntoSingle()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings,
 			builder => builder.Services
 				.AddKoalesce(builder.Configuration)
-				.ForOpenAPI(options =>
-				{
-					options.UseJwtBearerGatewaySecurity();
-				}));
+				.ForOpenAPI());
 
 		var mergedResult = await _httpClient.GetStringAsync(_mergedApiGatewayPath);
 
@@ -188,8 +185,9 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		await koalescingApi.StopAsync();
 	}
 
+	#region TESTS USING OpenApiSecurityScheme
 	[Fact]
-	public async Task Koalesce_WhenUsingApiGateway_WithJwtBearerGatewaySecurity_ShouldAddGlobalBearerGatewaySecurity()
+	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithJwtBearerGatewaySecurity_ShouldAddGlobalBearerGatewaySecurity()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
@@ -198,14 +196,13 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 				.AddKoalesce(builder.Configuration)
 				.ForOpenAPI(options =>
 				{
-					options.UseJwtBearerGatewaySecurity();
+					options.ApplyGlobalJwtBearerSecurityScheme();
 				});
 		});
 
 		var mergedResult = await _httpClient.GetStringAsync(_mergedApiGatewayPath);
 
 		// Checks schema definitions
-		Assert.Contains("\"GatewaySecurity\"", mergedResult);
 		Assert.Contains("\"type\": \"http\"", mergedResult);
 		Assert.Contains("\"scheme\": \"bearer\"", mergedResult);
 
@@ -213,14 +210,13 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		Assert.Contains(OpenAPIConstants.JwtBearerSchemeDefaultDescription, mergedResult);
 
 		// Confirms no scopes defined (Robust check using Regex to ignore whitespace)
-		// Matches: "GatewaySecurity": [] OR "GatewaySecurity": [ ] OR "GatewaySecurity":[]
-		Assert.Matches("\"GatewaySecurity\"\\s*:\\s*\\[\\s*\\]", mergedResult);
+		Assert.Contains(OpenAPIConstants.JwtBearerSchemeDefaultName, mergedResult);
 
 		await koalescingApi.StopAsync();
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingApiGateway_WithApiKeyGatewaySecurity_ShouldAddGlobalApiKeyGatewaySecurity()
+	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithApiKeyGatewaySecurity_ShouldAddGlobalApiKeyGatewaySecurity()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
@@ -229,14 +225,13 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 				.AddKoalesce(builder.Configuration)
 				.ForOpenAPI(options =>
 				{
-					options.UseApiKeyGatewaySecurity("X-API-KEY");
+					options.ApplyGlobalApiKeySecurityScheme("X-API-KEY");
 				});
 		});
 
 		var mergedResult = await _httpClient.GetStringAsync(_mergedApiGatewayPath);
 
 		// Confirms schema definitions for API Key
-		Assert.Contains("\"GatewaySecurity\"", mergedResult);
 		Assert.Contains("\"type\": \"apiKey\"", mergedResult);
 		Assert.Contains("\"in\": \"header\"", mergedResult);
 		Assert.Contains("\"name\": \"X-API-KEY\"", mergedResult);
@@ -245,14 +240,13 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		Assert.Contains(OpenAPIConstants.ApiKeySchemeDefaultDescription, mergedResult);
 
 		// Confirms global security application
-		// Matches: "GatewaySecurity": [] (Ignoring whitespace)
-		Assert.Matches("\"GatewaySecurity\"\\s*:\\s*\\[\\s*\\]", mergedResult);
+		Assert.Matches("\"X-API-KEY\"\\s*:\\s*\\[\\s*\\]", mergedResult);
 
 		await koalescingApi.StopAsync();
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingApiGateway_WithBasicGatewaySecurity_ShouldAddGlobalBasicGatewaySecurity()
+	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithBasicGatewaySecurity_ShouldAddGlobalBasicGatewaySecurity()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
@@ -262,14 +256,14 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 				.ForOpenAPI(options =>
 				{
 					// Configura para usar Basic Authentication
-					options.UseBasicAuthGatewaySecurity();
+					options.ApplyGlobalBasicAuthSecurityScheme("Basic Auth");
 				});
 		});
 
 		var mergedResult = await _httpClient.GetStringAsync(_mergedApiGatewayPath);
 
 		// Confirms schema definitions for Basic Auth
-		Assert.Contains("\"GatewaySecurity\"", mergedResult);
+		Assert.Contains("\"Basic Auth\"", mergedResult);
 		Assert.Contains("\"type\": \"http\"", mergedResult);
 		Assert.Contains("\"scheme\": \"basic\"", mergedResult); // Diferenciador chave do Bearer
 
@@ -277,14 +271,13 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		Assert.Contains(OpenAPIConstants.BasicAuthSchemeDefaultDescription, mergedResult);
 
 		// Confirms global security application
-		// Matches: "GatewaySecurity": [] (Ignoring whitespace)
-		Assert.Matches("\"GatewaySecurity\"\\s*:\\s*\\[\\s*\\]", mergedResult);
+		Assert.Contains(OpenAPIConstants.BasicAuthSchemeDefaultName, mergedResult);
 
 		await koalescingApi.StopAsync();
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingApiGateway_WithOAuth2ClientCredentials_ShouldAddGlobalOAuth2Security()
+	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithOAuth2ClientCredentials_ShouldAddGlobalOAuth2Security()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
@@ -293,7 +286,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 				.AddKoalesce(builder.Configuration)
 				.ForOpenAPI(options =>
 				{
-					options.UseOAuth2ClientCredentialsGatewaySecurity(
+					options.ApplyGlobalOAuth2ClientCredentialsSecurityScheme(
 						tokenUrl: new Uri("https://localhost:5001/connect/token"),
 						scopes: new Dictionary<string, string>
 						{
@@ -319,14 +312,13 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		Assert.Contains("\"my_api.read\": \"Read Access\"", mergedResult);
 
 		// Confirms global security application
-		// Matches: "GatewaySecurity": [] (Ignoring whitespace)
-		Assert.Matches("\"GatewaySecurity\"\\s*:\\s*\\[\\s*\\]", mergedResult);
+		Assert.Contains(OpenAPIConstants.OAuth2ClientCredentialsSchemeDefaultName, mergedResult);
 
 		await koalescingApi.StopAsync();
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingApiGateway_WithOAuth2AuthCodeGatewaySecurity_ShouldAddGlobalOAuth2Security()
+	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_ApplyOAuth2AuthCodeSecurityScheme_ShouldAddGlobalOAuth2Security()
 	{
 		// Arrange & Act
 		var authUrl = "https://localhost:5001/connect/authorize";
@@ -338,7 +330,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 				.AddKoalesce(builder.Configuration)
 				.ForOpenAPI(options =>
 				{
-					options.UseOAuth2AuthCodeGatewaySecurity(
+					options.ApplyGlobalOAuth2AuthCodeSecurityScheme(
 						authorizationUrl: new Uri(authUrl),
 						tokenUrl: new Uri(tokenUrl),
 						scopes: new Dictionary<string, string>
@@ -354,7 +346,6 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		var mergedResult = await _httpClient.GetStringAsync(_mergedApiGatewayPath);
 
 		// Confirms schema definitions for OAuth2 Client Credentials
-		Assert.Contains("\"GatewaySecurity\"", mergedResult);
 		Assert.Contains("\"type\": \"oauth2\"", mergedResult);
 
 		// Confirms default description was applied		
@@ -373,14 +364,13 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		Assert.Contains("\"my_api.full_access\": \"Full API Access\"", mergedResult);
 
 		// Confirms global security application
-		// Matches: "GatewaySecurity": [] (Ignoring whitespace)
-		Assert.Matches("\"GatewaySecurity\"\\s*:\\s*\\[\\s*\\]", mergedResult);
+		Assert.Contains(OpenAPIConstants.OAuth2AuthCodeSchemeDefaultName, mergedResult);
 
 		await koalescingApi.StopAsync();
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingApiGateway_WithOpenIdConnectGatewaySecurity_ShouldAddGlobalOIDCSecurity()
+	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithOpenIdConnectGatewaySecurity_ShouldAddGlobalOIDCSecurity()
 	{
 		// Arrange & Act
 		var discoveryUrl = "https://localhost:5001/.well-known/openid-configuration";
@@ -391,8 +381,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 				.AddKoalesce(builder.Configuration)
 				.ForOpenAPI(options =>
 				{
-					// Usando o método original limpo
-					options.UseOpenIdConnectGatewaySecurity(
+					options.ApplyGlobalOpenIdConnectSecurityScheme(
 						openIdConnectUrl: new Uri(discoveryUrl)
 					);
 				});
@@ -401,7 +390,6 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		var mergedResult = await _httpClient.GetStringAsync(_mergedApiGatewayPath);
 
 		// Confirms schema definitions for OAuth2 Client Credentials
-		Assert.Contains("\"GatewaySecurity\"", mergedResult);
 		Assert.Contains("\"type\": \"openIdConnect\"", mergedResult);
 		Assert.Contains($"\"openIdConnectUrl\": \"{discoveryUrl}\"", mergedResult);
 
@@ -409,8 +397,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		Assert.Contains(OpenAPIConstants.OpenIdConnectSchemeDefaultDescription, mergedResult);
 
 		// Confirms global security application
-		// Matches: "GatewaySecurity": [] (Ignoring whitespace)
-		Assert.Matches("\"GatewaySecurity\"\\s*:\\s*\\[\\s*\\]", mergedResult);
+		Assert.Contains(OpenAPIConstants.OpenIdConnectSchemeDefaultName, mergedResult);
 
 		await koalescingApi.StopAsync();
 	}

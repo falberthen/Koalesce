@@ -1,4 +1,6 @@
-﻿namespace Koalesce.Tests.Unit;
+﻿using Koalesce.OpenAPI.Options;
+
+namespace Koalesce.Tests.Unit;
 
 [Collection("Koalesce Core Options Unit Tests")]
 public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
@@ -125,7 +127,7 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<OpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
 		});
 
 		Assert.Contains("must be a valid absolute URL", exception.Message);

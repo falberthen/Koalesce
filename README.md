@@ -8,21 +8,22 @@
 
 ## How It Works?
 
+**Process:**
 - Koalesce fetches API definitions from the specified **Sources**.
-- It then merges them using supported providers, generating a single schema at **MergedDocumentPath**.
+- It merges them using the an available `provider` (e.g, `Koalesce.OpenAPI`), generating a single schema at **MergedDocumentPath**.
 - The final *Koalesced* API definition is serialized and available in `JSON` or `YAML` format.
 
 ### ⚡ Key Features
 
 - ✅ Coalesce multiple API definitions into one unified schema.
-- ✅ **Agnostic Core:** Designed to support future formats beyond OpenAPI.
-- ✅ **Fail-Fast Validation:** Validates URLs and paths at startup to prevent runtime errors.
-- ✅ **Gateway Security Integration:** Define a single authentication source of truth for your API Gateway.
 - ✅ Fully configurable via `appsettings.json` or Fluent API.
+- ✅ Fail-Fast Validation: Validates URLs and paths at startup to prevent runtime errors.
+- ✅ Flexible Security Handling: Apply global Gateway security or preserve downstream API security configurations.
 - ✅ Aligns perfectly with API Gateways (**Ocelot**, **YARP**).
 - ✅ Allows output a `json` or `yaml` merged document regardless the document type of the source APIs.
 - ✅ Streamlines API client generation (e.g., **NSwag**, **Kiota**) since it results in one unified schema.
-- ✅ **Multi-targeting:** Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
+- ✅ Multi-targeting: Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
+- ✅ Agnostic Core: Designed to support future providers implementing other API specification formats (e.g., gRPC, GraphQL).
 
 ---
 ## 📦 Installation
@@ -33,11 +34,11 @@
 
 ```sh
 # Package Manager
-NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.5
+NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.6
 ```
 ```sh
 # .NET CLI
-dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.5
+dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.6
 ```
 
 #### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
@@ -90,18 +91,82 @@ These settings are specific to the `Koalesce.OpenAPI` provider.
 | Setting | Type | Default Value | Description |
 |---|---|---|---|
 | `OpenApiVersion` | `string` | "3.0.1" | Target OpenAPI version for the output. |
-| `ApiGatewayBaseUrl` | `string` | `null` | The public URL of your Gateway. **Requires** a Security Scheme if set. |
-| `GatewaySecurityScheme` | `object` | `null` | Defines the global security scheme (e.g., JWT, ApiKey) for the Gateway. |
-| `IgnoreGatewaySecurity` | `boolean` | `false` | If `true`, keeps downstream security schemes instead of enforcing the Gateway scheme. |
+| `ApiGatewayBaseUrl` | `string` | `null` | The public URL of your Gateway. Activates **Gateway Mode**. |
+| `OpenApiSecurityScheme` | `object` | `null` | Optional global security scheme (e.g., JWT, ApiKey) for the Gateway. `When configured, it's applied to all operations. When omitted, downstream security is preserved as-is.` |
 
 ---
 
-##### 📝 `appsettings.json` for Koalesce.OpenAPI
+### 🔐 Gateway Security Configuration
+
+Koalesce provides a simple, intuitive security model:
+
+#### ✅ With `OpenApiSecurityScheme` (Global Gateway Security)
+
+**Use when:** Your Gateway handles authentication and you want all operations to require Gateway auth.
 
 ```json
 {
   "Koalesce": {
-    // Core Settings
+    "ApiGatewayBaseUrl": "https://gateway.com",
+    "OpenApiSecurityScheme": {
+      "Type": "Http",
+      "Scheme": "bearer",
+      "BearerFormat": "JWT",
+      "Description": "JWT Authorization"
+    }
+  }
+}
+```
+
+**Result:** All operations in the merged document require Gateway authentication. Ideal for NSwag/Kiota client generation with centralized auth.
+
+---
+
+#### ✅ Without `OpenApiSecurityScheme` (Preserve Downstream Security)
+
+**Use when:** You want to preserve each downstream API's security configuration exactly as-is.
+
+```json
+{
+  "Koalesce": {
+    "ApiGatewayBaseUrl": "https://gateway.com"
+    // No OpenApiSecurityScheme = preserve downstream security
+  }
+}
+```
+
+**Result:**
+
+- Operations with security in downstream APIs → Keep their security requirements
+- Operations without security in downstream APIs → Remain public
+- Mixed public/private scenarios are supported naturally
+
+**Example:** If CustomersAPI has JWT security and ProductsAPI is public, the merged document will reflect exactly that - Customers operations require auth, Products operations don't.
+
+---
+
+##### 📝 `appsettings.json` Examples
+
+**Aggregation Mode (No Gateway):**
+
+```json
+{
+  "Koalesce": {
+    "Sources": [
+      { "Url": "https://service1.com/swagger.json" },
+      { "Url": "https://service2.com/swagger.json" }
+    ],
+    "MergedDocumentPath": "/swagger/v1/all-apis.json",
+    "Title": "All APIs Documentation"
+  }
+}
+```
+
+**Gateway Mode (With Global Security):**
+
+```json
+{
+  "Koalesce": {
     "Sources": [
       {
         "Url": "https://localhost:8001/swagger/v1/swagger.json",
@@ -113,16 +178,21 @@ These settings are specific to the `Koalesce.OpenAPI` provider.
       }
     ],
     "MergedDocumentPath": "/swagger/v1/apigateway.json",
-    "Title": "My Koalesced API",
-    
-    // OpenAPI Specific Settings
-    "OpenApiVersion": "3.0.1",
+    "Title": "API Gateway",
+
+    // Gateway Mode Configuration
     "ApiGatewayBaseUrl": "https://localhost:5000",
-    
+    "OpenApiSecurityScheme": {
+      "Type": "Http",
+      "Scheme": "bearer",
+      "BearerFormat": "JWT",
+      "Description": "JWT Authorization"
+    },
+
     // Caching
     "Cache": {
       "AbsoluteExpirationSeconds": 86400,
-      "SlidingExpirationSeconds": 300      
+      "SlidingExpirationSeconds": 300
     }
   }
 }
@@ -154,19 +224,19 @@ app.UseKoalesce();
 
 ##### 🔐 Security Configuration through Fluent API
 
-Koalesce provides a set of fluent extension methods to easily configure common security scenarios. When `ApiGatewayBaseUrl` is set, you **must** define a `GatewaySecurityScheme` either via `appsettings.json` or the fluent API.
+Koalesce provides a set of fluent extension methods to easily configure common security scenarios. When `ApiGatewayBaseUrl` is set, you **must** define a `OpenApiSecurityScheme` either via `appsettings.json` or the fluent API.
 Without it, Koalesce can't know how to document the authentication mechanism for your API Gateway and will throw an exception at startup.
 
-If using the Middleware, it's recommended you specify the security configuration inside the provider options to keep your `appsettings.json` clear of a GatewaySecurityScheme.
+If using the Middleware, it's recommended you specify the security configuration inside the provider options to keep your `appsettings.json` clear of a OpenApiSecurityScheme.
 
 ##### Available Extension Methods
 
-- `UseJwtBearerGatewaySecurity`: Configures standard JWT Bearer Token authentication.
-- `UseApiKeyGatewaySecurity`: Configures API Key authentication (Header or Query).
-- `UseBasicAuthGatewaySecurity`: Configures HTTP Basic Authentication.
-- `UseOAuth2ClientCredentialsGatewaySecurity`: Configures OAuth2 Client Credentials flow.
-- `UseOAuth2AuthCodeGatewaySecurity`: Configures OAuth2 Authorization Code flow.
-- `UseOpenIdConnectGatewaySecurity`: Configures OIDC via Discovery Document.
+- `ApplyGlobalJwtBearerSecurityScheme`: Configures standard JWT Bearer Token authentication.
+- `ApplyGlobalApiKeySecurityScheme`: Configures API Key authentication (Header, Query, or Cookie).
+- `ApplyGlobalBasicAuthSecurityScheme`: Configures HTTP Basic Authentication.
+- `ApplyGlobalOAuth2ClientCredentialsSecurityScheme`: Configures OAuth2 Client Credentials flow.
+- `ApplyGlobalOAuth2AuthCodeSecurityScheme`: Configures OAuth2 Authorization Code flow.
+- `ApplyGlobalOpenIdConnectSecurityScheme`: Configures OpenID Connect (OIDC) via Discovery Document.
 
 **Example:**
 
@@ -175,26 +245,28 @@ builder.Services.AddKoalesce(builder.Configuration)
     .ForOpenAPI(options =>
     {
         // Example 1: JWT Bearer (Most Common)
-        options.UseJwtBearerGatewaySecurity(
-            description: "Enter your JWT token",
-            bearerFormat: "JWT"
+        options.ApplyGlobalJwtBearerSecurityScheme(
+            schemeName: "Bearer",
+            description: "Enter your JWT token"
         );
-        
+
         /* Other examples:
-        
+
         // Example 2: API Key
-        options.UseApiKeyGatewaySecurity("X-Api-Key", ApiKeyLocation.Header);
+        options.ApplyGlobalApiKeySecurityScheme(
+            headerName: "X-Api-Key",
+            location: ParameterLocation.Header
+        );
 
         // Example 3: OAuth2 Client Credentials
-        options.UseOAuth2ClientCredentialsGatewaySecurity(
-            tokenUrl: "[https://auth.example.com/connect/token](https://auth.example.com/connect/token)",
+        options.ApplyGlobalOAuth2ClientCredentialsSecurityScheme(
+            tokenUrl: new Uri("https://auth.example.com/connect/token"),
             scopes: new Dictionary<string, string> { { "api.read", "Read Access" } }
         );
 
         // Example 4: OpenID Connect (OIDC)
-        options.UseOpenIdConnectGatewaySecurity(
-            openIdConnectUrl: "[https://auth.example.com/.well-known/openid-configuration](https://auth.example.com/.well-known/openid-configuration)",
-            openIdConnectUrlDescription: "Discovery Endpoint"
+        options.ApplyGlobalOpenIdConnectSecurityScheme(
+            openIdConnectUrl: new Uri("https://auth.example.com/.well-known/openid-configuration")
         );
         */
     });
@@ -224,14 +296,13 @@ The `Koalesce.OpenAPI.CLI` tool was built specifically to allow the usage of Koa
 koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml --verbose
 ```
 
-> **⚠️ Security:** If your `appsettings.json` defines an `ApiGatewayBaseUrl`, you **must** also provide a `GatewaySecurityScheme` section within the JSON file unless you set `IgnoreGatewaySecurity` to **true**. 
-Because the CLI cannot utilize the fluent API for security configuration, the security scheme must be explicitly defined in the configuration file.
+> **💡 Security:** When using the CLI, `OpenApiSecurityScheme` is optional. If you want to apply global Gateway security, include it in the `appsettings.json` file. If omitted, downstream API security configurations are preserved as-is.
 
 ```json
   "Koalesce": {
     "OpenApiVersion": "3.0.1",        
     "ApiGatewayBaseUrl": "https://localhost:5000",
-    "GatewaySecurityScheme": {  // sample using JWT
+    "OpenApiSecurityScheme": {  // sample using JWT
       "Type": "Http",
       "Scheme": "bearer",
       "BearerFormat": "JWT",
@@ -246,9 +317,11 @@ Because the CLI cannot utilize the fluent API for security configuration, the se
 
 #### 🔐 Security Schemes & Authorization
 
-Koalesce enforces a "Single Source of Truth" for Gateway security when `ApiGatewayBaseUrl` is set.
-- By default, downstream security schemes are **removed** and replaced by the `GatewaySecurityScheme`.
-- If you need to keep downstream schemes, set `"IgnoreGatewaySecurity": true`.
+Koalesce provides flexible security handling:
+
+- **With `OpenApiSecurityScheme`**: Applies global Gateway security to all operations in the merged document
+- **Without `OpenApiSecurityScheme`**: Preserves each downstream API's security configuration exactly as-is
+- Downstream security schemes (Bearer, ApiKey, etc.) are always preserved in `components.securitySchemes` for reference
 
 #### 🔀 Handling Identical Routes
 

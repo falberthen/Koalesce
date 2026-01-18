@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.6] - 2026-01-18
+
+### Changed
+
+- **Core Update:** Upgraded `Koalesce.OpenAPI` core library to version **1.0.0-alpha.6**.
+- **Security Configuration:** `OpenApiSecurityScheme` is now fully optional in `appsettings.json`. When omitted, downstream API security configurations are preserved as-is in the merged document.
+
+### ⚠️ Breaking Changes
+
+- **Removed `IgnoreGatewaySecurity` property:** This property is no longer needed. Simply omit `OpenApiSecurityScheme` from your `appsettings.json` to preserve downstream security.
+- **Renamed `GatewaySecurityScheme` property:** Now called `OpenApiSecurityScheme` to align with the OpenAPI specification terminology.
+
+### 🔄 Migration Guide
+
+**Before (Alpha 5):**
+
+```json
+{
+  "Koalesce": {
+    "ApiGatewayBaseUrl": "https://localhost:5000",
+    "GatewaySecurityScheme": { ... }  // Required
+  }
+}
+```
+
+**After (Alpha 6):**
+
+```json
+{
+  "Koalesce": {
+    "ApiGatewayBaseUrl": "https://localhost:5000",
+    "OpenApiSecurityScheme": { ... }  // Optional - omit to preserve downstream security
+  }
+}
+```
+
+---
+
 ## [1.0.0-alpha.5] - 2026-01-15
 
 ### Added
@@ -24,8 +62,8 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0-alpha.3] - 2026-01-11
 
 ### ⚠️ Breaking Changes
-- **Security Enforcement:** When `ApiGatewayBaseUrl` is set in `OpenApiOptions`, a `GatewaySecurityScheme` is now **required** (unless `IgnoreGatewaySecurity` is true). Startup will fail if the gateway URL is present but no security scheme is defined.
-> **Note:** When using Koalesce through **Koalesce.OpenAPI.CLI**, you **must** include a `GatewaySecurityScheme` section in the `appsettings.json` if `ApiGatewayBaseUrl` is defined, as the CLI cannot see configurations defined in C# code.
+- **Security Enforcement:** When `ApiGatewayBaseUrl` is set in `OpenApiOptions`, a `OpenApiSecurityScheme` is now **required** (unless `IgnoreGatewaySecurity` is true). Startup will fail if the gateway URL is present but no security scheme is defined.
+> **Note:** When using Koalesce through **Koalesce.OpenAPI.CLI**, you **must** include a `OpenApiSecurityScheme` section in the `appsettings.json` if `ApiGatewayBaseUrl` is defined, as the CLI cannot see configurations defined in C# code.
 
 ---
 

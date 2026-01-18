@@ -1,4 +1,5 @@
 global using Koalesce.Core.Extensions;
+global using Koalesce.OpenAPI;
 global using Koalesce.OpenAPI.CLI;
 global using Koalesce.OpenAPI.Constants;
 global using Koalesce.OpenAPI.Extensions;
@@ -7,6 +8,8 @@ global using Microsoft.AspNetCore.Builder;
 global using Microsoft.AspNetCore.Hosting;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.Extensions.Configuration;
+global using Microsoft.OpenApi.Models;
+global using Microsoft.OpenApi.Readers;
 global using System.Diagnostics;
 global using System.Net;
 global using System.Net.Sockets;
