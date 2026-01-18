@@ -1,31 +1,34 @@
 ![CI Status](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg)
 
-<img src="img/koalesce_small.png" /> 
+<img src="img/koalesce_small.png" />
 
 **Koalesce** is a .NET library designed to merge multiple API definitions into a unified document. It enables seamless API Gateway integration and simplifies frontend client generation for microservices-based architectures.
 
 ---
 
-## How It Works?
+## How It Works
 
 **Process:**
 - Koalesce fetches API definitions from the specified **Sources**.
-- It merges them using the an available `provider` (e.g, `Koalesce.OpenAPI`), generating a single schema at **MergedDocumentPath**.
+- It merges them using an available provider (e.g., `Koalesce.OpenAPI`), generating a single schema at **MergedDocumentPath**.
 - The final *Koalesced* API definition is serialized and available in `JSON` or `YAML` format.
 
 ### ⚡ Key Features
 
-- ✅ Coalesce multiple API definitions into one unified schema.
-- ✅ Fully configurable via `appsettings.json` or Fluent API.
-- ✅ Fail-Fast Validation: Validates URLs and paths at startup to prevent runtime errors.
-- ✅ Flexible Security Handling: Apply global Gateway security or preserve downstream API security configurations.
-- ✅ Aligns perfectly with API Gateways (**Ocelot**, **YARP**).
-- ✅ Allows output a `json` or `yaml` merged document regardless the document type of the source APIs.
-- ✅ Streamlines API client generation (e.g., **NSwag**, **Kiota**) since it results in one unified schema.
-- ✅ Multi-targeting: Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
-- ✅ Agnostic Core: Designed to support future providers implementing other API specification formats (e.g., gRPC, GraphQL).
+- ✅ **Merge Multiple APIs**: Coalesce multiple API definitions into one unified schema.
+- ✅ **Flexible Security**: Apply global Gateway security OR preserve downstream API security configurations.
+- ✅ **Conflict Resolution**: Automatic schema renaming and path collision detection.
+- ✅ **Configurable Caching**: Fine-grained cache control with absolute/sliding expiration settings.
+- ✅ **Gateway Integration**: Works seamlessly with **Ocelot**, **YARP**, and other API Gateways.
+- ✅ **Client Generation**: Streamlines API client generation (e.g., **NSwag**, **Kiota**) with a single unified schema.
+- ✅ **Flexible Configuration**: Configure via `appsettings.json` or Fluent API.
+- ✅ **Format Agnostic Output**: Output `JSON` or `YAML` regardless of source document format.
+- ✅ **Fail-Fast Validation**: Validates URLs and paths at startup to prevent runtime errors.
+- ✅ **Multi-targeting**: Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
+- ✅ **Extensible Core**: Designed to support future providers for other API specification formats.
 
 ---
+
 ## 📦 Installation
 
 #### 🟢 Koalesce for OpenAPI Middleware (ASP.NET Core)
@@ -45,64 +48,105 @@ dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.6
 
 ![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
 
-To install the **Koalesce.OpenAPI.CLI** globally:
-
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.5
+dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.6
 ```
 
 ---
 
-### ⚙️ Configuration
+## ⚙️ Configuration
 
 Koalesce configuration is divided into **Core Options** and **Provider Options** (e.g., OpenAPI).
 
-- 💡 Parameters listed with 🔺 are required.
-- 💡 The file extension `[.json, .yaml]` defined in **MergedDocumentPath** determines the output format.
+- 💡 Parameters marked with 🔺 are required
+- 💡 The file extension `[.json, .yaml]` in **MergedDocumentPath** determines the output format
 
-<br/>
+### 1️⃣ Core Configuration (`Koalesce`)
 
-#### 1️⃣ Core Configuration (`Koalesce`)
-
-| Setting | Type | Default Value | Description |
+| Setting | Type | Default | Description |
 |---|---|---|---|
-| `Sources` | `array` | 🔺 | List of API sources. Each item contains `Url` and **optional** `VirtualPrefix`. |
-| `MergedDocumentPath` | `string` | 🔺 | Path where the merged API definition is exposed. |
-| `Title` | `string` | `"My 🐨Koalesced API"` | Title for the Koalesced API definition. |
-| `SkipIdenticalPaths` | `boolean` | `true` | If `false`, throws exception on duplicate paths. If `true`, logs warning and skips duplicates. |
+| `Sources` | `array` | 🔺 | List of API sources. Each item contains `Url` and optional `VirtualPrefix` |
+| `MergedDocumentPath` | `string` | 🔺 | Path where the merged API definition is exposed |
+| `Title` | `string` | `"My 🐨Koalesced API"` | Title for the merged API definition |
+| `SkipIdenticalPaths` | `boolean` | `true` | If `false`, throws exception on duplicate paths. If `true`, logs warning and skips duplicates |
 
-<br/>
+### Caching Configuration (`Koalesce.Cache`)
 
-#### Caching Configuration (`Koalesce.Cache`)
-
-| Setting | Type | Default Value | Description |
+| Setting | Type | Default | Description |
 |---|---|---|---|
-| `DisableCache` | `boolean` | `false` | If `true`, recomputes the merged document on every request. |
-| `AbsoluteExpirationSeconds` | `integer` | `86400` (24h) | Max duration before a forced refresh of merged result. |
-| `SlidingExpirationSeconds` | `integer` | `300` (5 min) | Resets expiration on every access. |
-| `MinExpirationSeconds` | `integer` | `30` | Minimum allowed expiration time. |
+| `DisableCache` | `boolean` | `false` | If `true`, recomputes the merged document on every request |
+| `AbsoluteExpirationSeconds` | `integer` | `86400` (24h) | Max duration before a forced refresh of merged result |
+| `SlidingExpirationSeconds` | `integer` | `300` (5 min) | Resets expiration on every access |
+| `MinExpirationSeconds` | `integer` | `30` | Minimum allowed expiration time |
 
-<br/>
-
-#### 2️⃣ OpenAPI Provider Configuration
+### 2️⃣ OpenAPI Provider Configuration
 
 These settings are specific to the `Koalesce.OpenAPI` provider.
 
-| Setting | Type | Default Value | Description |
+| Setting | Type | Default | Description |
 |---|---|---|---|
-| `OpenApiVersion` | `string` | "3.0.1" | Target OpenAPI version for the output. |
-| `ApiGatewayBaseUrl` | `string` | `null` | The public URL of your Gateway. Activates **Gateway Mode**. |
-| `OpenApiSecurityScheme` | `object` | `null` | Optional global security scheme (e.g., JWT, ApiKey) for the Gateway. `When configured, it's applied to all operations. When omitted, downstream security is preserved as-is.` |
+| `OpenApiVersion` | `string` | `"3.0.1"` | Target OpenAPI version for the output |
+| `ApiGatewayBaseUrl` | `string` | `null` | The public URL of your Gateway. Activates **Gateway Mode** |
+| `OpenApiSecurityScheme` | `object` | `null` | **Optional** global security scheme. When configured, replaces all downstream security. When omitted, preserves downstream security as-is |
 
 ---
 
-### 🔐 Gateway Security Configuration
+## 🔌 How to Use
 
-Koalesce provides a simple, intuitive security model:
+### ⚙️ As Middleware in ASP.NET Core
 
-#### ✅ With `OpenApiSecurityScheme` (Global Gateway Security)
+#### 1️⃣ Register Koalesce
 
-**Use when:** Your Gateway handles authentication and you want all operations to require Gateway auth.
+```csharp
+builder.Services.AddKoalesce(builder.Configuration)
+    .ForOpenAPI();
+```
+
+#### 2️⃣ Enable Middleware
+
+```csharp
+app.UseKoalesce();
+```
+
+<br/>
+
+### 💻 As CLI (Command Line Interface) Tool
+
+The `Koalesce.OpenAPI.CLI` is a standalone tool that uses `Koalesce.OpenAPI` to merge OpenAPI definitions directly into a file `without hosting a .NET application`.
+
+<img src="img/Screenshot_CLI.png"/>
+
+#### Arguments:
+
+- 🔺 `--config` - Path to your `appsettings.json`
+- 🔺 `--output` - Path for the merged OpenAPI spec file
+- `--verbose` - Enable detailed logging
+- `--version` - Display current version
+
+#### Example
+
+```bash
+koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml --verbose
+```
+
+> 💡 **Note:** The CLI uses the same configuration model as the Middleware. All settings are defined in `appsettings.json`, including optional security configuration.
+
+---
+
+## 🔐 Security Configuration (Optional)
+
+Koalesce is **non-opinionated** about security - authentication and authorization are responsibilities of your APIs and Gateway.
+
+**Default Behavior:**
+
+- ✅ Operations with security in downstream APIs → Keep their security requirements
+- ✅ Operations without security in downstream APIs → Remain public
+- ✅ Mixed public/private scenarios are supported naturally
+- ✅ Each API's security scheme is preserved in the merged document
+
+However, it provides an **optional global security scheme** to simplify client generation and avoid post-processing the merged definition.
+
+**Configuration:**
 
 ```json
 {
@@ -118,127 +162,28 @@ Koalesce provides a simple, intuitive security model:
 }
 ```
 
-**Result:** All operations in the merged document require Gateway authentication. Ideal for NSwag/Kiota client generation with centralized auth.
-
----
-
-#### ✅ Without `OpenApiSecurityScheme` (Preserve Downstream Security)
-
-**Use when:** You want to preserve each downstream API's security configuration exactly as-is.
-
-```json
-{
-  "Koalesce": {
-    "ApiGatewayBaseUrl": "https://gateway.com"
-    // No OpenApiSecurityScheme = preserve downstream security
-  }
-}
-```
-
 **Result:**
 
-- Operations with security in downstream APIs → Keep their security requirements
-- Operations without security in downstream APIs → Remain public
-- Mixed public/private scenarios are supported naturally
+- ✅ All operations in the merged document require Gateway authentication
+- ✅ Downstream security schemes are **replaced** with the global scheme
+- ✅ Ideal for NSwag/Kiota client generation with centralized auth
+- ✅ All APIs become secured (even if they were public downstream)
 
-**Example:** If CustomersAPI has JWT security and ProductsAPI is public, the merged document will reflect exactly that - Customers operations require auth, Products operations don't.
+#### (Optional) Configure Security via Fluent API
 
----
+Koalesce provides fluent extension methods for common security scenarios:
 
-##### 📝 `appsettings.json` Examples
+**Available Extension Methods:**
 
-**Aggregation Mode (No Gateway):**
+- `ApplyGlobalJwtBearerSecurityScheme` - JWT Bearer Token authentication
+- `ApplyGlobalApiKeySecurityScheme` - API Key authentication (Header, Query, or Cookie)
+- `ApplyGlobalBasicAuthSecurityScheme` - HTTP Basic Authentication
+- `ApplyGlobalOAuth2ClientCredentialsSecurityScheme` - OAuth2 Client Credentials flow
+- `ApplyGlobalOAuth2AuthCodeSecurityScheme` - OAuth2 Authorization Code flow
+- `ApplyGlobalOpenIdConnectSecurityScheme` - OpenID Connect (OIDC) Discovery
 
-```json
-{
-  "Koalesce": {
-    "Sources": [
-      { "Url": "https://service1.com/swagger.json" },
-      { "Url": "https://service2.com/swagger.json" }
-    ],
-    "MergedDocumentPath": "/swagger/v1/all-apis.json",
-    "Title": "All APIs Documentation"
-  }
-}
-```
+> 💡 **Tip:** If using the Middleware, specify security configuration via Fluent API to keep your `appsettings.json` clean.
 
-**Gateway Mode (With Global Security):**
-
-```json
-{
-  "Koalesce": {
-    "Sources": [
-      {
-        "Url": "https://localhost:8001/swagger/v1/swagger.json",
-        "VirtualPrefix": "customers"
-      },
-      {
-        "Url": "https://localhost:8002/swagger/v1/swagger.json",
-        "VirtualPrefix": "inventory"
-      }
-    ],
-    "MergedDocumentPath": "/swagger/v1/apigateway.json",
-    "Title": "API Gateway",
-
-    // Gateway Mode Configuration
-    "ApiGatewayBaseUrl": "https://localhost:5000",
-    "OpenApiSecurityScheme": {
-      "Type": "Http",
-      "Scheme": "bearer",
-      "BearerFormat": "JWT",
-      "Description": "JWT Authorization"
-    },
-
-    // Caching
-    "Cache": {
-      "AbsoluteExpirationSeconds": 86400,
-      "SlidingExpirationSeconds": 300
-    }
-  }
-}
-```
-
-> **Note on `VirtualPrefix`:** When you define a prefix (e.g., `"inventory"`), Koalesce modifies the path in the documentation (e.g., `/api/get` becomes `/inventory/api/get`). Your API Gateway (e.g., Ocelot/YARP) must be configured to route this prefixed path back to the original downstream service.
-
----
-
-## How to use Koalesce?
-
-
-#### 🛠️ Using Koalesce as Middleware in your .NET Application
-
-In the `Program.cs` of your gateway project, register service and enable the middleware.
-
-##### 1️⃣ Register Koalesce.[ForProvider()]
-
-```csharp
-builder.Services.AddKoalesce(builder.Configuration)
-    .ForOpenAPI(); // Add options lambda here for fluent security config
-```
-
-##### 2️⃣ Enable Middleware
-
-```csharp
-app.UseKoalesce();
-```
-
-##### 🔐 Security Configuration through Fluent API
-
-Koalesce provides a set of fluent extension methods to easily configure common security scenarios. When `ApiGatewayBaseUrl` is set, you **must** define a `OpenApiSecurityScheme` either via `appsettings.json` or the fluent API.
-Without it, Koalesce can't know how to document the authentication mechanism for your API Gateway and will throw an exception at startup.
-
-If using the Middleware, it's recommended you specify the security configuration inside the provider options to keep your `appsettings.json` clear of a OpenApiSecurityScheme.
-
-##### Available Extension Methods
-
-- `ApplyGlobalJwtBearerSecurityScheme`: Configures standard JWT Bearer Token authentication.
-- `ApplyGlobalApiKeySecurityScheme`: Configures API Key authentication (Header, Query, or Cookie).
-- `ApplyGlobalBasicAuthSecurityScheme`: Configures HTTP Basic Authentication.
-- `ApplyGlobalOAuth2ClientCredentialsSecurityScheme`: Configures OAuth2 Client Credentials flow.
-- `ApplyGlobalOAuth2AuthCodeSecurityScheme`: Configures OAuth2 Authorization Code flow.
-- `ApplyGlobalOpenIdConnectSecurityScheme`: Configures OpenID Connect (OIDC) via Discovery Document.
-
-**Example:**
 
 ```csharp
 builder.Services.AddKoalesce(builder.Configuration)
@@ -255,13 +200,18 @@ builder.Services.AddKoalesce(builder.Configuration)
         // Example 2: API Key
         options.ApplyGlobalApiKeySecurityScheme(
             headerName: "X-Api-Key",
+            description: "Enter your API Key",
             location: ParameterLocation.Header
         );
 
         // Example 3: OAuth2 Client Credentials
         options.ApplyGlobalOAuth2ClientCredentialsSecurityScheme(
             tokenUrl: new Uri("https://auth.example.com/connect/token"),
-            scopes: new Dictionary<string, string> { { "api.read", "Read Access" } }
+            scopes: new Dictionary<string, string>
+            {
+                { "api.read", "Read Access" },
+                { "api.write", "Write Access" }
+            }
         );
 
         // Example 4: OpenID Connect (OIDC)
@@ -272,91 +222,237 @@ builder.Services.AddKoalesce(builder.Configuration)
     });
 ```
 
-> 💡 Check the **Koalesce.Samples.Swagger.Ocelot** project for a complete implementation of all these scenarios.
+---
 
+## 🔀 Conflict Resolution Strategies
+
+Koalesce automatically handles conflicts during the merge process:
+
+### Schema Name Conflicts
+
+When multiple APIs define schemas with the same name (e.g., `Product`), Koalesce automatically renames them using the pattern `{prefix}_{SchemaName}`:
+
+**Example:**
+
+- `InventoryAPI` defines `Product` → becomes `Inventory_Product`
+- `CatalogAPI` defines `Product` → becomes `Catalog_Product`
+
+The prefix is determined by (in order of priority):
+
+1. **VirtualPrefix** (if configured, e.g., `/inventory` → `Inventory`)
+2. **API Name** (sanitized, e.g., `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPI`)
+
+This ensures all schemas are preserved without collisions.
+
+### Path Conflicts
+
+When identical paths exist across multiple APIs (e.g., `/api/health`), you have two options:
+
+**Option 1: Use `VirtualPrefix` (Recommended)**
+
+```json
+{
+  "Sources": [
+    {
+      "Url": "https://inventory-api/swagger.json",
+      "VirtualPrefix": "/inventory"
+    },
+    {
+      "Url": "https://catalog-api/swagger.json",
+      "VirtualPrefix": "/catalog"
+    }
+  ]
+}
+```
+
+**Result:** `/api/health` becomes `/inventory/api/health` and `/catalog/api/health`
+
+> **Important:** Your API Gateway (Ocelot/YARP) must be configured to route these prefixed paths back to the original downstream services.
 
 <br/>
 
-#### 💻 Using Koalesce.OpenAPI through CLI (Command Line Interface)
-
-The `Koalesce.OpenAPI.CLI` tool was built specifically to allow the usage of Koalesce for merging OpenAPI definitions directly into a file in the disk, without the need for a .NET application hosting the middleware.
-
-<img src="img/Screenshot_CLI.png"/>
-
-#### Arguments:
-
-- 🔺`--config` specifies the path to your `appsettings.json`.
-- 🔺`--output` defines the path for the merged OpenAPI spec file.
-- `--verbose` enables detailed logging.
-- `--version` displays the current version.
-
-#### Example
-
-```bash
-koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml --verbose
-```
-
-> **💡 Security:** When using the CLI, `OpenApiSecurityScheme` is optional. If you want to apply global Gateway security, include it in the `appsettings.json` file. If omitted, downstream API security configurations are preserved as-is.
+**Option 2: Set `SkipIdenticalPaths: true`**
 
 ```json
+{
+  "SkipIdenticalPaths": true
+}
+```
+
+**Result:** First API wins, subsequent identical paths are skipped with a warning.
+
+---
+
+## 📝 Configuration Examples (Koalesce.OpenAPI)
+
+### Aggregation Mode
+
+```json
+{
   "Koalesce": {
-    "OpenApiVersion": "3.0.1",        
+    "Sources": [
+      { "Url": "https://service1.com/swagger.json" },
+      { "Url": "https://service2.com/swagger.json" }
+    ],
+    "MergedDocumentPath": "/swagger/v1/all-apis.json",
+    "Title": "All APIs Documentation"
+    // If OpenApiSecurityScheme = downstream security is preserved
+  }
+}
+```
+
+### Gateway Mode
+
+```json
+{
+  "Koalesce": {
+    "Sources": [
+      { "Url": "https://localhost:8001/swagger/v1/swagger.json" },
+      { "Url": "https://localhost:8002/swagger/v1/swagger.json" }
+    ],
+    "MergedDocumentPath": "/swagger/v1/apigateway.yaml",
+    "Title": "API Gateway",
+    "ApiGatewayBaseUrl": "https://localhost:5000"
+    // If OpenApiSecurityScheme = downstream security is preserved
+  }
+}
+```
+
+### Gateway Mode (With Global Security and Cache)
+
+```json
+{
+  "Koalesce": {
+    "Sources": [
+      {
+        "Url": "https://localhost:8001/swagger/v1/swagger.json",
+        "VirtualPrefix": "/customers"
+      },
+      {
+        "Url": "https://localhost:8002/swagger/v1/swagger.json",
+        "VirtualPrefix": "/inventory"
+      }
+    ],
+    "MergedDocumentPath": "/swagger/v1/apigateway.json",
+    "Title": "API Gateway",
     "ApiGatewayBaseUrl": "https://localhost:5000",
-    "OpenApiSecurityScheme": {  // sample using JWT
+    "OpenApiSecurityScheme": {
       "Type": "Http",
       "Scheme": "bearer",
       "BearerFormat": "JWT",
-      "Description": "JWT Authorization header using the Bearer scheme."
+      "Description": "JWT Authorization"
+    },
+    "Cache": {
+      "AbsoluteExpirationSeconds": 86400,
+      "SlidingExpirationSeconds": 300
     }
+  }
 }
 ```
+
+> 💡 **Note:** Check out the [Koalesce.Samples.Swagger.Ocelot](https://github.com/falberthen/Koalesce/tree/master/samples/Koalesce.Samples.Swagger.Ocelot) sample project for a complete working implementation with Ocelot Gateway integration.
 
 ---
 
 ## ⚠️ Important Considerations and Limitations
 
-#### 🔐 Security Schemes & Authorization
+### Path Conflict Resolution
 
-Koalesce provides flexible security handling:
+When multiple APIs define identical routes (e.g., `/api/health`), Koalesce handles conflicts based on your configuration. Choose the strategy that best fits your architecture:
 
-- **With `OpenApiSecurityScheme`**: Applies global Gateway security to all operations in the merged document
-- **Without `OpenApiSecurityScheme`**: Preserves each downstream API's security configuration exactly as-is
-- Downstream security schemes (Bearer, ApiKey, etc.) are always preserved in `components.securitySchemes` for reference
+**Scenario 1: With `VirtualPrefix` (Recommended) - Preserve All Endpoints**
 
-#### 🔀 Handling Identical Routes
+Use when you want to preserve ALL endpoints from ALL APIs:
 
-If two or more microservices share the same route (e.g., `/api/health`), a collision occurs.
+```json
+{
+  "Sources": [
+    { "Url": "https://inventory-api/swagger.json", "VirtualPrefix": "/inventory" },
+    { "Url": "https://catalog-api/swagger.json", "VirtualPrefix": "/catalog" }
+  ]
+}
+```
 
-🔹 **How to resolve this?**
+**Behavior:**
 
-1.  **Use `VirtualPrefix` (Recommended):**
-    Assign a unique prefix in `appsettings.json` (e.g., `inventory`, `products`).
-    - Koalesce transforms `/api/health` into `/inventory/api/health`.
-    - This ensures unique paths in the documentation.
-    - *Requires API Gateway URL Rewrite configuration.*
+- ✅ Transforms `/api/health` → `/inventory/api/health` and `/catalog/api/health`
+- ✅ Both endpoints preserved in merged document
+- ✅ No path conflicts occur
+- ⚠️ **Requires Gateway URL Rewrite** to route prefixed paths back to original services
 
-2.  **Order of Precedence:**
-    - If `VirtualPrefix` is not used, the **order of Sources** determines precedence.
-    - By default (`SkipIdenticalPaths: true`), duplicates are ignored (first wins).
+**Scenario 2: Without `VirtualPrefix` (Default) - First Source Wins**
+
+Use when you have overlapping routes and want Koalesce to handle it automatically:
+
+```json
+{
+  "Sources": [
+    { "Url": "https://inventory-api/swagger.json" },
+    { "Url": "https://catalog-api/swagger.json" }
+  ],
+}
+```
+
+**Behavior:**
+
+- ✅ First source wins: `/api/health` from `inventory-api` is kept
+- ⚠️ Subsequent identical paths are **skipped** with warning
+- ⚠️ `/api/health` from `catalog-api` is **lost** in merged document
+- ✅ No Gateway configuration needed
+
+**Scenario 3: Fail-Fast on Conflicts - Enforce Unique Routes**
+
+Use when you want to enforce unique routes and fail if conflicts are detected:
+
+```json
+{
+  "Sources": [
+    { "Url": "https://inventory-api/swagger.json" },
+    { "Url": "https://catalog-api/swagger.json" }
+  ],
+  "SkipIdenticalPaths": false
+}
+```
+
+**Behavior:**
+
+- ❌ **Throws `KoalesceIdenticalPathFoundException` at startup**
+- ❌ Merge fails if any path collision detected
+- ✅ Forces explicit conflict resolution
+
+### Schema Name Conflict Resolution
+
+**Automatic Resolution:** When multiple APIs define schemas with identical names (e.g., `Product`), Koalesce automatically renames them using the pattern `{prefix}_{SchemaName}`.
+
+**Prefix Priority:**
+
+1. **VirtualPrefix** (if configured): `/inventory` → `Inventory_Product`
+2. **API Name** (sanitized): `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPI_Product`
+
+**Example:**
+
+- `InventoryAPI` defines `Product` → becomes `Inventory_Product`
+- `CatalogAPI` defines `Product` → becomes `Catalog_Product`
+
+This ensures all schemas are preserved without manual intervention.
 
 ---
 
-#### 📝 License
+## 📜 Changelog
+
+- [Koalesce Changelog](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md)
+- [Koalesce CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/src/Koalesce.OpenAPI.CLI/CHANGELOG.md)
+
+---
+
+## 📧 Support & Contributing
+
+- **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/falberthen/Koalesce/issues)
+- **Contributing**: Contributions are welcome! Feel free to open issues and submit PRs.
+- **Sample Projects**: Check out [Koalesce.Samples.sln](https://github.com/falberthen/Koalesce/blob/master/samples/Koalesce.Samples.sln) for a complete implementation
+
+---
+
+## 📝 License
 
 Koalesce is licensed under the [**MIT License**](https://github.com/falberthen/Koalesce/blob/master/LICENSE).
-
-#### ❤️ Contributing
-
-Contributions are welcome! Feel free to open issues and submit PRs.
-
-#### 📧 Contact
-
-For support or inquiries, reach out via **GitHub Issues**.
-
-#### 📜 Koalesce Changelog
-
-See the full changelog [here](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md).
-
-#### 📜 Koalesce.OpenAPI.CLI Changelog
-
-See the full changelog [here](https://github.com/falberthen/Koalesce/tree/master/src/Koalesce.OpenAPI.CLI/CHANGELOG.md).
