@@ -15,9 +15,9 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 			{
 				// Title omitido propositalmente para testar o default
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://localhost:5001/v1/apidefinition.json" }
+					new ApiSource { Url = "https://localhost:5001/v1/apidefinition.json" }
 				}
 			}
 		};
@@ -48,10 +48,10 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 			{
 				Title = "My Koalesced API",
 				MergedDocumentPath = "/v1/mergedapidefinition.yaml",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://localhost:5001/v1/apidefinition.json" },
-					new SourceDefinition { Url = "https://localhost:5002/v1/apidefinition.json" }
+					new ApiSource { Url = "https://localhost:5001/v1/apidefinition.json" },
+					new ApiSource { Url = "https://localhost:5002/v1/apidefinition.json" }
 				}
 			}
 		};
@@ -64,10 +64,10 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 
 		var provider = Services.BuildServiceProvider();
 
-		var expectedRoutes = new List<SourceDefinition>()
+		var expectedRoutes = new List<ApiSource>()
 		{
-			new SourceDefinition { Url = "https://localhost:5001/v1/apidefinition.json" },
-			new SourceDefinition { Url = "https://localhost:5002/v1/apidefinition.json" }
+			new ApiSource { Url = "https://localhost:5001/v1/apidefinition.json" },
+			new ApiSource { Url = "https://localhost:5002/v1/apidefinition.json" }
 		};
 
 		// Act
@@ -78,7 +78,7 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 		Assert.Equal("My Koalesced API", options.Title);
 		Assert.Equal("/v1/mergedapidefinition.yaml", options.MergedDocumentPath);
 
-		// Nota: Isso assume que SourceDefinition é um record ou implementa Equals corretamente
+		// Nota: Isso assume que ApiSource é um record ou implementa Equals corretamente
 		Assert.Equal(expectedRoutes.Count, options.Sources.Count);
 		Assert.Equal(expectedRoutes[0].Url, options.Sources[0].Url);
 		Assert.Equal(expectedRoutes[1].Url, options.Sources[1].Url);
@@ -108,10 +108,10 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 			Koalesce = new KoalesceOptions
 			{
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" },
-					new SourceDefinition { Url = "localhost:8002/v1/apidefinition.json" } // Invalid URL (missing scheme)
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
+					new ApiSource { Url = "localhost:8002/v1/apidefinition.json" } // Invalid URL (missing scheme)
                 }
 			}
 		};

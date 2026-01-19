@@ -50,9 +50,9 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 		// Arrange
 		var options = new KoalesceOptions
 		{
-			Sources = new List<SourceDefinition>
+			Sources = new List<ApiSource>
 			{
-				new SourceDefinition
+				new ApiSource
 				{
 					Url = "http://fakeapi.com/v1/apidefinition.json"
 				}
@@ -76,9 +76,9 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 		// Arrange
 		var options = new KoalesceOptions
 		{
-			Sources = new List<SourceDefinition> 
+			Sources = new List<ApiSource> 
 			{
-				new SourceDefinition
+				new ApiSource
 				{
 					Url = "http://fakeapi.com/v1/apidefinition.json",
 				}
@@ -102,9 +102,9 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 		// Arrange
 		var options = new KoalesceOptions
 		{
-			Sources = new List<SourceDefinition> 
+			Sources = new List<ApiSource> 
 			{
-				new SourceDefinition
+				new ApiSource
 				{
 					Url = "http://fakeapi.com/v1/apidefinition.json",
 				}

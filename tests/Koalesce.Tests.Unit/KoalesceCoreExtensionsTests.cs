@@ -12,10 +12,10 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 			Koalesce = new KoalesceOptions
 			{
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" },
-					new SourceDefinition { Url = "https://api2.com/v1/apidefinition.json" }
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
+					new ApiSource { Url = "https://api2.com/v1/apidefinition.json" }
 				}
 			}
 		};
@@ -55,9 +55,9 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 			Koalesce = new KoalesceOptions
 			{
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" }
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" }
 				}
 			}
 		};
@@ -88,9 +88,9 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 			Koalesce = new KoalesceOptions
 			{
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" }
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" }
 				}
 			}
 		};

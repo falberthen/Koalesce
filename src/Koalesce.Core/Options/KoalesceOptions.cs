@@ -10,7 +10,7 @@ public class KoalesceOptions : IValidatableObject
 	/// Source URLs. At least one source is required.
 	/// </summary>
 	[Required]
-	public List<SourceDefinition> Sources { get; set; } = new();
+	public List<ApiSource> Sources { get; set; } = new();
 
 	/// <summary>
 	/// The logical path where the merged definition should be exposed.
