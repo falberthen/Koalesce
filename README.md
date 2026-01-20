@@ -37,11 +37,11 @@
 
 ```sh
 # Package Manager
-NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.6
+NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.7
 ```
 ```sh
 # .NET CLI
-dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.6
+dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.7
 ```
 
 #### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
@@ -49,7 +49,7 @@ dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.6
 ![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
 
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.6
+dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.7
 ```
 
 ---
@@ -88,6 +88,7 @@ These settings are specific to the `Koalesce.OpenAPI` provider.
 | `OpenApiVersion` | `string` | `"3.0.1"` | Target OpenAPI version for the output |
 | `ApiGatewayBaseUrl` | `string` | `null` | The public URL of your Gateway. Activates **Gateway Mode** |
 | `OpenApiSecurityScheme` | `object` | `null` | **Optional** global security scheme. When configured, replaces all downstream security. When omitted, preserves downstream security as-is |
+| `SchemaConflictPattern` | `string` | `"{Prefix}_{SchemaName}"` | Pattern for resolving schema name conflicts. Available placeholders: `{Prefix}`, `{SchemaName}` |
 
 ---
 
@@ -230,14 +231,30 @@ Koalesce automatically handles conflicts during the merge process:
 
 ### Schema Name Conflicts
 
-When multiple APIs define schemas with the same name (e.g., `Product`), Koalesce automatically renames them using the pattern `{prefix}_{SchemaName}`:
+When multiple APIs define schemas with the same name (e.g., `Product`), Koalesce automatically renames them using a configurable pattern.
+
+**Default Pattern:** `{Prefix}_{SchemaName}`
 
 **Example:**
 
 - `InventoryAPI` defines `Product` → becomes `Inventory_Product`
 - `CatalogAPI` defines `Product` → becomes `Catalog_Product`
 
-The prefix is determined by (in order of priority):
+**Custom Pattern:**
+
+You can customize the pattern via `appsettings.json` or Fluent API:
+
+```json
+{
+  "Koalesce": {
+    "SchemaConflictPattern": "{SchemaName}_{Prefix}"
+  }
+}
+```
+
+**Available placeholders:** `{Prefix}`, `{SchemaName}`
+
+**Prefix Priority:**
 
 1. **VirtualPrefix** (if configured, e.g., `/inventory` → `Inventory`)
 2. **API Name** (sanitized, e.g., `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPI`)

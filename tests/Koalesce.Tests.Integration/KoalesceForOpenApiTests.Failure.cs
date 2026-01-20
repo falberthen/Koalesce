@@ -5,7 +5,7 @@ public partial class KoalesceForOpenApiTests
 	const string _identicalPathSettings = "RestAPIs/appsettings.identicalpaths.json";	
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_WithIdenticalPaths_AndSkipIdenticalPathsIsFalse_ShouldReturnHttp500()
+	public async Task KoalesceForOpenAPI_WhenIdenticalPaths_AndSkipIdenticalPathsIsFalse_ShouldReturnHttp500()
 	{
 		// Arrange
 		var koalescingApi = await StartWebApplicationAsync(_identicalPathSettings, builder =>
@@ -28,7 +28,7 @@ public partial class KoalesceForOpenApiTests
 
 	#region TESTS USING OpenApiSecurityScheme
 	[Fact]
-	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithEmptyName_ShouldReturn500()
+	public async Task KoalesceForOpenAPI_WhenUsingOpenApiSecurityScheme_WithEmptyName_ShouldReturn500()
 	{
 		// Arrange
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>

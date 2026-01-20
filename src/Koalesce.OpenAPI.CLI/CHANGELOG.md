@@ -5,11 +5,35 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.1.0-alpha.7] - 2026-01-19
+
+### Added
+
+- **Customizable Schema Conflict Pattern:** New `SchemaConflictPattern` option in `appsettings.json` allows customizing how schema name conflicts are resolved.
+  - Default: `"{Prefix}_{SchemaName}"` (e.g., `Inventory_Product`)
+  - Available placeholders: `{Prefix}`, `{SchemaName}`
+
+**Example configuration:**
+
+```json
+{
+  "Koalesce": {
+    "SchemaConflictPattern": "{SchemaName}_{Prefix}"
+  }
+}
+```
+
+### Changed
+
+- **Core Update:** Upgraded `Koalesce.OpenAPI` core library to version **1.1.0-alpha.7**.
+
+---
+
 ## [1.0.0-alpha.6] - 2026-01-18
 
 ### Changed
 
-- **Core Update:** Upgraded `Koalesce.OpenAPI` core library to version **1.0.0-alpha.6**.
+- **Core Update:** Upgraded `Koalesce.OpenAPI` core library to version **1.0.0-alpha.7**.
 - **Security Configuration:** `OpenApiSecurityScheme` is now fully optional in `appsettings.json`. When omitted, downstream API security configurations are preserved as-is in the merged document.
 
 ### ⚠️ Breaking Changes

@@ -6,7 +6,7 @@ namespace Koalesce.Tests.Unit;
 public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
 {
 	[Fact]
-	public void Koalesce_WhenForOpenAPI_WithGatewayUrlAndNoSecurity_ShouldNotThrow()
+	public void KoalesceForOpenAPI_WithGatewayUrlAndNoSecurity_ShouldNotThrow()
 	{
 		// Arrange
 		var appSettingsStub = new
@@ -40,7 +40,7 @@ public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void Koalesce_WhenForOpenAPI_WithInvalidGatewayUrl_ShouldThrowValidationException()
+	public void KoalesceForOpenAPI_WithInvalidGatewayUrl_ShouldThrowValidationException()
 	{
 		// Arrange
 		var appSettingsStub = new
@@ -74,7 +74,7 @@ public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void Koalesce_WhenForOpenAPI_WithOpenApiSecurityScheme_ShouldBindCorrectly()
+	public void KoalesceForOpenAPI_WithOpenApiSecurityScheme_ShouldBindCorrectly()
 	{
 		// Arrange
 		var appSettingsStub = new
@@ -118,7 +118,7 @@ public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void Koalesce_WhenForOpenAPI_WithEmptyGatewayUrl_ShouldNotValidate()
+	public void KoalesceForOpenAPI_WithEmptyGatewayUrl_ShouldNotThrowValidationException()
 	{
 		// Arrange - Empty string is treated as Aggregation Mode
 		var appSettingsStub = new
@@ -147,5 +147,106 @@ public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
 
 		Assert.NotNull(options);
 		Assert.Empty(options.ApiGatewayBaseUrl);
+	}
+
+	[Fact]
+	public void KoalesceForOpenAPI_WithDefaultSchemaConflictPattern_ShouldUseDefault()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+
+		// Assert - Default pattern
+		Assert.Equal("{Prefix}_{SchemaName}", options.SchemaConflictPattern);
+	}
+
+	[Fact]
+	public void KoalesceForOpenAPI_WithCustomSchemaConflictPattern_ShouldBindCorrectly()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				},
+				SchemaConflictPattern = "{SchemaName}_{Prefix}"
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+
+		// Assert - Custom pattern
+		Assert.Equal("{SchemaName}_{Prefix}", options.SchemaConflictPattern);
+	}
+
+	[Theory]
+	[InlineData("{Prefix}_Schema")]         // Missing {SchemaName}
+	[InlineData("Schema_{SchemaName}")]     // Missing {Prefix}
+	[InlineData("InvalidPattern")]          // Missing both placeholders
+	[InlineData("{prefix}_{schemaname}")]   // Case-sensitive: wrong case
+	public void KoalesceForOpenAPI_WithInvalidSchemaConflictPattern_ShouldThrowValidationException(string invalidPattern)
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				},
+				SchemaConflictPattern = invalidPattern
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains(OpenAPIConstants.SchemaConflictPatternValidationError, exception.Message);
 	}
 }

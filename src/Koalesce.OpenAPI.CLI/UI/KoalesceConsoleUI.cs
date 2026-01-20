@@ -69,7 +69,7 @@ public static class KoalesceConsoleUI
 	/// Prints the list of OpenAPI source document URLs loaded from configuration.
 	/// </summary>
 	/// <param name="sources">The list of OpenAPI URLs.</param>
-	public static void PrintSourceList(IEnumerable<SourceDefinition> sources)
+	public static void PrintSourceList(IEnumerable<ApiSource> sources)
 	{
 		Console.WriteLine($"{Cyan}🔍 Loaded {sources.Count()} source OpenAPI docs from config:{Reset}\n");
 		foreach (var source in sources)
