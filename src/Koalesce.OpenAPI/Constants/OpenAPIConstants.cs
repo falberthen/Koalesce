@@ -2,9 +2,12 @@
 
 public static class OpenAPIConstants
 {
-	#region OpenApiOptions	
+	#region OpenApiOptions
 	public const string ApiGatewayBaseUrlValidationError =
 		"ApiGatewayBaseUrl must be a valid absolute URL (http:// or https://).";
+
+	public const string SchemaConflictPatternValidationError =
+		"SchemaConflictPattern must contain both {Prefix} and {SchemaName} placeholders.";
 	#endregion
 
 	#region OpenApiDocumentMerger

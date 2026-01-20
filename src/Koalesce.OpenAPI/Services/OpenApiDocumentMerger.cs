@@ -62,17 +62,17 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			var fetchTasks = _options.Sources.Select(async source =>
 			{
 				var doc = await FetchApiDefinitionAsync(httpClient, source.Url);
-				return (SourceConfig: source, Document: doc);
+				return (ApiSource: source, Document: doc);
 			});
 
 			var results = await Task.WhenAll(fetchTasks);
 
 			// Merge results sequentially
-			foreach (var (sourceConfig, downstreamApiDefinition) in results)
+			foreach (var (apiSource, downstreamApiDefinition) in results)
 			{
 				if (downstreamApiDefinition is not null)
 				{
-					MergeApiDefinition(downstreamApiDefinition, mergedDocumentDefinition, sourceConfig);
+					MergeApiDefinition(downstreamApiDefinition, mergedDocumentDefinition, apiSource);
 				}
 			}
 
@@ -125,21 +125,21 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	private void MergeApiDefinition(
 		OpenApiDocument sourceDocument,
 		OpenApiDocument targetDocument,
-		SourceDefinition sourceConfig)
+		ApiSource apiSource)
 	{
 		string apiName = sourceDocument.Info?.Title ?? "Unknown API";
 		string apiVersion = sourceDocument.Info?.Version ?? "v1";
 
 		// Resolve Schema Conflicts (renaming source schemas if they collide)
 		OpenApiSchemaConflictResolver
-			.ResolveSchemaConflicts(_logger, sourceDocument, targetDocument, apiName, sourceConfig.VirtualPrefix);
+			.ResolveSchemaConflicts(_logger, sourceDocument, targetDocument, apiName, apiSource.VirtualPrefix, _options.SchemaConflictPattern);
 
 		// Prepare the source server entry ONLY for Aggregation Mode.
 		// If using Gateway,  ignore source servers here (handled globally in MergeIntoSingleDefinitionAsync).
 		OpenApiServer? serverEntry = null;
 		if (string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
 		{
-			string baseUrl = new Uri(sourceConfig.Url).GetLeftPart(UriPartial.Authority);
+			string baseUrl = new Uri(apiSource.Url).GetLeftPart(UriPartial.Authority);
 			serverEntry = new OpenApiServer
 			{
 				Url = baseUrl,
@@ -157,11 +157,11 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			targetDocument.Paths,
 			serverEntry,
 			apiName,
-			sourceConfig.VirtualPrefix
+			apiSource.VirtualPrefix
 		);
 
 		MergeComponents(sourceDocument.Components, targetDocument.Components);
-		MergeTags(sourceDocument, targetDocument, sourceConfig.Url);
+		MergeTags(sourceDocument, targetDocument, apiSource.Url);
 	}
 
 	/// <summary>
