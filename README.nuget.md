@@ -70,7 +70,10 @@ koalesce --config ./appsettings.json --output ./gateway.yaml
 
 ## Conflict Resolution
 
-**Schema conflicts:** Automatically renamed with prefixes (e.g., `Inventory_Product`, `Catalog_Product`)
+**Schema conflicts:** Automatically renamed using a configurable pattern (default: `{Prefix}_{SchemaName}`)
+
+- Example: `Inventory_Product`, `Catalog_Product`
+- Customize via `SchemaConflictPattern` in `appsettings.json`
 
 **Path conflicts:**
 

@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [1.0.0-alpha.6] - 2026-01-18
+## [1.1.0-alpha.7] - 2026-01-19
+
+### Added
+
+- **Customizable Schema Conflict Pattern:** Added `SchemaConflictPattern` property to `KoalesceOpenApiOptions`. This allows customizing how schema name conflicts are resolved during merge.
+  - Available placeholders: `{Prefix}`, `{SchemaName}`
+  - Default: `"{Prefix}_{SchemaName}"` (e.g., `Inventory_Product`)
+  - Example alternatives: `"{SchemaName}_{Prefix}"`, `"{Prefix}{SchemaName}"`
+
+### Changed
+
+- **Renamed `SourceDefinition` to `ApiSource`:** The class representing a source API configuration has been renamed for clarity. This is an internal class rename - the `Sources` property name in configuration remains unchanged.
+
+---
+
+## [1.0.0-alpha.7] - 2026-01-18
 
 ### Changed
 
