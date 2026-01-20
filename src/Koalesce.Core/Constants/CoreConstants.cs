@@ -3,4 +3,24 @@
 public static class CoreConstants
 {
 	public const string KoalesceClient = "KoalesceClient";
+
+	#region SchemaConflictPattern Placeholders
+	public const string PrefixPlaceholder = "{Prefix}";
+	public const string SchemaNamePlaceholder = "{SchemaName}";
+	public const string DefaultSchemaConflictPattern = $"{PrefixPlaceholder}_{SchemaNamePlaceholder}";
+	#endregion
+
+	#region KoalesceOptions Validation Messages
+	public const string ExcludePathCannotBeEmpty =
+		"ExcludePaths[{0}] at Source index {1} cannot be empty.";
+
+	public const string ExcludePathMustStartWithSlash =
+		"ExcludePaths[{0}] at Source index {1} ('{2}') must start with '/'.";
+
+	public const string ExcludePathInvalidWildcard =
+		"ExcludePaths[{0}] at Source index {1} ('{2}') has invalid wildcard. Only '/*' at the end is supported (e.g., '/api/admin/*').";
+
+	public const string SchemaConflictPatternValidationError =
+		$"SchemaConflictPattern must contain both {PrefixPlaceholder} and {SchemaNamePlaceholder} placeholders.";
+	#endregion
 }

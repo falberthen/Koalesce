@@ -12,10 +12,12 @@ internal static class OpenApiSchemaConflictResolver
 		OpenApiDocument targetDocument,
 		string apiName,
 		string? virtualPrefix,
-		string schemaConflictPattern = "{Prefix}_{SchemaName}")
+		string? schemaConflictPattern = null)
 	{
 		if (sourceDocument.Components?.Schemas is null || targetDocument.Components?.Schemas is null)
 			return;
+
+		schemaConflictPattern ??= CoreConstants.DefaultSchemaConflictPattern;
 
 		var renames = new Dictionary<string, string>();
 		var keysToRemove = new List<string>();
@@ -99,8 +101,8 @@ internal static class OpenApiSchemaConflictResolver
 	private static string ApplySchemaConflictPattern(string pattern, string schemaName, string prefix)
 	{
 		return pattern
-			.Replace("{Prefix}", prefix)
-			.Replace("{SchemaName}", schemaName);
+			.Replace(CoreConstants.PrefixPlaceholder, prefix)
+			.Replace(CoreConstants.SchemaNamePlaceholder, schemaName);
 	}
 
 	/// <summary>

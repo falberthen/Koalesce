@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.1.0-alpha.8] - 2026-01-19
+
+### Added
+
+- **Exclude Paths from Merge:** New `ExcludePaths` option per source in `appsettings.json` allows excluding specific paths from the merged document.
+  - Supports exact matches (e.g., `"/api/internal"`)
+  - Supports wildcard patterns (e.g., `"/api/admin/*"`)
+  - **Fail-fast validation:** Paths must start with `/`, cannot be empty, and wildcards are only supported at the end (`/*`)
+
+**Example configuration:**
+
+```json
+{
+  "Koalesce": {
+    "Sources": [
+      {
+        "Url": "https://api.example.com/swagger.json",
+        "ExcludePaths": [
+          "/api/internal",
+          "/api/admin/*"
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Changed
+
+- **Core Update:** Upgraded `Koalesce.OpenAPI` core library to version **1.1.0-alpha.8**.
+- **Moved `SchemaConflictPattern` to Core Options:** `SchemaConflictPattern` has been moved from `OpenApiOptions` to `KoalesceOptions` (Core). No changes required in `appsettings.json` configuration.
+
+---
+
 ## [1.1.0-alpha.7] - 2026-01-19
 
 ### Added

@@ -448,4 +448,71 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		await koalescingApi.StopAsync();
 	}
 	#endregion
+
+	#region TESTS USING ExcludePaths
+
+	private const string _excludePathsSettings = "RestAPIs/appsettings.excludepaths.json";
+	private const string _mergedExcludePathsPath = "/swagger/v1/excludepaths.json";
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WhenExcludePathsConfigured_ShouldNotIncludeExcludedPaths()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_excludePathsSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI());
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedExcludePathsPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// The "/api/customers" (list all) should still be present
+		Assert.Contains("/api/customers", mergedResult);
+
+		// The "/api/customers/{id}" path should be excluded
+		Assert.DoesNotContain("/api/customers/{id}", mergedResult);
+
+		// Products path should be present (not excluded)
+		Assert.Contains("/api/products", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WhenExcludePathsWithWildcard_ShouldExcludeMatchingPaths()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_appSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI(options =>
+				{
+					// Programmatically configure ExcludePaths with wildcard
+					if (options.Sources != null)
+					{
+						foreach (var source in options.Sources.Where(s => s.Url.Contains("8001")))
+						{
+							source.ExcludePaths = new List<string> { "/api/customers/*" };
+						}
+					}
+				}));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// The "/api/customers" (exact match) should be excluded by wildcard
+		Assert.DoesNotContain("\"/api/customers\":", mergedResult);
+
+		// The "/api/customers/{id}" should also be excluded by wildcard
+		Assert.DoesNotContain("/api/customers/{id}", mergedResult);
+
+		// Products path should be present (not excluded)
+		Assert.Contains("/api/products", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	#endregion
 }
