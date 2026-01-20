@@ -79,6 +79,7 @@ koalesce --config ./appsettings.json --output ./gateway.yaml
 
 - Use `VirtualPrefix` to preserve all endpoints: `/api/health` → `/inventory/api/health` + `/catalog/api/health`
 - Set `SkipIdenticalPaths: true` to keep first API's path and skip duplicates
+- Use `ExcludePaths` to exclude specific paths from merge (supports wildcards: `"/api/admin/*"`)
 
 ## Documentation
 

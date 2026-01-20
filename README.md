@@ -37,11 +37,11 @@
 
 ```sh
 # Package Manager
-NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.7
+NuGet\Install-Package Koalesce.OpenAPI
 ```
 ```sh
 # .NET CLI
-dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.7
+dotnet add package Koalesce.OpenAPI
 ```
 
 #### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
@@ -49,7 +49,7 @@ dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.7
 ![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
 
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.7
+dotnet tool install --global Koalesce.OpenAPI.CLI
 ```
 
 ---
@@ -65,12 +65,21 @@ Koalesce configuration is divided into **Core Options** and **Provider Options**
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `Sources` | `array` | 🔺 | List of API sources. Each item contains `Url` and optional `VirtualPrefix` |
+| `Sources` | `array` | 🔺 | List of API sources. Each item contains `Url`, optional `VirtualPrefix`, and optional `ExcludePaths` |
 | `MergedDocumentPath` | `string` | 🔺 | Path where the merged API definition is exposed |
 | `Title` | `string` | `"My 🐨Koalesced API"` | Title for the merged API definition |
 | `SkipIdenticalPaths` | `boolean` | `true` | If `false`, throws exception on duplicate paths. If `true`, logs warning and skips duplicates |
+| `SchemaConflictPattern` | `string` | `"{Prefix}_{SchemaName}"` | Pattern for resolving schema name conflicts. Available placeholders: `{Prefix}`, `{SchemaName}` |
 
-### Caching Configuration (`Koalesce.Cache`)
+#### Source Configuration
+
+| Setting | Type | Default | Description |
+|---|---|---|---|
+| `Url` | `string` | 🔺 | URL of the API definition (must be absolute URL) |
+| `VirtualPrefix` | `string` | `null` | Optional prefix to apply to routes (e.g., `/inventory`) |
+| `ExcludePaths` | `array` | `null` | Optional list of paths to exclude from merge. Supports exact matches and wildcards (e.g., `"/api/admin/*"`) |
+
+### Caching Configuration
 
 | Setting | Type | Default | Description |
 |---|---|---|---|
@@ -78,6 +87,8 @@ Koalesce configuration is divided into **Core Options** and **Provider Options**
 | `AbsoluteExpirationSeconds` | `integer` | `86400` (24h) | Max duration before a forced refresh of merged result |
 | `SlidingExpirationSeconds` | `integer` | `300` (5 min) | Resets expiration on every access |
 | `MinExpirationSeconds` | `integer` | `30` | Minimum allowed expiration time |
+
+<br/>
 
 ### 2️⃣ OpenAPI Provider Configuration
 
@@ -88,7 +99,6 @@ These settings are specific to the `Koalesce.OpenAPI` provider.
 | `OpenApiVersion` | `string` | `"3.0.1"` | Target OpenAPI version for the output |
 | `ApiGatewayBaseUrl` | `string` | `null` | The public URL of your Gateway. Activates **Gateway Mode** |
 | `OpenApiSecurityScheme` | `object` | `null` | **Optional** global security scheme. When configured, replaces all downstream security. When omitted, preserves downstream security as-is |
-| `SchemaConflictPattern` | `string` | `"{Prefix}_{SchemaName}"` | Pattern for resolving schema name conflicts. Available placeholders: `{Prefix}`, `{SchemaName}` |
 
 ---
 
@@ -297,6 +307,35 @@ When identical paths exist across multiple APIs (e.g., `/api/health`), you have 
 ```
 
 **Result:** First API wins, subsequent identical paths are skipped with a warning.
+
+### Excluding Specific Paths
+
+You can exclude specific paths from being merged using the `ExcludePaths` option per source. This is useful for:
+
+- Hiding internal/admin endpoints from the public API documentation
+- Preventing path conflicts without using VirtualPrefix
+- Excluding deprecated or experimental endpoints
+
+**Example:**
+
+```json
+{
+  "Sources": [
+    {
+      "Url": "https://api.example.com/swagger.json",
+      "ExcludePaths": [
+        "/api/internal",
+        "/api/admin/*"
+      ]
+    }
+  ]
+}
+```
+
+**Supported Patterns:**
+
+- **Exact match:** `"/api/internal"` - excludes only that exact path
+- **Wildcard:** `"/api/admin/*"` - excludes `/api/admin` and any path starting with `/api/admin/`
 
 ---
 
