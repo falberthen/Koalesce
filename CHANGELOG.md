@@ -5,11 +5,45 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.1.0-alpha.8] - 2026-01-19
+
+### Added
+
+- **Exclude Paths from Merge:** Added `ExcludePaths` property to `ApiSource`. This allows excluding specific paths from the merged document on a per-source basis.
+  - Supports exact matches (e.g., `"/api/internal"`)
+  - Supports wildcard patterns (e.g., `"/api/admin/*"`)
+  - Useful for hiding internal/admin endpoints or preventing path conflicts
+  - **Fail-fast validation:** Paths must start with `/`, cannot be empty, and wildcards are only supported at the end (`/*`)
+
+### Changed
+
+- **Moved `SchemaConflictPattern` to Core Options:** `SchemaConflictPattern` has been moved from `OpenApiOptions` to `KoalesceOptions` (Core). This makes the setting provider-agnostic and available to future providers. No changes required in `appsettings.json` configuration.
+
+**Example configuration:**
+
+```json
+{
+  "Koalesce": {
+    "Sources": [
+      {
+        "Url": "https://api.example.com/swagger.json",
+        "ExcludePaths": [
+          "/api/internal",
+          "/api/admin/*"
+        ]
+      }
+    ]
+  }
+}
+```
+
+---
+
 ## [1.1.0-alpha.7] - 2026-01-19
 
 ### Added
 
-- **Customizable Schema Conflict Pattern:** Added `SchemaConflictPattern` property to `KoalesceOpenApiOptions`. This allows customizing how schema name conflicts are resolved during merge.
+- **Customizable Schema Conflict Pattern:** Added `SchemaConflictPattern` property to `KoalesceOptions` (Core). This allows customizing how schema name conflicts are resolved during merge.
   - Available placeholders: `{Prefix}`, `{SchemaName}`
   - Default: `"{Prefix}_{SchemaName}"` (e.g., `Inventory_Product`)
   - Example alternatives: `"{SchemaName}_{Prefix}"`, `"{Prefix}{SchemaName}"`

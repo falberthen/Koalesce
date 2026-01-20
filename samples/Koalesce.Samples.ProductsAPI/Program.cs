@@ -67,6 +67,14 @@ app.MapGet("/api/products", () =>
 })
 .WithName("GetProducts");
 
+
+// Create a product (admin only, to be a skipped endpoint using ExcludePaths)
+app.MapPost("/api/admin/products", (Product newProduct) =>
+{	
+	return Results.Created($"/api/admin/products/{newProduct.Id}", newProduct);
+})
+.WithName("CreateProduct");
+
 await app.RunAsync();
 
 public record Product(Guid Id, string Name);
