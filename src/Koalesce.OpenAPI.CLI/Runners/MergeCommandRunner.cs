@@ -61,7 +61,7 @@ public class MergeCommandRunner
 			if (string.IsNullOrWhiteSpace(Path.GetExtension(outputPath)))
 				outputPath += Path.GetExtension(koalesceOptions.MergedDocumentPath ?? ".yaml");
 
-			KoalesceConsoleUI.PrintSourceList(koalesceOptions.Sources ?? Enumerable.Empty<SourceDefinition>());
+			KoalesceConsoleUI.PrintSourceList(koalesceOptions.Sources ?? Enumerable.Empty<ApiSource>());
 
 			var mergedSpec = await openApiProvider.ProvideMergedDocumentAsync();
 			await writer.WriteAsync(outputPath, mergedSpec);

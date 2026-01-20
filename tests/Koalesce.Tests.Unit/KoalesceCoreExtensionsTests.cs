@@ -4,7 +4,7 @@ namespace Koalesce.Tests.Unit;
 public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 {
 	[Fact]
-	public void AddKoalesce_WhenServicesAndConfigurationProvided_ShouldRegisterDependenciesAndBindOptions()
+	public void Koalesce_WhenServicesAndConfigurationProvided_ShouldRegisterDependenciesAndBindOptions()
 	{
 		// Arrange		
 		var appSettingsStub = new
@@ -12,10 +12,10 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 			Koalesce = new KoalesceOptions
 			{
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" },
-					new SourceDefinition { Url = "https://api2.com/v1/apidefinition.json" }
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
+					new ApiSource { Url = "https://api2.com/v1/apidefinition.json" }
 				}
 			}
 		};
@@ -47,7 +47,7 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void AddKoalesce_ShouldRegisterSingletonKoalesceBuilder()
+	public void Koalesce_ShouldRegisterSingletonKoalesceBuilder()
 	{
 		// Arrange
 		var appSettingsStub = new
@@ -55,9 +55,9 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 			Koalesce = new KoalesceOptions
 			{
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" }
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" }
 				}
 			}
 		};
@@ -80,7 +80,7 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void UseKoalesce_WhenAddProvider_ShouldEnableMiddleware()
+	public void Koalesce_WhenAddProvider_ShouldEnableMiddleware()
 	{
 		// Arrange
 		var appSettingsStub = new
@@ -88,9 +88,9 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 			Koalesce = new KoalesceOptions
 			{
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
-				Sources = new List<SourceDefinition>
+				Sources = new List<ApiSource>
 				{
-					new SourceDefinition { Url = "https://api1.com/v1/apidefinition.json" }
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" }
 				}
 			}
 		};
@@ -112,7 +112,7 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void AddKoalesce_WhenServicesIsNull_ShouldThrowArgumentNullException()
+	public void Koalesce_WhenServicesIsNull_ShouldThrowArgumentNullException()
 	{
 		// Arrange
 		IServiceCollection? nullServices = null;
@@ -126,7 +126,7 @@ public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void AddKoalesce_WhenConfigurationIsNull_ShouldThrowArgumentNullException()
+	public void Koalesce_WhenConfigurationIsNull_ShouldThrowArgumentNullException()
 	{
 		// Act & Assert
 		var exception = Assert.Throws<ArgumentNullException>(() =>

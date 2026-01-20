@@ -42,6 +42,9 @@
 	  <None Update="RestAPIs\appsettings.openapi.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="RestAPIs\appsettings.schemaconflict.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

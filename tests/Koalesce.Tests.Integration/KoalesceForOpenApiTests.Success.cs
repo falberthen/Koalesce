@@ -8,8 +8,10 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	private const string _apiGatewaySettings = "RestAPIs/appsettings.apigateway.json";
 	private const string _mergedApiGatewayPath = "/swagger/v1/apigateway.json";
 
+	private const string _schemaConflictSettings = "RestAPIs/appsettings.schemaconflict.json";
+
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldMergeOpenAPIRoutes()
+	public async Task KoalesceForOpenAPI_ShouldMergeOpenAPIRoutes()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
@@ -27,7 +29,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldReturnValidOpenApiSchema()
+	public async Task KoalesceForOpenAPI_ShouldReturnValidOpenApiSchema()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
@@ -47,7 +49,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldIncludeCorrectServerUrls()
+	public async Task KoalesceForOpenAPI_ShouldIncludeCorrectServerUrls()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
@@ -65,7 +67,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldContainTopLevelServers()
+	public async Task KoalesceForOpenAPI_ShouldContainTopLevelServers()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
@@ -84,7 +86,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldEnsureEachPathHasServers()
+	public async Task KoalesceForOpenAPI_ShouldEnsureEachPathHasServers()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
@@ -111,7 +113,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldContainTagsPerPathWhenTagProvided()
+	public async Task KoalesceForOpenAPI_ShouldContainTagsPerPathWhenTagProvided()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
@@ -128,7 +130,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenForOpenAPI_ShouldPreserveDownstreamSecuritySchemes()
+	public async Task KoalesceForOpenAPI_ShouldPreserveDownstreamSecuritySchemes()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
@@ -150,7 +152,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenApiGatewayBaseUrlIsSet_ShouldMergeAllServerUrlDefinitionsIntoSingle()
+	public async Task KoalesceForOpenAPI_WhenApiGatewayBaseUrlIsSet_ShouldMergeAllServerUrlDefinitionsIntoSingle()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings,
@@ -187,7 +189,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 
 	#region TESTS USING OpenApiSecurityScheme
 	[Fact]
-	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithJwtBearerGatewaySecurity_ShouldAddGlobalBearerGatewaySecurity()
+	public async Task KoalesceForOpenAPI_WhenUsingOpenApiSecurityScheme_WithJwtBearerGatewaySecurity_ShouldAddGlobalBearerGatewaySecurity()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
@@ -216,7 +218,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithApiKeyGatewaySecurity_ShouldAddGlobalApiKeyGatewaySecurity()
+	public async Task KoalesceForOpenAPI_WhenUsingOpenApiSecurityScheme_WithApiKeyGatewaySecurity_ShouldAddGlobalApiKeyGatewaySecurity()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
@@ -246,7 +248,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithBasicGatewaySecurity_ShouldAddGlobalBasicGatewaySecurity()
+	public async Task KoalesceForOpenAPI_WhenUsingOpenApiSecurityScheme_WithBasicGatewaySecurity_ShouldAddGlobalBasicGatewaySecurity()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
@@ -277,7 +279,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithOAuth2ClientCredentials_ShouldAddGlobalOAuth2Security()
+	public async Task KoalesceForOpenAPI_WhenUsingOpenApiSecurityScheme_WithOAuth2ClientCredentials_ShouldAddGlobalOAuth2Security()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings, builder =>
@@ -318,7 +320,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_ApplyOAuth2AuthCodeSecurityScheme_ShouldAddGlobalOAuth2Security()
+	public async Task KoalesceForOpenAPI_WhenUsingOpenApiSecurityScheme_ApplyOAuth2AuthCodeSecurityScheme_ShouldAddGlobalOAuth2Security()
 	{
 		// Arrange & Act
 		var authUrl = "https://localhost:5001/connect/authorize";
@@ -370,7 +372,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenUsingOpenApiSecurityScheme_WithOpenIdConnectGatewaySecurity_ShouldAddGlobalOIDCSecurity()
+	public async Task KoalesceForOpenAPI_WhenUsingOpenApiSecurityScheme_WithOpenIdConnectGatewaySecurity_ShouldAddGlobalOIDCSecurity()
 	{
 		// Arrange & Act
 		var discoveryUrl = "https://localhost:5001/.well-known/openid-configuration";
@@ -398,6 +400,50 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 
 		// Confirms global security application
 		Assert.Contains(OpenAPIConstants.OpenIdConnectSchemeDefaultName, mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+	#endregion
+
+	#region TESTS USING SchemaConflictPattern
+	[Fact]
+	public async Task KoalesceForOpenAPI_WhenSchemaConflictOccurs_ShouldRenameSchemaWithDefaultPattern()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_appSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI());
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		// Assert: Default pattern is {Prefix}_{SchemaName}, so Inventory's Product becomes Inventory_Product
+		Assert.Contains("\"Product\"", mergedResult);
+		Assert.Contains("\"Inventory_Product\"", mergedResult);
+
+		// Verify the reference was updated
+		Assert.Contains("#/components/schemas/Inventory_Product", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WhenSchemaConflictPatternIsCustomized_ShouldRenameSchemaWithCustomPattern()
+	{
+		// Arrange & Act: Using appsettings with SchemaConflictPattern = "{SchemaName}_{Prefix}"
+		var koalescingApi = await StartWebApplicationAsync(_schemaConflictSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI());
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		// Assert: Custom pattern is {SchemaName}_{Prefix}, so Inventory's Product becomes Product_Inventory
+		Assert.Contains("\"Product\"", mergedResult);
+		Assert.Contains("\"Product_Inventory\"", mergedResult);
+
+		// Verify the reference was updated
+		Assert.Contains("#/components/schemas/Product_Inventory", mergedResult);
 
 		await koalescingApi.StopAsync();
 	}

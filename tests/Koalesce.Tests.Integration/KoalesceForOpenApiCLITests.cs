@@ -7,7 +7,7 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 	private const string _appSettings = "RestAPIs/appsettings.openapi.json";
 
 	[Fact]
-	public async Task KoalesceCli_WhenRunWithValidConfig_ShouldMergeOpenAPIRoutes()
+	public async Task KoalesceForOpenAPICLI_WhenRunWithValidConfig_ShouldMergeOpenAPIRoutes()
 	{
 		var configFullPath = Path.Combine(AppContext.BaseDirectory, _appSettings);
 
@@ -33,7 +33,7 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task KoalesceCli_WhenMissingConfig_ShouldFailGracefully()
+	public async Task KoalesceForOpenAPICLI_WhenMissingConfig_ShouldFailGracefully()
 	{
 		var missingConfigPath = Path.Combine(Path.GetTempPath(), $"nonexistent-{Guid.NewGuid()}.json");
 
@@ -75,7 +75,7 @@ public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task KoalesceCli_WhenRunWithVersionCommand_ShouldDisplayVersionAndExit()
+	public async Task KoalesceForOpenAPICLI_WhenRunWithVersionCommand_ShouldDisplayVersionAndExit()
 	{
 		var cliDllPath = GetCliDllPath();
 

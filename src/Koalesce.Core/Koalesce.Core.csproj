@@ -6,7 +6,7 @@
 		<PackageId>Koalesce.Core</PackageId>
 		<IsPackable>true</IsPackable>
 		<Nullable>enable</Nullable>
-		<Version>1.0.0-alpha.6</Version>
+		<Version>1.0.0-alpha.7</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The Core library for Koalesce packages.</Description>

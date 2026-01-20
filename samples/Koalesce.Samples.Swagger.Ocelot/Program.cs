@@ -8,10 +8,6 @@ using Ocelot.Middleware;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 IServiceCollection services = builder.Services;
 
-// Detect which Security Scenario to run based on Environment Variable
-string securityScenario = builder.Configuration["KoalesceSample:SecurityMode"] ?? "None";
-Console.WriteLine($"🐨 Starting Koalesce Sample in mode: {securityScenario}");
-
 // Load merged ocelot.json
 builder.Configuration
 	.SetBasePath(Directory.GetCurrentDirectory())
@@ -35,6 +31,15 @@ services.AddOcelot(builder.Configuration);
 services.AddKoalesce(builder.Configuration)
 	.ForOpenAPI(options =>
 	{
+		// Change the SecurityMode if you want to test Auth scheme options 
+		// "None" to disable security (not recommended for production)
+		// "JWT" for JWT Bearer in header
+		// "ApiKey" for ApiKey in header
+		// "Basic" for Basic Authentication
+		// "OAuth2ClientCredentials" for OAuth2 Client Credentials flow
+		// "OAuth2AuthCode" for OAuth2 Authorization Code flow
+		// "OpenIdConnect" for OpenID Connect
+		string securityScenario = "None";
 		switch (securityScenario.ToUpper())
 		{
 			case "JWT":

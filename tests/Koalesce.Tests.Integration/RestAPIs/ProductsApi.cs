@@ -22,11 +22,33 @@ public class ProductsApi
                     "/api/products": {
                         "get": {
                             "summary": "Get Products",
-                            "tags": ["Products"]
+                            "tags": ["Products"],
+                            "responses": {
+                                "200": {
+                                    "description": "OK",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "array",
+                                                "items": { "$ref": "#/components/schemas/Product" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 },
                 "components": {
+                    "schemas": {
+                        "Product": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "format": "uuid" },
+                                "name": { "type": "string" }
+                            }
+                        }
+                    },
                     "securitySchemes": {
                         "api_key": {
                             "type": "apiKey",
@@ -39,12 +61,12 @@ public class ProductsApi
                   { "api_key": [] }
                 ],
                 "tags": [
-                { 
-                    "name": "Products", 
+                {
+                    "name": "Products",
                     "description": "Operations related to products"
                 }
                ]
-            }            
+            }
             """;
 			return Results.Text(json, "application/json");
 		});

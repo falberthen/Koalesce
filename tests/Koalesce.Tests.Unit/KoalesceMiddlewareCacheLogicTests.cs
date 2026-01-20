@@ -6,7 +6,67 @@ public class KoalesceMiddlewareCacheTests : KoalesceUnitTestBase
 	private const string _mergedDocumentPath = "/mergedapidefinition.json";
 
 	[Fact]
-	public async Task KoalesceMiddleware_WhenDisableCacheIsTrue_ShouldAlwaysCallProvider()
+	public async Task Koalesce_WhenCacheEnabled_ShouldCacheMergedDocument()
+	{
+		// Arrange
+		string mergedDocumentPath = "/mergedapidefinition.json";
+		var cache = new MemoryCache(new MemoryCacheOptions());
+		var options = Options.Create(new KoalesceOptions
+		{
+			MergedDocumentPath = mergedDocumentPath,
+			Cache = new KoalesceCacheOptions
+			{
+				DisableCache = false,
+				AbsoluteExpirationSeconds = 10,
+				SlidingExpirationSeconds = 5
+			}
+		});
+
+		var provider = new DummyProvider(); // Simulated API Merge
+		var logger = CreateLogger<KoalesceMiddleware>();
+
+		var middleware = new KoalesceMiddleware(
+			options, logger, provider, context => Task.CompletedTask, cache);
+
+		var context = CreateHttpContext(mergedDocumentPath);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert
+		Assert.True(cache.TryGetValue(mergedDocumentPath, out string cachedDocument));
+		Assert.False(string.IsNullOrWhiteSpace(cachedDocument));
+	}
+
+	[Fact]
+	public async Task Koalesce_WhenCacheDisabled_ShouldNotCache()
+	{
+		// Arrange
+		string mergedDocumentPath = "/mergedapidefinition.json";
+		var cache = new MemoryCache(new MemoryCacheOptions());
+		var options = Options.Create(new KoalesceOptions
+		{
+			MergedDocumentPath = mergedDocumentPath,
+			Cache = new KoalesceCacheOptions { DisableCache = true }
+		});
+
+		var provider = new DummyProvider();
+		var logger = CreateLogger<KoalesceMiddleware>();
+
+		var middleware = new KoalesceMiddleware(
+			options, logger, provider, context => Task.CompletedTask, cache);
+
+		var context = CreateHttpContext(mergedDocumentPath);
+
+		// Act
+		await middleware.InvokeAsync(context);
+
+		// Assert
+		Assert.False(cache.TryGetValue(mergedDocumentPath, out _));
+	}
+
+	[Fact]
+	public async Task Koalesce_WhenDisableCacheIsTrue_ShouldAlwaysCallProvider()
 	{
 		// Arrange
 		var dummyProvider = new DummyProvider();
@@ -29,7 +89,7 @@ public class KoalesceMiddlewareCacheTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public async Task KoalesceMiddleware_WhenCacheEnabled_ShouldRespectCacheHit()
+	public async Task Koalesce_WhenCacheEnabled_ShouldRespectCacheHit()
 	{
 		// Arrange
 		var dummyProvider = new DummyProvider();
@@ -58,7 +118,7 @@ public class KoalesceMiddlewareCacheTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public async Task KoalesceMiddleware_WhenSlidingExpiration_ShouldExtendLifetime()
+	public async Task Koalesce_WhenSlidingExpiration_ShouldExtendLifetime()
 	{
 		// Arrange
 		var dummyProvider = new DummyProvider();
