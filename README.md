@@ -37,11 +37,11 @@
 
 ```sh
 # Package Manager
-NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.6
+NuGet\Install-Package Koalesce.OpenAPI -Version 1.0.0-alpha.7
 ```
 ```sh
 # .NET CLI
-dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.6
+dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.7
 ```
 
 #### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
@@ -49,7 +49,7 @@ dotnet add package Koalesce.OpenAPI --version 1.0.0-alpha.6
 ![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
 
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.6
+dotnet tool install --global Koalesce.OpenAPI.CLI --version 1.0.0-alpha.7
 ```
 
 ---
