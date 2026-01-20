@@ -37,6 +37,13 @@ public class KoalesceOptions : IValidatableObject
 	public bool SkipIdenticalPaths { get; set; } = true;
 
 	/// <summary>
+	/// Pattern for resolving schema name conflicts.
+	/// Available placeholders: {Prefix}, {SchemaName}
+	/// Default: "{Prefix}_{SchemaName}"
+	/// </summary>
+	public string SchemaConflictPattern { get; set; } = CoreConstants.DefaultSchemaConflictPattern;
+
+	/// <summary>
 	/// Custom validation logic for required fields.
 	/// </summary>	
 	public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
@@ -97,6 +104,20 @@ public class KoalesceOptions : IValidatableObject
 				$"SlidingExpirationSeconds ({Cache.SlidingExpirationSeconds}) cannot be greater than AbsoluteExpirationSeconds ({Cache.AbsoluteExpirationSeconds}).",
 				[nameof(Cache.SlidingExpirationSeconds)]);
 		}
+
+		// Validate SchemaConflictPattern contains required placeholders
+		if (!string.IsNullOrWhiteSpace(SchemaConflictPattern))
+		{
+			bool hasPrefix = SchemaConflictPattern.Contains(CoreConstants.PrefixPlaceholder);
+			bool hasSchemaName = SchemaConflictPattern.Contains(CoreConstants.SchemaNamePlaceholder);
+
+			if (!hasPrefix || !hasSchemaName)
+			{
+				yield return new ValidationResult(
+					CoreConstants.SchemaConflictPatternValidationError,
+					[nameof(SchemaConflictPattern)]);
+			}
+		}
 	}
 
 	private IEnumerable<ValidationResult> ValidateSourceUrls()
@@ -124,6 +145,49 @@ public class KoalesceOptions : IValidatableObject
 				yield return new ValidationResult(
 					$"The Source URL at index {i} ('{source.Url}') must be a valid absolute URL (starting with http:// or https://).",
 					[$"{nameof(Sources)}[{i}].Url"]);
+			}
+
+			// Validate ExcludePaths
+			foreach (var validationResult in ValidateExcludePaths(source, i))
+				yield return validationResult;
+		}
+	}
+
+	private static IEnumerable<ValidationResult> ValidateExcludePaths(ApiSource source, int sourceIndex)
+	{
+		if (source.ExcludePaths == null || source.ExcludePaths.Count == 0)
+			yield break;
+
+		for (int j = 0; j < source.ExcludePaths.Count; j++)
+		{
+			var path = source.ExcludePaths[j];
+
+			if (string.IsNullOrWhiteSpace(path))
+			{
+				yield return new ValidationResult(
+					string.Format(CoreConstants.ExcludePathCannotBeEmpty, j, sourceIndex),
+					[$"{nameof(Sources)}[{sourceIndex}].ExcludePaths[{j}]"]);
+				continue;
+			}
+
+			if (!path.StartsWith('/'))
+			{
+				yield return new ValidationResult(
+					string.Format(CoreConstants.ExcludePathMustStartWithSlash, j, sourceIndex, path),
+					[$"{nameof(Sources)}[{sourceIndex}].ExcludePaths[{j}]"]);
+			}
+
+			// Validate wildcard usage: only "/*" at the end is supported
+			int wildcardIndex = path.IndexOf('*');
+			if (wildcardIndex != -1)
+			{
+				bool isValidWildcard = path.EndsWith("/*") && path.IndexOf('*') == path.Length - 1;
+				if (!isValidWildcard)
+				{
+					yield return new ValidationResult(
+						string.Format(CoreConstants.ExcludePathInvalidWildcard, j, sourceIndex, path),
+						[$"{nameof(Sources)}[{sourceIndex}].ExcludePaths[{j}]"]);
+				}
 			}
 		}
 	}

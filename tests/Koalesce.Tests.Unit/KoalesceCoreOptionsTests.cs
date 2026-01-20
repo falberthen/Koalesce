@@ -1,6 +1,4 @@
-﻿using Koalesce.OpenAPI.Options;
-
-namespace Koalesce.Tests.Unit;
+﻿namespace Koalesce.Tests.Unit;
 
 [Collection("Koalesce Core Options Unit Tests")]
 public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
@@ -13,7 +11,6 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 		{
 			Koalesce = new KoalesceOptions
 			{
-				// Title omitido propositalmente para testar o default
 				MergedDocumentPath = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
@@ -88,7 +85,6 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 	public void Koalesce_WhenKoalesceSectionIsMissing_ShouldThrowKoalesceConfigurationNotFoundException()
 	{
 		// Arrange: Empty configuration (simulating appsettings.json without "Koalesce" section)
-		// Podemos usar um objeto vazio ou com outra seção irrelevante
 		var appSettingsStub = new { OtherSection = "Irrelevant" };
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
@@ -133,4 +129,109 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 		Assert.Contains("must be a valid absolute URL", exception.Message);
 		Assert.Contains("index 1", exception.Message);
 	}
+
+	#region SchemaConflictPattern Validation Tests
+
+	[Fact]
+	public void Koalesce_WithDefaultSchemaConflictPattern_ShouldUseDefault()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+
+		// Assert - Default pattern
+		Assert.Equal("{Prefix}_{SchemaName}", options.SchemaConflictPattern);
+	}
+
+	[Fact]
+	public void Koalesce_WithCustomSchemaConflictPattern_ShouldBindCorrectly()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				},
+				SchemaConflictPattern = "{SchemaName}_{Prefix}"
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+
+		// Assert - Custom pattern
+		Assert.Equal("{SchemaName}_{Prefix}", options.SchemaConflictPattern);
+	}
+
+	[Theory]
+	[InlineData("{Prefix}_Schema")]         // Missing {SchemaName}
+	[InlineData("Schema_{SchemaName}")]     // Missing {Prefix}
+	[InlineData("InvalidPattern")]          // Missing both placeholders
+	[InlineData("{prefix}_{schemaname}")]   // Case-sensitive: wrong case
+	public void Koalesce_WithInvalidSchemaConflictPattern_ShouldThrowValidationException(string invalidPattern)
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				},
+				SchemaConflictPattern = invalidPattern
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains(CoreConstants.SchemaConflictPatternValidationError, exception.Message);
+	}
+
+	#endregion
 }
