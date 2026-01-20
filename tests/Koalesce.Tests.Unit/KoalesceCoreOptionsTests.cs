@@ -6,7 +6,7 @@ namespace Koalesce.Tests.Unit;
 public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 {
 	[Fact]
-	public void AddKoalesce_WhenNonRequiredConfigValuesAreMissing_ShouldUseDefaultValues()
+	public void Koalesce_WhenNonRequiredConfigValuesAreMissing_ShouldUseDefaultValues()
 	{
 		// Arrange
 		var appSettingsStub = new
@@ -39,7 +39,7 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void AddKoalesce_WhenValidConfiguration_ShouldBindKoalesceOptions()
+	public void Koalesce_WhenValidConfiguration_ShouldBindKoalesceOptions()
 	{
 		// Arrange
 		var appSettingsStub = new
@@ -85,7 +85,7 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void AddKoalesce_WhenKoalesceSectionIsMissing_ShouldThrowKoalesceConfigurationNotFoundException()
+	public void Koalesce_WhenKoalesceSectionIsMissing_ShouldThrowKoalesceConfigurationNotFoundException()
 	{
 		// Arrange: Empty configuration (simulating appsettings.json without "Koalesce" section)
 		// Podemos usar um objeto vazio ou com outra seção irrelevante

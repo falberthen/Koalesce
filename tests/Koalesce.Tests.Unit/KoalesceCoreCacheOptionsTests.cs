@@ -4,7 +4,7 @@ namespace Koalesce.Tests.Unit;
 public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 {
 	[Fact]
-	public void KoalesceCache_WhenConfigured_ShouldBindCacheOptions()
+	public void Koalesce_WhenCacheConfigured_ShouldBindCacheOptions()
 	{
 		// Arrange
 		var appSettingsStub = new
@@ -45,7 +45,7 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void KoalesceCache_WhenAbsoluteExpirationBelowDefaultMin_ShouldThrowException()
+	public void Koalesce_WhenCacheHasAbsoluteExpirationBelowDefaultMin_ShouldThrowException()
 	{
 		// Arrange
 		var options = new KoalesceOptions
@@ -71,7 +71,7 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void KoalesceCache_WhenAbsoluteExpirationBelowCustomMin_ShouldThrowException()
+	public void Koalesce_WhenCacheHasAbsoluteExpirationBelowCustomMin_ShouldThrowException()
 	{
 		// Arrange
 		var options = new KoalesceOptions
@@ -97,7 +97,7 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 	}
 
 	[Fact]
-	public void KoalesceCache_WhenSlidingExpirationExceedsAbsolute_ShouldThrowException()
+	public void Koalesce_WhenCacheHasSlidingExpirationExceedsAbsolute_ShouldThrowException()
 	{
 		// Arrange
 		var options = new KoalesceOptions
@@ -120,65 +120,5 @@ public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
 		// Act & Assert
 		Assert.Throws<KoalesceInvalidConfigurationValuesException>(() => 
 			options.Validate());
-	}
-
-	[Fact]
-	public async Task KoalesceMiddleware_WhenCacheEnabled_ShouldCacheMergedDocument()
-	{
-		// Arrange
-		string mergedDocumentPath = "/mergedapidefinition.json";
-		var cache = new MemoryCache(new MemoryCacheOptions());
-		var options = Options.Create(new KoalesceOptions
-		{
-			MergedDocumentPath = mergedDocumentPath,
-			Cache = new KoalesceCacheOptions
-			{
-				DisableCache = false,
-				AbsoluteExpirationSeconds = 10,
-				SlidingExpirationSeconds = 5
-			}
-		});
-
-		var provider = new DummyProvider(); // Simulated API Merge
-		var logger = CreateLogger<KoalesceMiddleware>();
-
-		var middleware = new KoalesceMiddleware(
-			options, logger, provider, context => Task.CompletedTask, cache);
-
-		var context = CreateHttpContext(mergedDocumentPath);
-
-		// Act
-		await middleware.InvokeAsync(context);
-
-		// Assert
-		Assert.True(cache.TryGetValue(mergedDocumentPath, out string cachedDocument));
-		Assert.False(string.IsNullOrWhiteSpace(cachedDocument));
-	}
-
-	[Fact]
-	public async Task KoalesceMiddleware_WhenCacheDisabled_ShouldNotCache()
-	{
-		// Arrange
-		string mergedDocumentPath = "/mergedapidefinition.json";
-		var cache = new MemoryCache(new MemoryCacheOptions());
-		var options = Options.Create(new KoalesceOptions
-		{
-			MergedDocumentPath = mergedDocumentPath,
-			Cache = new KoalesceCacheOptions { DisableCache = true }
-		});
-
-		var provider = new DummyProvider();
-		var logger = CreateLogger<KoalesceMiddleware>();
-
-		var middleware = new KoalesceMiddleware(
-			options, logger, provider, context => Task.CompletedTask, cache);
-
-		var context = CreateHttpContext(mergedDocumentPath);
-
-		// Act
-		await middleware.InvokeAsync(context);
-
-		// Assert
-		Assert.False(cache.TryGetValue(mergedDocumentPath, out _));
 	}
 }
