@@ -155,9 +155,9 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 		MergePaths(
 			sourceDocument,
 			targetDocument.Paths,
-			serverEntry,
 			apiName,
-			apiSource.VirtualPrefix
+			apiSource,
+			serverEntry
 		);
 
 		MergeComponents(sourceDocument.Components, targetDocument.Components);
@@ -170,19 +170,26 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	private void MergePaths(
 		OpenApiDocument sourceDocument,
 		OpenApiPaths targetPaths,
-		OpenApiServer? server,
 		string apiName,
-		string? pathPrefix)
+		ApiSource apiSource,
+		OpenApiServer? server)
 	{
 		var sourcePaths = sourceDocument.Paths;
 		var globalSecurityRequirements = sourceDocument.SecurityRequirements;
 		foreach (var (originalPath, pathItem) in sourcePaths)
 		{
+			// Check if the path should be excluded
+			if (IsPathExcluded(originalPath, apiSource.ExcludePaths))
+			{
+				_logger.LogInformation("Excluding path '{Path}' from '{ApiName}' as per ExcludePaths configuration.", originalPath, apiName);
+				continue;
+			}
+
 			// Construct the new path key with optional prefix
 			// Logic: "/api/apiname" + Prefix => "/prefix/api/apiname"
-			string newPathKey = string.IsNullOrEmpty(pathPrefix)
+			string newPathKey = string.IsNullOrEmpty(apiSource.VirtualPrefix)
 				? originalPath
-				: $"/{pathPrefix.Trim('/')}/{originalPath.TrimStart('/')}";
+				: $"/{apiSource.VirtualPrefix.Trim('/')}/{originalPath.TrimStart('/')}";
 
 			// Check for collisions
 			if (targetPaths.ContainsKey(newPathKey))
@@ -208,9 +215,9 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			foreach (var (opType, operation) in pathItem.Operations)
 			{
 				// OperationId Namespacing (Critical for API Clients)
-				if (!string.IsNullOrEmpty(operation.OperationId) && !string.IsNullOrEmpty(pathPrefix))
+				if (!string.IsNullOrEmpty(operation.OperationId) && !string.IsNullOrEmpty(apiSource.VirtualPrefix))
 				{
-					string cleanPrefix = pathPrefix.Replace("/", "").Replace("-", "");
+					string cleanPrefix = apiSource.VirtualPrefix.Replace("/", "").Replace("-", "");
 					operation.OperationId = $"{cleanPrefix}_{operation.OperationId}";
 				}
 
@@ -417,5 +424,43 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 
 			_logger.LogInformation("Applied global Gateway security scheme '{SchemeName}' to all operations", schemeName);
 		}
+	}
+
+	/// <summary>
+	/// Determines if a path should be excluded based on the ExcludePaths configuration.
+	/// Supports exact matches and wildcard patterns (e.g., "/api/admin/*").
+	/// </summary>
+	private static bool IsPathExcluded(string path, List<string>? excludePaths)
+	{
+		if (excludePaths == null || excludePaths.Count == 0)
+			return false;
+
+		foreach (var pattern in excludePaths)
+		{
+			if (string.IsNullOrWhiteSpace(pattern))
+				continue;
+
+			// Normalize both path and pattern
+			string normalizedPath = path.TrimEnd('/');
+			string normalizedPattern = pattern.TrimEnd('/');
+
+			// Check for wildcard pattern (e.g., "/api/admin/*")
+			if (normalizedPattern.EndsWith("/*"))
+			{
+				string prefix = normalizedPattern[..^2]; // Remove "/*"
+				if (normalizedPath.Equals(prefix, StringComparison.OrdinalIgnoreCase) ||
+					normalizedPath.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase))
+				{
+					return true;
+				}
+			}
+			// Exact match
+			else if (normalizedPath.Equals(normalizedPattern, StringComparison.OrdinalIgnoreCase))
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

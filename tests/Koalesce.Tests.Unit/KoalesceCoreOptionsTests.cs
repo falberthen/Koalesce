@@ -234,4 +234,161 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 	}
 
 	#endregion
+
+	#region ExcludePaths Validation Tests
+
+	[Fact]
+	public void Koalesce_WhenExcludePathsIsEmpty_ShouldThrowValidationException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+			{
+				new ApiSource
+				{
+					Url = "https://api1.com/v1/apidefinition.json",
+					ExcludePaths = new List<string> { "" }
+				}
+			}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("cannot be empty", exception.Message);
+	}
+
+	[Fact]
+	public void Koalesce_WhenExcludePathsDoesNotStartWithSlash_ShouldThrowValidationException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+			{
+				new ApiSource
+				{
+					Url = "https://api1.com/v1/apidefinition.json",
+					ExcludePaths = new List<string> { "api/admin" }
+				}
+			}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("must start with '/'", exception.Message);
+	}
+
+	[Theory]
+	[InlineData("/api/*/users")]
+	[InlineData("/*/admin")]
+	[InlineData("/api/**/users")]
+	[InlineData("/api/admin*")]
+	public void Koalesce_WhenExcludePathsHasInvalidWildcard_ShouldThrowValidationException(string invalidPath)
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+			{
+				new ApiSource
+				{
+					Url = "https://api1.com/v1/apidefinition.json",
+					ExcludePaths = new List<string> { invalidPath }
+				}
+			}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("invalid wildcard", exception.Message);
+		Assert.Contains("Only '/*' at the end is supported", exception.Message);
+	}
+
+	[Theory]
+	[InlineData("/api/admin")]
+	[InlineData("/api/admin/*")]
+	[InlineData("/api/internal/health")]
+	public void Koalesce_WhenExcludePathsIsValid_ShouldNotThrowException(string validPath)
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+			{
+				new ApiSource
+				{
+					Url = "https://api1.com/v1/apidefinition.json",
+					ExcludePaths = new List<string> { validPath }
+				}
+			}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert - Should not throw
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		Assert.NotNull(options);
+		Assert.Contains(validPath, options.Sources[0].ExcludePaths!);
+	}
+
+	#endregion
 }
