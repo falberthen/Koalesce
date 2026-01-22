@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.1.0-alpha.9] - 2026-01-21
+
+### Fixed
+
+- **Schema Conflict Resolution with VirtualPrefix:** When **both** conflicting sources have `VirtualPrefix` configured, **both** schemas are now renamed. Previously, only the second schema was renamed, making the output order-dependent.
+  - Before: `Product` (first wins), `Inventory_Product`
+  - After: `Products_Product`, `Inventory_Product`
+
+### Added
+
+- **Duplicate VirtualPrefix Validation:** Fail-fast validation now prevents configuration errors when multiple sources share the same `VirtualPrefix`. This prevents path collisions and asymmetric schema naming at runtime.
+
+### Changed
+
+- **Core Update:** Upgraded `Koalesce.OpenAPI` core library to version **1.1.0-alpha.9**.
+
+---
+
 ## [1.1.0-alpha.8] - 2026-01-19
 
 ### Added

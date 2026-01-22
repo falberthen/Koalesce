@@ -1,9 +1,15 @@
 ﻿namespace Koalesce.OpenAPI.Services;
 
+/// <summary>
+/// Tracks the origin of a schema for conflict resolution
+/// </summary>
+internal record SchemaOrigin(string ApiName, string? VirtualPrefix);
+
 internal static class OpenApiSchemaConflictResolver
 {
 	/// <summary>
 	/// Detects schema collisions and renames source schemas to avoid overwriting
+	/// When both source and existing schema have VirtualPrefix, BOTH are renamed
 	/// Priority: VirtualPrefix > Last Segment of Title > Full Title
 	/// </summary>
 	public static void ResolveSchemaConflicts(
@@ -12,18 +18,21 @@ internal static class OpenApiSchemaConflictResolver
 		OpenApiDocument targetDocument,
 		string apiName,
 		string? virtualPrefix,
-		string? schemaConflictPattern = null)
+		string? schemaConflictPattern = null,
+		Dictionary<string, SchemaOrigin>? schemaOrigins = null)
 	{
 		if (sourceDocument.Components?.Schemas is null || targetDocument.Components?.Schemas is null)
 			return;
 
 		schemaConflictPattern ??= CoreConstants.DefaultSchemaConflictPattern;
+		schemaOrigins ??= new Dictionary<string, SchemaOrigin>();
 
-		var renames = new Dictionary<string, string>();
+		var sourceRenames = new Dictionary<string, string>();
+		var targetRenames = new Dictionary<string, string>();
 		var keysToRemove = new List<string>();
 
-		// Determine the scope prefix
-		string scopePrefix = DetermineSchemaScopePrefix(apiName, virtualPrefix);
+		// Determine the scope prefix for the source
+		string sourceScopePrefix = DetermineSchemaScopePrefix(apiName, virtualPrefix);
 
 		// Identify collisions
 		foreach (var (key, schema) in sourceDocument.Components.Schemas)
@@ -31,11 +40,32 @@ internal static class OpenApiSchemaConflictResolver
 			// Only rename if the key ALREADY exists in the target (Collision)
 			if (targetDocument.Components.Schemas.ContainsKey(key))
 			{
-				// Generate a scoped name using the configured pattern
-				string newKey = ApplySchemaConflictPattern(schemaConflictPattern, key, scopePrefix);
+				// Check if the existing schema in target came from a source with VirtualPrefix
+				bool existingHasVirtualPrefix = schemaOrigins.TryGetValue(key, out var existingOrigin)
+					&& !string.IsNullOrWhiteSpace(existingOrigin.VirtualPrefix);
+
+				bool currentHasVirtualPrefix = !string.IsNullOrWhiteSpace(virtualPrefix);
+
+				// If BOTH have VirtualPrefix, rename BOTH schemas
+				if (existingHasVirtualPrefix && currentHasVirtualPrefix)
+				{
+					// Rename the existing schema in target
+					string existingPrefix = DetermineSchemaScopePrefix(existingOrigin!.ApiName, existingOrigin.VirtualPrefix);
+					string existingNewKey = ApplySchemaConflictPattern(schemaConflictPattern, key, existingPrefix);
+
+					if (!targetRenames.ContainsKey(key) && existingNewKey != key)
+					{
+						targetRenames[key] = existingNewKey;
+						logger.LogInformation("Schema collision detected for '{Key}'. Renaming existing schema to '{NewKey}' (from '{ApiName}').",
+							key, existingNewKey, existingOrigin.ApiName);
+					}
+				}
+
+				// Generate a scoped name for the source schema
+				string newKey = ApplySchemaConflictPattern(schemaConflictPattern, key, sourceScopePrefix);
 
 				// Edge Case: If the scoped name ALSO exists, fallback to fully qualified name
-				if (targetDocument.Components.Schemas.ContainsKey(newKey))
+				if (targetDocument.Components.Schemas.ContainsKey(newKey) || targetRenames.ContainsValue(newKey))
 				{
 					string fullPrefix = CleanName(apiName);
 					newKey = ApplySchemaConflictPattern(schemaConflictPattern, key, fullPrefix);
@@ -44,12 +74,37 @@ internal static class OpenApiSchemaConflictResolver
 				logger.LogInformation("Schema collision detected for '{Key}' in API '{ApiName}'. Renaming to '{NewKey}'.",
 					key, apiName, newKey);
 
-				renames[key] = newKey;
+				sourceRenames[key] = newKey;
 				keysToRemove.Add(key);
 			}
 		}
 
-		if (renames.Count == 0)
+		// Apply target renames first (existing schemas that need to be prefixed)
+		if (targetRenames.Count > 0)
+		{
+			foreach (var (oldKey, newKey) in targetRenames)
+			{
+				if (targetDocument.Components.Schemas.TryGetValue(oldKey, out var schema))
+				{
+					targetDocument.Components.Schemas.Remove(oldKey);
+					targetDocument.Components.Schemas[newKey] = schema;
+
+					// Update the origin tracking
+					if (schemaOrigins.TryGetValue(oldKey, out var origin))
+					{
+						schemaOrigins.Remove(oldKey);
+						schemaOrigins[newKey] = origin;
+					}
+				}
+			}
+
+			// Rewrite references in the target document
+			var targetRewriter = new SchemaReferenceRewriter(targetRenames);
+			var targetWalker = new OpenApiWalker(targetRewriter);
+			targetWalker.Walk(targetDocument);
+		}
+
+		if (sourceRenames.Count == 0)
 			return;
 
 		// Update the Source Document definitions
@@ -57,14 +112,19 @@ internal static class OpenApiSchemaConflictResolver
 		{
 			var schema = sourceDocument.Components.Schemas[key];
 			sourceDocument.Components.Schemas.Remove(key);
-			sourceDocument.Components.Schemas.Add(renames[key], schema);
+			sourceDocument.Components.Schemas.Add(sourceRenames[key], schema);
 		}
 
 		// Walk the entire source document to update all References ($ref)
-		// using the OpenApiWalker to safely traverse paths, operations, parameters, and other schemas.
-		var rewriter = new SchemaReferenceRewriter(renames);
+		var rewriter = new SchemaReferenceRewriter(sourceRenames);
 		var walker = new OpenApiWalker(rewriter);
 		walker.Walk(sourceDocument);
+
+		// Track the origin of the new schemas
+		foreach (var (oldKey, newKey) in sourceRenames)
+		{
+			schemaOrigins[newKey] = new SchemaOrigin(apiName, virtualPrefix);
+		}
 	}
 
 	/// <summary>

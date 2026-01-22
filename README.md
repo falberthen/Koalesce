@@ -37,11 +37,11 @@
 
 ```sh
 # Package Manager
-NuGet\Install-Package Koalesce.OpenAPI
+Install-Package Koalesce.OpenAPI -IncludePrerelease
 ```
 ```sh
 # .NET CLI
-dotnet add package Koalesce.OpenAPI
+dotnet add package Koalesce.OpenAPI --prerelease
 ```
 
 #### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
@@ -49,7 +49,7 @@ dotnet add package Koalesce.OpenAPI
 ![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
 
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI
+dotnet tool install --global Koalesce.OpenAPI.CLI --prerelease
 ```
 
 ---
@@ -478,19 +478,27 @@ Use when you want to enforce unique routes and fail if conflicts are detected:
 
 ### Schema Name Conflict Resolution
 
-**Automatic Resolution:** When multiple APIs define schemas with identical names (e.g., `Product`), Koalesce automatically renames them using the pattern `{prefix}_{SchemaName}`.
+**Automatic Resolution:** When multiple APIs define schemas with identical names (e.g., `Product`), Koalesce automatically renames them using the pattern `{Prefix}_{SchemaName}`.
+
+**Conflict Behavior:**
+
+| Scenario | Result |
+|---|---|
+| Both sources have `VirtualPrefix` | **Both** schemas are renamed (e.g., `Inventory_Product`, `Catalog_Product`) |
+| Only one source have `VirtualPrefix` | Only the prefixed source's schema is renamed |
+| Neither source has `VirtualPrefix` | First schema keeps original name, second uses API name prefix |
 
 **Prefix Priority:**
 
 1. **VirtualPrefix** (if configured): `/inventory` → `Inventory_Product`
 2. **API Name** (sanitized): `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPI_Product`
 
-**Example:**
+**Example (both with VirtualPrefix):**
 
-- `InventoryAPI` defines `Product` → becomes `Inventory_Product`
-- `CatalogAPI` defines `Product` → becomes `Catalog_Product`
+- `InventoryAPI` (`/inventory`) defines `Product` → becomes `Inventory_Product`
+- `CatalogAPI` (`/catalog`) defines `Product` → becomes `Catalog_Product`
 
-This ensures all schemas are preserved without manual intervention.
+This ensures all schemas are preserved without manual intervention and naming is deterministic regardless of source order.
 
 ---
 

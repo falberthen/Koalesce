@@ -9,6 +9,12 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	private readonly ILogger<OpenApiDocumentMerger> _logger;
 	private readonly IHttpClientFactory _httpClientFactory;
 
+	/// <summary>
+	/// Tracks the origin of each schema for conflict resolution
+	/// Key: schema name, Value: origin info (ApiName, VirtualPrefix)
+	/// </summary>
+	private readonly Dictionary<string, SchemaOrigin> _schemaOrigins = new();
+
 	public OpenApiDocumentMerger(
 		IOptions<KoalesceOpenApiOptions> options,
 		ILogger<OpenApiDocumentMerger> logger,
@@ -32,6 +38,9 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			throw new ArgumentException("API source list cannot be empty.");
 
 		_logger.LogInformation("Starting API Koalescing process with {Count} APIs", _options.Sources.Count);
+
+		// Clear schema origins from previous runs
+		_schemaOrigins.Clear();
 
 		try
 		{
@@ -131,8 +140,15 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 		string apiVersion = sourceDocument.Info?.Version ?? "v1";
 
 		// Resolve Schema Conflicts (renaming source schemas if they collide)
+		// When both source and existing schema have VirtualPrefix, BOTH are renamed
 		OpenApiSchemaConflictResolver
-			.ResolveSchemaConflicts(_logger, sourceDocument, targetDocument, apiName, apiSource.VirtualPrefix, _options.SchemaConflictPattern);
+			.ResolveSchemaConflicts(_logger, 
+				sourceDocument, 
+				targetDocument, 
+				apiName, 
+				apiSource.VirtualPrefix, 
+				_options.SchemaConflictPattern, 
+				_schemaOrigins);
 
 		// Prepare the source server entry ONLY for Aggregation Mode.
 		// If using Gateway,  ignore source servers here (handled globally in MergeIntoSingleDefinitionAsync).
@@ -160,7 +176,12 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			serverEntry
 		);
 
-		MergeComponents(sourceDocument.Components, targetDocument.Components);
+		MergeComponents(
+			sourceDocument.Components, 
+			targetDocument.Components, 
+			apiName, 
+			apiSource.VirtualPrefix);
+
 		MergeTags(sourceDocument, targetDocument, apiSource.Url);
 	}
 
@@ -311,7 +332,9 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	/// </summary>
 	private void MergeComponents(
 		OpenApiComponents sourceComponents,
-		OpenApiComponents targetComponents)
+		OpenApiComponents targetComponents,
+		string apiName,
+		string? virtualPrefix)
 	{
 		if (sourceComponents is null) return;
 
@@ -323,8 +346,13 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 		{
 			foreach (var (key, schema) in sourceComponents.Schemas)
 			{
-				// TryAdd ensures we don't overwrite existing schemas, but we should log collisions
-				if (!targetComponents.Schemas.TryAdd(key, schema))
+				// TryAdd ensures not overwriting existing schemas, but log collisions
+				if (targetComponents.Schemas.TryAdd(key, schema))
+				{
+					// Track the origin of this schema for future conflict resolution
+					_schemaOrigins[key] = new SchemaOrigin(apiName, virtualPrefix);
+				}
+				else
 				{
 					_logger.LogDebug("Schema '{SchemaKey}' already exists in target. Skipping merge from source to prevent overwrites.", key);
 				}

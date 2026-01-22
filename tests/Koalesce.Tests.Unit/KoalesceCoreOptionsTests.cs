@@ -391,4 +391,176 @@ public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
 	}
 
 	#endregion
+
+	#region VirtualPrefix Validation Tests
+
+	[Fact]
+	public void Koalesce_WhenDuplicateVirtualPrefix_ShouldThrowValidationException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+				{
+					new ApiSource
+					{
+						Url = "https://api1.com/v1/apidefinition.json",
+						VirtualPrefix = "/inventory"
+					},
+					new ApiSource
+					{
+						Url = "https://api2.com/v1/apidefinition.json",
+						VirtualPrefix = "/inventory"  // Duplicate!
+					}
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("Duplicate VirtualPrefix", exception.Message);
+		Assert.Contains("inventory", exception.Message);
+	}
+
+	[Fact]
+	public void Koalesce_WhenDuplicateVirtualPrefixWithDifferentCasing_ShouldThrowValidationException()
+	{
+		// Arrange - VirtualPrefix comparison should be case-insensitive
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+				{
+					new ApiSource
+					{
+						Url = "https://api1.com/v1/apidefinition.json",
+						VirtualPrefix = "/Inventory"
+					},
+					new ApiSource
+					{
+						Url = "https://api2.com/v1/apidefinition.json",
+						VirtualPrefix = "/inventory"  // Same prefix, different casing
+					}
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("Duplicate VirtualPrefix", exception.Message);
+	}
+
+	[Fact]
+	public void Koalesce_WhenUniqueVirtualPrefixes_ShouldNotThrowException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+				{
+					new ApiSource
+					{
+						Url = "https://api1.com/v1/apidefinition.json",
+						VirtualPrefix = "/inventory"
+					},
+					new ApiSource
+					{
+						Url = "https://api2.com/v1/apidefinition.json",
+						VirtualPrefix = "/products"
+					}
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert - Should not throw
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		Assert.NotNull(options);
+		Assert.Equal(2, options.Sources.Count);
+	}
+
+	[Fact]
+	public void Koalesce_WhenMixedVirtualPrefixesWithEmptyOnes_ShouldNotThrowException()
+	{
+		// Arrange - Only non-empty VirtualPrefixes should be checked for duplicates
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+				{
+					new ApiSource
+					{
+						Url = "https://api1.com/v1/apidefinition.json",
+						VirtualPrefix = null
+					},
+					new ApiSource
+					{
+						Url = "https://api2.com/v1/apidefinition.json",
+						VirtualPrefix = ""  // Empty should be treated as "no prefix"
+					},
+					new ApiSource
+					{
+						Url = "https://api3.com/v1/apidefinition.json",
+						VirtualPrefix = "/products"
+					}
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert - Should not throw (null and empty are not considered duplicates)
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		Assert.NotNull(options);
+		Assert.Equal(3, options.Sources.Count);
+	}
+
+	#endregion
 }
