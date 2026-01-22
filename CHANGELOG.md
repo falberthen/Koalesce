@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.9] - 2026-01-21
+
+### Fixed
+
+- **Schema Conflict Resolution with VirtualPrefix:** When **both** conflicting sources have `VirtualPrefix` configured, **both** schemas are now renamed. Previously, only the second schema was renamed (first source "won"), making the output order-dependent and unpredictable.
+  - Before: `Product` (first wins), `Inventory_Product`
+  - After: `Products_Product`, `Inventory_Product`
+
+### Added
+
+- **Duplicate VirtualPrefix Validation:** Fail-fast validation now prevents configuration errors when multiple sources share the same `VirtualPrefix`. This avoids path collisions and asymmetric schema naming at runtime.
+
+---
+
 ## [1.1.0-alpha.8] - 2026-01-19
 
 ### Added
