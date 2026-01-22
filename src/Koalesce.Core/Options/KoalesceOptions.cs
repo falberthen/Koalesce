@@ -122,6 +122,21 @@ public class KoalesceOptions : IValidatableObject
 
 	private IEnumerable<ValidationResult> ValidateSourceUrls()
 	{
+		// Check for duplicate VirtualPrefix values
+		var virtualPrefixGroups = Sources
+			.Select((source, index) => (source, index))
+			.Where(x => !string.IsNullOrWhiteSpace(x.source.VirtualPrefix))
+			.GroupBy(x => x.source.VirtualPrefix!.Trim('/').ToLowerInvariant())
+			.Where(g => g.Count() > 1);
+
+		foreach (var group in virtualPrefixGroups)
+		{
+			var indices = string.Join(", ", group.Select(x => x.index));
+			yield return new ValidationResult(
+				$"Duplicate VirtualPrefix '/{group.Key}' found in Sources at indices [{indices}]. Each source must have a unique VirtualPrefix.",
+				[nameof(Sources)]);
+		}
+
 		for (int i = 0; i < Sources.Count; i++)
 		{
 			var source = Sources[i];
