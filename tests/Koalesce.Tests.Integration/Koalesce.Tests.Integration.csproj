@@ -48,6 +48,9 @@
 	  <None Update="RestAPIs\appsettings.excludepaths.json">
 	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
 	  </None>
+	  <None Update="RestAPIs\appsettings.bothvirtualprefix.json">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
 	</ItemGroup>
 
 </Project>

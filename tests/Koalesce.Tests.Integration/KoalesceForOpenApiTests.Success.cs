@@ -417,11 +417,43 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 
 		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
 
-		// Assert: Default pattern is {Prefix}_{SchemaName}, so Inventory's Product becomes Inventory_Product
+		// Assert: Default pattern is {Prefix}_{SchemaName}
+		// When source without VirtualPrefix conflicts with source with VirtualPrefix,
+		// only the one with VirtualPrefix gets renamed (first wins for sources without prefix)
 		Assert.Contains("\"Product\"", mergedResult);
 		Assert.Contains("\"Inventory_Product\"", mergedResult);
 
 		// Verify the reference was updated
+		Assert.Contains("#/components/schemas/Inventory_Product", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	private const string _bothVirtualPrefixSettings = "RestAPIs/appsettings.bothvirtualprefix.json";
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WhenBothSourcesHaveVirtualPrefix_ShouldRenameBothConflictingSchemas()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_bothVirtualPrefixSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI());
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		// Assert: When BOTH sources have VirtualPrefix and define the same schema (Product),
+		// BOTH should be renamed to avoid order-dependent behavior
+		// Products API (first) defines Product -> Products_Product
+		// Inventory API (second) defines Product -> Inventory_Product
+		Assert.Contains("\"Products_Product\"", mergedResult);
+		Assert.Contains("\"Inventory_Product\"", mergedResult);
+
+		// The original "Product" name should NOT exist (both were renamed)
+		Assert.DoesNotContain("\"Product\":", mergedResult);
+
+		// Verify the references were updated
+		Assert.Contains("#/components/schemas/Products_Product", mergedResult);
 		Assert.Contains("#/components/schemas/Inventory_Product", mergedResult);
 
 		await koalescingApi.StopAsync();
