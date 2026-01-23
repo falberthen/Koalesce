@@ -1,4 +1,6 @@
-﻿namespace Koalesce.OpenAPI.Extensions;
+﻿using Koalesce.OpenAPI.Services.ConflictResolution;
+
+namespace Koalesce.OpenAPI.Extensions;
 
 /// <summary>
 /// Extension methods for configuring Koalesce with OpenAPI
@@ -19,6 +21,15 @@ public static class KoalesceForOpenApiBuilderExtensions
 		// Implementations of Koalesce basic services
 		services.TryAddSingleton(typeof(IDocumentMerger<OpenApiDocument>), typeof(OpenApiDocumentMerger));
 		services.TryAddSingleton(typeof(IMergedDocumentSerializer<OpenApiDocument>), typeof(OpenApiDocumentSerializer));
+
+		// Supporting Services for merging
+		services.AddTransient<OpenApiDefinitionLoader>();
+		services.AddTransient<OpenApiPathMerger>();
+
+		// Conflict Resolution Services
+		services.AddTransient<IConflictResolutionStrategy, DefaultConflictResolutionStrategy>();
+		services.AddTransient<SchemaRenamer>();
+		services.AddTransient<SchemaConflictCoordinator>();
 
 		// Registering provider
 		services.TryAddSingleton<KoalesceOpenApiProvider>();
