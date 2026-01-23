@@ -1,4 +1,4 @@
-﻿namespace Koalesce.OpenAPI.Services;
+﻿namespace Koalesce.OpenAPI.Services.ConflictResolution;
 
 /// <summary>
 /// Internal visitor to rewrite Schema reference Ids in the source document
