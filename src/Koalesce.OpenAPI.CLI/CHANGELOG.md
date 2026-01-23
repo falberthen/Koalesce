@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.10] - 2026-01-22
+
+### Added
+
+- **Fail-Fast Configuration:** Introduced `FailOnServiceLoadError` option (default: `false`).
+  - When set to `true`, Koalesce will abort the startup process if **any** source API fails to load (network error, timeout, invalid JSON).
+  - When set to `false` (default), Koalesce continues to operate resiliently, skipping unreachable sources.
+
+### Changed
+
+- **Internal Architecture:**
+  - Implemented `DefaultConflictResolutionStrategy` for clearer conflict resolution.
+  - Refactored `OpenApiDocumentMerger` to adhere to Single Responsibility Principle (SRP).
+  - Extracted `OpenApiDefinitionLoader` for robust I/O handling.
+  - Extracted `SchemaConflictCoordinator` and `SchemaRenamer` for isolated conflict logic.
+
+### ⚠️ Breaking Changes
+
+- **Schema Conflict Resolution Strategy:**
+  - The logic for resolving schema name conflicts is now deterministic based on `VirtualPrefix`.
+  - **With Prefix:** Sources defining a `VirtualPrefix` will have their schemas scoped to that prefix (e.g., `Inventory_Product`).
+  - **No Prefix:** Sources without a prefix act as the "root" domain. If a conflict occurs with another non-prefixed source, the incoming source falls back to using its Sanitized API Title.
+  - *Impact:* Generated clients (Kiota/NSwag) will require refactoring as class names will change to match the new scoping rules.
+
+---
+
 ## [1.1.0-alpha.9] - 2026-01-21
 
 ### Fixed
