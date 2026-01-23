@@ -44,6 +44,12 @@ public class KoalesceOptions : IValidatableObject
 	public string SchemaConflictPattern { get; set; } = CoreConstants.DefaultSchemaConflictPattern;
 
 	/// <summary>
+	/// If true, the merge process will fail and throw an exception if ANY source API cannot be loaded.
+	/// If false (default), unreachable sources are logged and skipped, allowing the Gateway to start partially.
+	/// </summary>
+	public bool FailOnServiceLoadError { get; set; } = false;
+
+	/// <summary>
 	/// Custom validation logic for required fields.
 	/// </summary>	
 	public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

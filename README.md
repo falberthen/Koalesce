@@ -27,6 +27,13 @@
 - ✅ **Multi-targeting**: Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
 - ✅ **Extensible Core**: Designed to support future providers for other API specification formats.
 
+### 🧠 Philosophy: DX-First & Client-Ready
+
+Koalesce is built to balance **Developer Experience (DX)** with architectural governance:
+
+* **Resilient by Default:** If a microservice is down, Koalesce skips it to keep your Gateway alive.
+* **Strict by Choice:** Enable **Strict Mode** (`FailOnServiceLoadError=true`, `SkipIdenticalPaths=false`) to use Koalesce as a linter. Fail your build if services are unreachable or if teams accidentally created colliding routes.
+* **Purposefully Opinionated:** It enforces **deterministic naming** (via `VirtualPrefix`) to ensure that generated SDKs are clean, strongly typed, and free of ambiguous names.
 ---
 
 ## 📦 Installation
@@ -70,6 +77,7 @@ Koalesce configuration is divided into **Core Options** and **Provider Options**
 | `Title` | `string` | `"My 🐨Koalesced API"` | Title for the merged API definition |
 | `SkipIdenticalPaths` | `boolean` | `true` | If `false`, throws exception on duplicate paths. If `true`, logs warning and skips duplicates |
 | `SchemaConflictPattern` | `string` | `"{Prefix}_{SchemaName}"` | Pattern for resolving schema name conflicts. Available placeholders: `{Prefix}`, `{SchemaName}` |
+| `FailOnServiceLoadError` | `boolean` | `false` | If `true`, aborts startup if ANY source is unreachable. If `false` (default), logs error and skips the source. |
 
 #### Source Configuration
 
@@ -237,105 +245,94 @@ builder.Services.AddKoalesce(builder.Configuration)
 
 ## 🔀 Conflict Resolution Strategies
 
-Koalesce automatically handles conflicts during the merge process:
+### Path Conflict Resolution
 
-### Schema Name Conflicts
+When multiple APIs define identical routes (e.g., `/api/health`), Koalesce handles conflicts based on your configuration. Choose the strategy that best fits your architecture:
 
-When multiple APIs define schemas with the same name (e.g., `Product`), Koalesce automatically renames them using a configurable pattern.
+**Scenario 1: Preserve All Endpoints wIth a `VirtualPrefix` (Recommended)**
 
-**Default Pattern:** `{Prefix}_{SchemaName}`
-
-**Example:**
-
-- `InventoryAPI` defines `Product` → becomes `Inventory_Product`
-- `CatalogAPI` defines `Product` → becomes `Catalog_Product`
-
-**Custom Pattern:**
-
-You can customize the pattern via `appsettings.json` or Fluent API:
-
-```json
-{
-  "Koalesce": {
-    "SchemaConflictPattern": "{SchemaName}_{Prefix}"
-  }
-}
-```
-
-**Available placeholders:** `{Prefix}`, `{SchemaName}`
-
-**Prefix Priority:**
-
-1. **VirtualPrefix** (if configured, e.g., `/inventory` → `Inventory`)
-2. **API Name** (sanitized, e.g., `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPI`)
-
-This ensures all schemas are preserved without collisions.
-
-### Path Conflicts
-
-When identical paths exist across multiple APIs (e.g., `/api/health`), you have two options:
-
-**Option 1: Use `VirtualPrefix` (Recommended)**
+Use when you want to preserve All endpoints from All APIs:
 
 ```json
 {
   "Sources": [
-    {
-      "Url": "https://inventory-api/swagger.json",
-      "VirtualPrefix": "/inventory"
-    },
-    {
-      "Url": "https://catalog-api/swagger.json",
-      "VirtualPrefix": "/catalog"
-    }
+    { "Url": "https://inventory-api/swagger.json", "VirtualPrefix": "/inventory" },
+    { "Url": "https://catalog-api/swagger.json", "VirtualPrefix": "/catalog" }
   ]
 }
 ```
 
-**Result:** `/api/health` becomes `/inventory/api/health` and `/catalog/api/health`
+**Behavior:**
 
-> **Important:** Your API Gateway (Ocelot/YARP) must be configured to route these prefixed paths back to the original downstream services.
+- ✅ Transforms `/api/health` → `/inventory/api/health` and `/catalog/api/health`
+- ✅ Both endpoints preserved in merged document
+- ✅ No path conflicts occur
+- ⚠️ **Requires Gateway URL Rewrite** to route prefixed paths back to original services
 
 <br/>
 
-**Option 2: Set `SkipIdenticalPaths: true`**
+**Scenario 2: First Source Wins (Default)**
 
-```json
-{
-  "SkipIdenticalPaths": true
-}
-```
-
-**Result:** First API wins, subsequent identical paths are skipped with a warning.
-
-### Excluding Specific Paths
-
-You can exclude specific paths from being merged using the `ExcludePaths` option per source. This is useful for:
-
-- Hiding internal/admin endpoints from the public API documentation
-- Preventing path conflicts without using VirtualPrefix
-- Excluding deprecated or experimental endpoints
-
-**Example:**
+Use when you have overlapping routes and want Koalesce to handle it automatically:
 
 ```json
 {
   "Sources": [
-    {
-      "Url": "https://api.example.com/swagger.json",
-      "ExcludePaths": [
-        "/api/internal",
-        "/api/admin/*"
-      ]
-    }
-  ]
+    { "Url": "https://inventory-api/swagger.json" },
+    { "Url": "https://catalog-api/swagger.json" }
+  ],
 }
 ```
 
-**Supported Patterns:**
+**Behavior:**
 
-- **Exact match:** `"/api/internal"` - excludes only that exact path
-- **Wildcard:** `"/api/admin/*"` - excludes `/api/admin` and any path starting with `/api/admin/`
+- ✅ First source wins: `/api/health` from `inventory-api` is kept
+- ⚠️ Subsequent identical paths are **skipped** with warning
+- ⚠️ `/api/health` from `catalog-api` is **lost** in merged document
+- ✅ No Gateway configuration needed
+
+<br/>
+
+**Scenario 3: Enforce Unique Routes, Fail-Fast on Conflicts**
+
+Use when you want to enforce unique routes and fail if conflicts are detected:
+
+```json
+{
+  "Sources": [
+    { "Url": "https://inventory-api/swagger.json" },
+    { "Url": "https://catalog-api/swagger.json" }
+  ],
+  "SkipIdenticalPaths": false
+}
+```
+
+**Behavior:**
+
+- ❌ **Throws `KoalesceIdenticalPathFoundException` at startup**
+- ❌ Merge fails if any path collision detected
+- ✅ Forces explicit conflict resolution
+
+<br/>
+
+### Schema Name Conflict Resolution
+
+**Automatic Resolution:** When multiple APIs define schemas with identical names (e.g., `Product`), Koalesce automatically renames them using the pattern `{Prefix}_{SchemaName}`.
+
+**Conflict Behavior:**
+
+| Scenario | Result |
+|---|---|
+| Both sources have `VirtualPrefix` | **Both** schemas are renamed (e.g., `Inventory_Product`, `Catalog_Product`.) |
+| Only one source have `VirtualPrefix` | Only the prefixed source's schema is renamed |
+| Neither source has `VirtualPrefix` | First schema keeps original name. Second uses **Sanitized API Title** as prefix. |
+
+> 💡 **Note:** When falling back to the API Title, Koalesce sanitizes the string (PascalCase, alphanumeric only) to ensure valid C# identifiers. For example, `"Sales API v2"` becomes `SalesApiV2`.
+
+**Prefix Priority:**
+
+1. **VirtualPrefix** (if configured): `/inventory` → `Inventory_Product`
+2. **API Name** (sanitized): `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPI_Product`
 
 ---
 
@@ -352,7 +349,6 @@ You can exclude specific paths from being merged using the `ExcludePaths` option
     ],
     "MergedDocumentPath": "/swagger/v1/all-apis.json",
     "Title": "All APIs Documentation"
-    // If OpenApiSecurityScheme = downstream security is preserved
   }
 }
 ```
@@ -369,7 +365,6 @@ You can exclude specific paths from being merged using the `ExcludePaths` option
     "MergedDocumentPath": "/swagger/v1/apigateway.yaml",
     "Title": "API Gateway",
     "ApiGatewayBaseUrl": "https://localhost:5000"
-    // If OpenApiSecurityScheme = downstream security is preserved
   }
 }
 ```
@@ -407,98 +402,6 @@ You can exclude specific paths from being merged using the `ExcludePaths` option
 ```
 
 > 💡 **Note:** Check out the [Koalesce.Samples.Swagger.Ocelot](https://github.com/falberthen/Koalesce/tree/master/samples/Koalesce.Samples.Swagger.Ocelot) sample project for a complete working implementation with Ocelot Gateway integration.
-
----
-
-## ⚠️ Important Considerations and Limitations
-
-### Path Conflict Resolution
-
-When multiple APIs define identical routes (e.g., `/api/health`), Koalesce handles conflicts based on your configuration. Choose the strategy that best fits your architecture:
-
-**Scenario 1: With `VirtualPrefix` (Recommended) - Preserve All Endpoints**
-
-Use when you want to preserve ALL endpoints from ALL APIs:
-
-```json
-{
-  "Sources": [
-    { "Url": "https://inventory-api/swagger.json", "VirtualPrefix": "/inventory" },
-    { "Url": "https://catalog-api/swagger.json", "VirtualPrefix": "/catalog" }
-  ]
-}
-```
-
-**Behavior:**
-
-- ✅ Transforms `/api/health` → `/inventory/api/health` and `/catalog/api/health`
-- ✅ Both endpoints preserved in merged document
-- ✅ No path conflicts occur
-- ⚠️ **Requires Gateway URL Rewrite** to route prefixed paths back to original services
-
-**Scenario 2: Without `VirtualPrefix` (Default) - First Source Wins**
-
-Use when you have overlapping routes and want Koalesce to handle it automatically:
-
-```json
-{
-  "Sources": [
-    { "Url": "https://inventory-api/swagger.json" },
-    { "Url": "https://catalog-api/swagger.json" }
-  ],
-}
-```
-
-**Behavior:**
-
-- ✅ First source wins: `/api/health` from `inventory-api` is kept
-- ⚠️ Subsequent identical paths are **skipped** with warning
-- ⚠️ `/api/health` from `catalog-api` is **lost** in merged document
-- ✅ No Gateway configuration needed
-
-**Scenario 3: Fail-Fast on Conflicts - Enforce Unique Routes**
-
-Use when you want to enforce unique routes and fail if conflicts are detected:
-
-```json
-{
-  "Sources": [
-    { "Url": "https://inventory-api/swagger.json" },
-    { "Url": "https://catalog-api/swagger.json" }
-  ],
-  "SkipIdenticalPaths": false
-}
-```
-
-**Behavior:**
-
-- ❌ **Throws `KoalesceIdenticalPathFoundException` at startup**
-- ❌ Merge fails if any path collision detected
-- ✅ Forces explicit conflict resolution
-
-### Schema Name Conflict Resolution
-
-**Automatic Resolution:** When multiple APIs define schemas with identical names (e.g., `Product`), Koalesce automatically renames them using the pattern `{Prefix}_{SchemaName}`.
-
-**Conflict Behavior:**
-
-| Scenario | Result |
-|---|---|
-| Both sources have `VirtualPrefix` | **Both** schemas are renamed (e.g., `Inventory_Product`, `Catalog_Product`) |
-| Only one source have `VirtualPrefix` | Only the prefixed source's schema is renamed |
-| Neither source has `VirtualPrefix` | First schema keeps original name, second uses API name prefix |
-
-**Prefix Priority:**
-
-1. **VirtualPrefix** (if configured): `/inventory` → `Inventory_Product`
-2. **API Name** (sanitized): `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPI_Product`
-
-**Example (both with VirtualPrefix):**
-
-- `InventoryAPI` (`/inventory`) defines `Product` → becomes `Inventory_Product`
-- `CatalogAPI` (`/catalog`) defines `Product` → becomes `Catalog_Product`
-
-This ensures all schemas are preserved without manual intervention and naming is deterministic regardless of source order.
 
 ---
 

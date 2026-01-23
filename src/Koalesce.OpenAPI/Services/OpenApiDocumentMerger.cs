@@ -1,13 +1,15 @@
 ﻿namespace Koalesce.OpenAPI.Services;
 
 /// <summary>
-/// Merges multiple API sources into a single OpenApiDocument
+/// Service for merging multiple OpenAPI documents into a single consolidated document
 /// </summary>
 internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 {
-	private readonly KoalesceOpenApiOptions _options;
 	private readonly ILogger<OpenApiDocumentMerger> _logger;
-	private readonly IHttpClientFactory _httpClientFactory;
+	private readonly KoalesceOpenApiOptions _options;
+	private readonly OpenApiDefinitionLoader _loader;
+	private readonly OpenApiPathMerger _pathMerger;
+	private readonly SchemaConflictCoordinator _schemaConflictCoordinator;
 
 	/// <summary>
 	/// Tracks the origin of each schema for conflict resolution
@@ -18,15 +20,18 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	public OpenApiDocumentMerger(
 		IOptions<KoalesceOpenApiOptions> options,
 		ILogger<OpenApiDocumentMerger> logger,
-		IHttpClientFactory httpClientFactory)
+		OpenApiDefinitionLoader loader,
+		OpenApiPathMerger pathMerger,
+		SchemaConflictCoordinator schemaConflictCoordinator)
 	{
 		ArgumentNullException.ThrowIfNull(options);
 		ArgumentNullException.ThrowIfNull(logger);
-		ArgumentNullException.ThrowIfNull(httpClientFactory);
 
 		_options = options.Value;
 		_logger = logger;
-		_httpClientFactory = httpClientFactory;
+		_loader = loader;
+		_pathMerger = pathMerger;
+		_schemaConflictCoordinator = schemaConflictCoordinator;
 	}
 
 	/// <summary>
@@ -38,59 +43,39 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			throw new ArgumentException("API source list cannot be empty.");
 
 		_logger.LogInformation("Starting API Koalescing process with {Count} APIs", _options.Sources.Count);
-
+		
 		// Clear schema origins from previous runs
 		_schemaOrigins.Clear();
 
 		try
 		{
-			var httpClient = _httpClientFactory.CreateClient(CoreConstants.KoalesceClient);
-			var detectedApiVersion = _options.MergedDocumentPath.ExtractVersionFromPath();
+			// Initialize merged document
+			var mergedDocument = InitializeMergedDocument();
 
-			var mergedDocumentDefinition = new OpenApiDocument
+			// Fetch concurrently using the Loader
+			var fetchDocumentTasks = _options.Sources.Select(async source =>
 			{
-				Info = new OpenApiInfo
-				{
-					Title = _options.Title,
-					Version = detectedApiVersion ?? OpenAPIConstants.V1
-				},
-				Paths = new OpenApiPaths(),
-				Components = new OpenApiComponents
-				{
-					SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>(),
-					Schemas = new Dictionary<string, OpenApiSchema>()
-				},
-				Servers = new List<OpenApiServer>(),
-				// Keep global security empty to prevent scope leakage between microservices
-				SecurityRequirements = new List<OpenApiSecurityRequirement>(),
-				Tags = new List<OpenApiTag>()
-			};
-
-			// Fetch all API definitions concurrently
-			// Mapping the tasks to the source definition to pair them later
-			var fetchTasks = _options.Sources.Select(async source =>
-			{
-				var doc = await FetchApiDefinitionAsync(httpClient, source.Url);
+				var doc = await _loader.LoadAsync(source.Url);
 				return (ApiSource: source, Document: doc);
 			});
 
-			var results = await Task.WhenAll(fetchTasks);
+			var loadResults = await Task.WhenAll(fetchDocumentTasks);
 
 			// Merge results sequentially
-			foreach (var (apiSource, downstreamApiDefinition) in results)
+			foreach (var (apiSource, downstreamDoc) in loadResults)
 			{
-				if (downstreamApiDefinition is not null)
+				if (downstreamDoc is not null)
 				{
-					MergeApiDefinition(downstreamApiDefinition, mergedDocumentDefinition, apiSource);
+					MergeApiDefinition(downstreamDoc, mergedDocument, apiSource);
 				}
 			}
 
-			// Finalize Server definitions (Server Urls, global SecurityScheme)
-			ConsolidateServerDefinitions(mergedDocumentDefinition);
-			ConsolidateGlobalSecuritySchemeDefinitions(mergedDocumentDefinition);
+			// Finalize
+			ConsolidateServerDefinitions(mergedDocument);
+			ConsolidateGlobalSecurity(mergedDocument);
 
 			_logger.LogInformation("API Koalescing completed.");
-			return mergedDocumentDefinition;
+			return mergedDocument;
 		}
 		catch (Exception ex)
 		{
@@ -100,233 +85,66 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	}
 
 	/// <summary>
-	/// Fetches and parses the OpenAPI definition from a URL
+	/// Initializes a new OpenAPI document with default metadata, empty paths, components, servers, security requirements,
+	/// and tags.
 	/// </summary>
-	private async Task<OpenApiDocument?> FetchApiDefinitionAsync(
-		HttpClient httpClient,
-		string definitionUrl)
+	private OpenApiDocument InitializeMergedDocument()
 	{
-		try
+		var version = _options.MergedDocumentPath.ExtractVersionFromPath();
+		return new OpenApiDocument
 		{
-			_logger.LogInformation("Fetching OpenAPI spec from: {Url}", definitionUrl);
-
-			// Using ResponseHeadersRead for efficiency with large streams
-			using var response = await httpClient.GetAsync(definitionUrl, HttpCompletionOption.ResponseHeadersRead);
-			response.EnsureSuccessStatusCode();
-
-			using var responseStream = await response.Content.ReadAsStreamAsync();
-			var readResult = await new OpenApiStreamReader().ReadAsync(responseStream);
-
-			return readResult.OpenApiDocument?.Paths?.Any() == true
-				? readResult.OpenApiDocument
-				: null;
-		}
-		catch (Exception ex) when (ex is HttpRequestException || ex is OpenApiException)
-		{
-			_logger.LogError(ex, "Failed to fetch or parse OpenAPI from {Url}. Skipping.", definitionUrl);
-			return null;
-		}
+			Info = new OpenApiInfo
+			{
+				Title = _options.Title,
+				Version = version ?? OpenAPIConstants.V1
+			},
+			Paths = new OpenApiPaths(),
+			Components = new OpenApiComponents
+			{
+				SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>(),
+				Schemas = new Dictionary<string, OpenApiSchema>()
+			},
+			Servers = new List<OpenApiServer>(),
+			SecurityRequirements = new List<OpenApiSecurityRequirement>(),
+			Tags = new List<OpenApiTag>()
+		};
 	}
 
 	/// <summary>
 	/// Merges a specific API definition into the target document, applying prefixes and isolation rules
 	/// </summary>
 	private void MergeApiDefinition(
-		OpenApiDocument sourceDocument,
-		OpenApiDocument targetDocument,
+		OpenApiDocument sourceDoc,
+		OpenApiDocument targetDoc,
 		ApiSource apiSource)
 	{
-		string apiName = sourceDocument.Info?.Title ?? "Unknown API";
-		string apiVersion = sourceDocument.Info?.Version ?? "v1";
+		string apiName = sourceDoc.Info?.Title ?? "Unknown API";
+		string apiVersion = sourceDoc.Info?.Version ?? "v1";
 
-		// Resolve Schema Conflicts (renaming source schemas if they collide)
-		// When both source and existing schema have VirtualPrefix, BOTH are renamed
-		OpenApiSchemaConflictResolver
-			.ResolveSchemaConflicts(_logger, 
-				sourceDocument, 
-				targetDocument, 
-				apiName, 
-				apiSource.VirtualPrefix, 
-				_options.SchemaConflictPattern, 
-				_schemaOrigins);
+		// Resolve Conflicts
+		_schemaConflictCoordinator.ResolveConflicts(
+			sourceDoc, targetDoc, apiName, apiSource.VirtualPrefix,
+			_options.SchemaConflictPattern, _schemaOrigins);
 
-		// Prepare the source server entry ONLY for Aggregation Mode.
-		// If using Gateway,  ignore source servers here (handled globally in MergeIntoSingleDefinitionAsync).
+		// Prepare Server Entry (for Aggregation Mode)
 		OpenApiServer? serverEntry = null;
 		if (string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
 		{
 			string baseUrl = new Uri(apiSource.Url).GetLeftPart(UriPartial.Authority);
-			serverEntry = new OpenApiServer
-			{
-				Url = baseUrl,
-				Description = $"{apiName} ({apiVersion})"
-			};
+			serverEntry = new OpenApiServer { Url = baseUrl, Description = $"{apiName} ({apiVersion})" };
 
-			// Register Server if unique in target (Aggregation Mode requirement)
-			if (!targetDocument.Servers.Any(s => s.Url == baseUrl))
-				targetDocument.Servers.Add(serverEntry);
+			if (!targetDoc.Servers.Any(s => s.Url == baseUrl))
+				targetDoc.Servers.Add(serverEntry);
 		}
 
-		// Merge Core Structures (Paths, Components, Tags)
-		MergePaths(
-			sourceDocument,
-			targetDocument.Paths,
-			apiName,
-			apiSource,
-			serverEntry
-		);
+		// Merge Paths
+		_pathMerger.MergePaths(sourceDoc, targetDoc.Paths, apiName, apiSource, serverEntry);
 
-		MergeComponents(
-			sourceDocument.Components, 
-			targetDocument.Components, 
-			apiName, 
-			apiSource.VirtualPrefix);
-
-		MergeTags(sourceDocument, targetDocument, apiSource.Url);
+		// Merge Components & Tags
+		MergeComponents(sourceDoc.Components, targetDoc.Components, apiName, apiSource.VirtualPrefix);
+		MergeTags(sourceDoc, targetDoc, apiSource.Url);
 	}
-
-	/// <summary>
-	/// Merges paths, applies route prefixes, and enforces security isolation
-	/// </summary>
-	private void MergePaths(
-		OpenApiDocument sourceDocument,
-		OpenApiPaths targetPaths,
-		string apiName,
-		ApiSource apiSource,
-		OpenApiServer? server)
-	{
-		var sourcePaths = sourceDocument.Paths;
-		var globalSecurityRequirements = sourceDocument.SecurityRequirements;
-		foreach (var (originalPath, pathItem) in sourcePaths)
-		{
-			// Check if the path should be excluded
-			if (IsPathExcluded(originalPath, apiSource.ExcludePaths))
-			{
-				_logger.LogInformation("Excluding path '{Path}' from '{ApiName}' as per ExcludePaths configuration.", originalPath, apiName);
-				continue;
-			}
-
-			// Construct the new path key with optional prefix
-			// Logic: "/api/apiname" + Prefix => "/prefix/api/apiname"
-			string newPathKey = string.IsNullOrEmpty(apiSource.VirtualPrefix)
-				? originalPath
-				: $"/{apiSource.VirtualPrefix.Trim('/')}/{originalPath.TrimStart('/')}";
-
-			// Check for collisions
-			if (targetPaths.ContainsKey(newPathKey))
-			{
-				if (!_options.SkipIdenticalPaths)
-				{
-					throw new KoalesceIdenticalPathFoundException(newPathKey, apiName);
-				}
-				_logger.LogWarning("Skipping identical path '{Path}' from '{ApiName}'.", newPathKey, apiName);
-				continue;
-			}
-
-			// Copy path-level metadata and parameters			
-			var newPathItem = new OpenApiPathItem
-			{
-				Summary = pathItem.Summary,
-				Description = pathItem.Description,
-				Parameters = pathItem.Parameters?.Select(p => p).ToList() ?? new List<OpenApiParameter>()
-			};
-
-			targetPaths[newPathKey] = newPathItem;
-
-			foreach (var (opType, operation) in pathItem.Operations)
-			{
-				// OperationId Namespacing (Critical for API Clients)
-				if (!string.IsNullOrEmpty(operation.OperationId) && !string.IsNullOrEmpty(apiSource.VirtualPrefix))
-				{
-					string cleanPrefix = apiSource.VirtualPrefix.Replace("/", "").Replace("-", "");
-					operation.OperationId = $"{cleanPrefix}_{operation.OperationId}";
-				}
-
-				// Handle Servers (Gateway vs Direct)
-				if (!string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
-				{
-					// Gateway handles routing, remove internal servers
-					operation.Servers?.Clear();
-				}
-				else if (server != null)
-				{
-					operation.Servers ??= new List<OpenApiServer>();
-
-					// Avoid duplication if the server is already listed
-					if (!operation.Servers.Any(s => s.Url == server.Url))
-					{
-						operation.Servers.Add(server);
-					}
-				}
-
-				// Materialize document-level security requirements into operations
-				// Per OpenAPI spec: if operation.Security is null/empty, it inherits from document.Security
-				// Need to make this explicit to preserve downstream API security in the merged document
-				if ((operation.Security == null || !operation.Security.Any())
-					&& globalSecurityRequirements?.Any() == true)
-				{
-					operation.Security = new List<OpenApiSecurityRequirement>(globalSecurityRequirements);
-				}
-
-				operation.Summary ??= string.Empty;
-				newPathItem.Operations[opType] = operation;
-			}
-		}
-	}
-
-	/// <summary>
-	/// Merges tags prioritizing: Operation Tags > Document Global Tags > URL Fallback
-	/// </summary>
-	private void MergeTags(
-		OpenApiDocument sourceDocument,
-		OpenApiDocument targetDocument,
-		string sourceUrl)
-	{
-		// Ensure source global definitions are copied (preserves descriptions)
-		if (sourceDocument.Tags is not null)
-		{
-			foreach (var tag in sourceDocument.Tags)
-			{
-				if (!targetDocument.Tags.Any(t => t.Name == tag.Name))
-					targetDocument.Tags.Add(tag);
-			}
-		}
-
-		var defaultTagName = new Uri(sourceUrl).Host.Replace(".", "-");
-
-		// Assign tags to operations
-		foreach (var path in sourceDocument.Paths.Values)
-		{
-			foreach (var operation in path.Operations.Values)
-			{
-				operation.Tags ??= new List<OpenApiTag>();
-
-				if (!operation.Tags.Any())
-				{
-					// Fallback Strategy:
-					// Use Global Source Tags if available
-					if (sourceDocument.Tags?.Any() == true)
-					{
-						foreach (var docTag in sourceDocument.Tags)
-							operation.Tags.Add(new OpenApiTag { Name = docTag.Name });
-					}
-					// Use URL Hostname if no tags exist anywhere
-					else
-					{
-						operation.Tags.Add(new OpenApiTag { Name = defaultTagName });
-					}
-				}
-
-				// Ensure all operation tags are registered in the target global list
-				foreach (var tag in operation.Tags)
-				{
-					if (!targetDocument.Tags.Any(t => t.Name == tag.Name))
-						targetDocument.Tags.Add(tag);
-				}
-			}
-		}
-	}
-
+	
 	/// <summary>
 	/// Merges schemas and security scheme definitions
 	/// </summary>
@@ -336,39 +154,63 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 		string apiName,
 		string? virtualPrefix)
 	{
-		if (sourceComponents is null) return;
+		if (sourceComponents?.Schemas is null) return;
 
-		_logger.LogInformation("Merging {Count} schemas...",
-			sourceComponents.Schemas?.Count ?? 0);
-
-		// Merge Schemas
-		if (sourceComponents.Schemas is not null)
+		foreach (var (key, schema) in sourceComponents.Schemas)
 		{
-			foreach (var (key, schema) in sourceComponents.Schemas)
+			if (targetComponents.Schemas.TryAdd(key, schema))
 			{
-				// TryAdd ensures not overwriting existing schemas, but log collisions
-				if (targetComponents.Schemas.TryAdd(key, schema))
-				{
-					// Track the origin of this schema for future conflict resolution
+				if (!_schemaOrigins.ContainsKey(key))
 					_schemaOrigins[key] = new SchemaOrigin(apiName, virtualPrefix);
-				}
-				else
-				{
-					_logger.LogDebug("Schema '{SchemaKey}' already exists in target. Skipping merge from source to prevent overwrites.", key);
-				}
 			}
 		}
 
 		// Merge Security Schemes (preserve downstream scheme definitions)
 		// Only merge if no global security scheme is configured
-		if (_options.OpenApiSecurityScheme == null && sourceComponents.SecuritySchemes is not null)
+		if (_options.OpenApiSecurityScheme == null && sourceComponents.SecuritySchemes != null)
 		{
 			foreach (var (key, scheme) in sourceComponents.SecuritySchemes)
+				targetComponents.SecuritySchemes.TryAdd(key, scheme);
+		}
+	}
+
+	/// <summary>
+	/// Merges tags prioritizing: Operation Tags > Document Global Tags > URL Fallback
+	/// </summary>
+	private void MergeTags(
+		OpenApiDocument sourceDoc, 
+		OpenApiDocument targetDoc, 
+		string sourceUrl)
+	{
+		if (sourceDoc.Tags != null)
+		{
+			foreach (var tag in sourceDoc.Tags) 
 			{
-				if (!targetComponents.SecuritySchemes.TryAdd(key, scheme))
+				if (!targetDoc.Tags.Any(t => t.Name == tag.Name)) 
+					targetDoc.Tags.Add(tag);
+			}
+		}
+
+		var defaultTagName = new Uri(sourceUrl).Host.Replace(".", "-");
+		foreach (var path in sourceDoc.Paths.Values)
+		{
+			foreach (var operation in path.Operations.Values)
+			{
+				operation.Tags ??= new List<OpenApiTag>();
+				if (!operation.Tags.Any())
 				{
-					_logger.LogDebug("Security scheme '{SchemeKey}' already exists in target.", key);
+					if (sourceDoc.Tags?.Any() == true)
+					{
+						foreach (var t in sourceDoc.Tags) 
+							operation.Tags.Add(new OpenApiTag { Name = t.Name });
+					}						
+					else
+						operation.Tags.Add(new OpenApiTag { Name = defaultTagName });
 				}
+
+				foreach (var tag in operation.Tags)
+					if (!targetDoc.Tags.Any(t => t.Name == tag.Name)) 
+						targetDoc.Tags.Add(tag);
 			}
 		}
 	}
@@ -376,20 +218,16 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	/// <summary>
 	/// Consolidates the server definitions in the specified OpenAPI document to ensure a valid server entry is present.
 	/// </summary>
-	private void ConsolidateServerDefinitions(OpenApiDocument mergedDocumentDefinition)
+	private void ConsolidateServerDefinitions(OpenApiDocument doc)
 	{
 		if (!string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
 		{
-			// If a Gateway URL is specified, override all server entries
-			mergedDocumentDefinition.Servers.Clear();
-			mergedDocumentDefinition.Servers.Add(
-				new OpenApiServer { Url = _options.ApiGatewayBaseUrl, Description = "API Gateway" }
-			);
+			doc.Servers.Clear();
+			doc.Servers.Add(new OpenApiServer { Url = _options.ApiGatewayBaseUrl, Description = "API Gateway" });
 		}
-		else if (!mergedDocumentDefinition.Servers.Any())
+		else if (!doc.Servers.Any())
 		{
-			_logger.LogWarning("No valid servers found. Adding fallback '/'");
-			mergedDocumentDefinition.Servers.Add(new OpenApiServer { Url = "/" });
+			doc.Servers.Add(new OpenApiServer { Url = "/" });
 		}
 	}
 
@@ -397,98 +235,40 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	/// Adds the configured global security scheme to the specified OpenAPI document and applies it as a global security
 	/// requirement if present in the options.
 	/// </summary>
-	private void ConsolidateGlobalSecuritySchemeDefinitions(OpenApiDocument mergedDocumentDefinition)
+	private void ConsolidateGlobalSecurity(OpenApiDocument doc)
 	{
-		// If OpenApiSecurityScheme is configured, apply it globally
-		if (_options.OpenApiSecurityScheme is not null)
+		if (_options.OpenApiSecurityScheme is null) return;
+
+		string schemeName = _options.OpenApiSecurityScheme.Name;
+		if (string.IsNullOrWhiteSpace(schemeName))
+			throw new InvalidOperationException("Security scheme name is required.");
+
+		doc.Components.SecuritySchemes.Clear();
+		doc.Components.SecuritySchemes[schemeName] = _options.OpenApiSecurityScheme;
+
+		// Create the global security requirement reference
+		var globalSecurityRequirement = new OpenApiSecurityRequirement
 		{
-			string schemeName = _options.OpenApiSecurityScheme.Name;
-
-			// Validate scheme name is not null or empty
-			if (string.IsNullOrWhiteSpace(schemeName))
 			{
-				_logger.LogError(
-					"OpenApiSecurityScheme.Name cannot be null or empty. " +
-					"When using extension methods, provide a scheme name. " +
-					"When using appsettings.json, ensure the Name property is set.");
-				throw new InvalidOperationException(
-					"Security scheme name is required. Provide a Name value for the OpenApiSecurityScheme.");
-			}
-
-			// Clear all downstream security schemes (we're replacing them with the global scheme)
-			mergedDocumentDefinition.Components.SecuritySchemes.Clear();
-
-			// Add the global scheme to components
-			mergedDocumentDefinition.Components.SecuritySchemes[schemeName] = _options.OpenApiSecurityScheme;
-
-			// Create the global security requirement reference
-			var globalSecurityRequirement = new OpenApiSecurityRequirement
-			{
+				new OpenApiSecurityScheme
 				{
-					new OpenApiSecurityScheme
+					Reference = new OpenApiReference
 					{
-						Reference = new OpenApiReference
-						{
-							Type = ReferenceType.SecurityScheme,
-							Id = schemeName
-						}
-					},
-					new List<string>()
-				}
-			};
-
-			// Add global security requirement at document level
-			mergedDocumentDefinition.SecurityRequirements.Add(globalSecurityRequirement);
-
-			// Apply global security to ALL operations (replacing downstream security)
-			foreach (var pathItem in mergedDocumentDefinition.Paths.Values)
-			{
-				foreach (var operation in pathItem.Operations.Values)
-				{
-					// Replace operation-level security with the global scheme
-					operation.Security = new List<OpenApiSecurityRequirement> { globalSecurityRequirement };
-				}
+						Type = ReferenceType.SecurityScheme,
+						Id = schemeName
+					}
+				},
+				new List<string>()
 			}
+		};
 
-			_logger.LogInformation("Applied global Gateway security scheme '{SchemeName}' to all operations", schemeName);
-		}
-	}
-
-	/// <summary>
-	/// Determines if a path should be excluded based on the ExcludePaths configuration.
-	/// Supports exact matches and wildcard patterns (e.g., "/api/admin/*").
-	/// </summary>
-	private static bool IsPathExcluded(string path, List<string>? excludePaths)
-	{
-		if (excludePaths == null || excludePaths.Count == 0)
-			return false;
-
-		foreach (var pattern in excludePaths)
+		doc.SecurityRequirements.Add(globalSecurityRequirement);
+		foreach (var path in doc.Paths.Values)
 		{
-			if (string.IsNullOrWhiteSpace(pattern))
-				continue;
-
-			// Normalize both path and pattern
-			string normalizedPath = path.TrimEnd('/');
-			string normalizedPattern = pattern.TrimEnd('/');
-
-			// Check for wildcard pattern (e.g., "/api/admin/*")
-			if (normalizedPattern.EndsWith("/*"))
-			{
-				string prefix = normalizedPattern[..^2]; // Remove "/*"
-				if (normalizedPath.Equals(prefix, StringComparison.OrdinalIgnoreCase) ||
-					normalizedPath.StartsWith(prefix + "/", StringComparison.OrdinalIgnoreCase))
-				{
-					return true;
-				}
-			}
-			// Exact match
-			else if (normalizedPath.Equals(normalizedPattern, StringComparison.OrdinalIgnoreCase))
-			{
-				return true;
-			}
+			foreach (var op in path.Operations.Values)
+				op.Security = [globalSecurityRequirement];
 		}
-
-		return false;
+		
+		_logger.LogInformation("Applied global Gateway security scheme '{SchemeName}'", schemeName);
 	}
 }

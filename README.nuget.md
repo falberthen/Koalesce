@@ -6,13 +6,13 @@
 
 - ✅ **Merge Multiple APIs**: Coalesce multiple API definitions into one unified schema.
 - ✅ **Flexible Security**: Apply global Gateway security OR preserve downstream API security configurations.
-- ✅ **Conflict Resolution**: Automatic schema renaming and path collision detection.
+- ✅ **Conflict Resolution**: Deterministic schema renaming and path collision detection.
+- ✅ **Resilience vs. Strictness**: Choose between fault-tolerant production modes or strict validation for CI/CD.
 - ✅ **Configurable Caching**: Fine-grained cache control with absolute/sliding expiration settings.
 - ✅ **Gateway Integration**: Works seamlessly with **Ocelot**, **YARP**, and other API Gateways.
 - ✅ **Client Generation**: Streamlines API client generation (e.g., **NSwag**, **Kiota**) with a single unified schema.
 - ✅ **Flexible Configuration**: Configure via `appsettings.json` or Fluent API.
 - ✅ **Format Agnostic Output**: Output `JSON` or `YAML` regardless of source document format.
-- ✅ **Fail-Fast Validation**: Validates URLs and paths at startup to prevent runtime errors.
 - ✅ **Multi-targeting**: Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
 - ✅ **Extensible Core**: Designed to support future providers for other API specification formats.
 
@@ -24,11 +24,12 @@
 {
   "Koalesce": {
     "Sources": [
-      { "Url": "https://service-a/swagger/v1/swagger.json" },
-      { "Url": "https://service-b/swagger/v1/swagger.json" }
+      { "Url": "https://service-a/swagger/v1/swagger.json", "VirtualPrefix": "/sales" },
+      { "Url": "https://service-b/swagger/v1/swagger.json", "VirtualPrefix": "/inventory" }
     ],
     "MergedDocumentPath": "/swagger/v1/gateway.json",
-    "ApiGatewayBaseUrl": "https://localhost:5000"
+    "ApiGatewayBaseUrl": "https://localhost:5000",
+    "FailOnServiceLoadError": false
   }
 }
 ```
@@ -64,22 +65,28 @@ builder.Services.AddKoalesce(builder.Configuration)
 Install globally to merge OpenAPI specs without hosting an app:
 
 ```bash
-dotnet tool install --global Koalesce.OpenAPI.CLI
+dotnet tool install --global Koalesce.OpenAPI.CLI --prerelease
 koalesce --config ./appsettings.json --output ./gateway.yaml
 ```
 
-## Conflict Resolution
+## Conflict Resolution & Governance
 
-**Schema conflicts:** Automatically renamed using a configurable pattern (default: `{Prefix}_{SchemaName}`)
+**Schema conflicts:** Deterministic renaming strategy to ensure stable client generation.
 
-- Example: `Inventory_Product`, `Catalog_Product`
-- Customize via `SchemaConflictPattern` in `appsettings.json`
+- **With Prefix:** Sources with `VirtualPrefix` get scoped schemas (e.g., `/inventory` → `Inventory_Product`).
+- **No Prefix:** Sources without prefix keep original names (or fallback to API Title if conflicting).
+- **Result:** Consistent SDK generation regardless of load order.
 
 **Path conflicts:**
 
-- Use `VirtualPrefix` to preserve all endpoints: `/api/health` → `/inventory/api/health` + `/catalog/api/health`
-- Set `SkipIdenticalPaths: true` to keep first API's path and skip duplicates
-- Use `ExcludePaths` to exclude specific paths from merge (supports wildcards: `"/api/admin/*"`)
+- Use `VirtualPrefix` to preserve all endpoints: `/api/health` → `/inventory/api/health` + `/sales/api/health`
+- Set `SkipIdenticalPaths: true` (default) to keep first API's path and skip duplicates.
+- Use `ExcludePaths` to exclude specific paths from merge (supports wildcards: `"/api/admin/*"`).
+
+**Resilience:**
+
+- By default, Koalesce skips unreachable services to keep the Gateway alive.
+- Set `FailOnServiceLoadError: true` for CI/CD pipelines to ensure all services are reachable before building.
 
 ## Documentation
 
