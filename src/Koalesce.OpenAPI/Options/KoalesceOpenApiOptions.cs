@@ -16,12 +16,6 @@ public class KoalesceOpenApiOptions : KoalesceOptions
 	/// </summary>
 	public string? ApiGatewayBaseUrl { get; set; } = default!;
 
-	/// <summary>
-	/// Optional global security scheme for the merged document
-	/// When configured, this scheme is added to the merged document and applied globally to all operations
-	/// </summary>
-	public OpenApiSecurityScheme? OpenApiSecurityScheme { get; set; }
-
 	public override IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 	{
 		// Core validation

@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [1.0.0-alpha.9] - 2026-01-22
+## [1.0.0-alpha.11] - 2026-01-25
+
+### Changed
+
+- **Internal Optimizations:** Improved DI service lifetimes, thread-safety, and tag merging performance.
+
+### ⚠️ Breaking Changes
+
+- Removed optional support to `OpenApiSecurityScheme` and `KoalesceOpenApiOptionsExtensions` to always keep downstream security scheme by design.
+
+---
+
+## [1.0.0-alpha.10] - 2026-01-22
 
 ### Added
 
@@ -28,7 +40,6 @@ All notable changes to this project will be documented in this file.
   - **With Prefix:** Sources defining a `VirtualPrefix` will have their schemas scoped to that prefix (e.g., `Inventory_Product`).
   - **No Prefix:** Sources without a prefix act as the "root" domain. If a conflict occurs with another non-prefixed source, the incoming source falls back to using its Sanitized API Title.
   - *Impact:* Generated clients (Kiota/NSwag) will require refactoring as class names will change to match the new scoping rules.
-
 
 ---
 
@@ -104,7 +115,7 @@ All notable changes to this project will be documented in this file.
   - Pure security passthrough from downstream APIs
   - Explicit security when needed
 
-### 🐛 Fixes
+### Fixed
 
 - **Security Requirements Preservation:** Operations that inherit security from document-level `security` (per OpenAPI spec) now have those requirements explicitly materialized during merge. 
 This ensures downstream API security is properly preserved in the merged document.
@@ -115,10 +126,6 @@ This ensures downstream API security is properly preserved in the merged documen
 - **Removed `IgnoreGatewaySecurity` property:** This property is no longer needed. Simply omit `OpenApiSecurityScheme` to preserve downstream security.
 - **Renamed `GatewaySecurityScheme`property:** to `OpenApiSecurityScheme` and seamlessly align with Microsoft.OpenApi.Models, since itis of that type.
 - **Renamed all method in `KoalesceOpenApiOptionsExtensions`:** to better reflect the purpose of applying a global security to the merged definition.  
-
-### 🔄 Migration Guide
-
-**Simplified configuration:** The new model is much simpler - just configure `OpenApiSecurityScheme` if you want global Gateway security, or omit it to preserve downstream security.
 
 ---
 
@@ -139,7 +146,7 @@ This ensures downstream API security is properly preserved in the merged documen
   - Now, if `AbsoluteExpirationSeconds` or `SlidingExpirationSeconds` are configured with values **lower** than the configured `MinExpirationSeconds`, the middleware automatically clamps them to that minimum value.
   - *Note: The default value for `MinExpirationSeconds` is 30 seconds.*
   
-### 🐛 Fixes
+### Fixed
 
 - **Cache Reliability:** Resolved a stability issue where extremely short cache durations could cause excessive re-merging operations. The system now guarantees the cache duration respects the defined minimum floor.
 
@@ -157,7 +164,6 @@ This ensures downstream API security is properly preserved in the merged documen
   - Added `OpenApiSecurityScheme` to `OpenApiOptions`, enabling configuration of global security schemes directly within the API Gateway context.
   - Added `IgnoreGatewaySecurity` to `OpenApiOptions`, allowing downstream services to retain their own security definitions instead of being overridden by the Gateway's global scheme.
 - **Gateway Security Extensions:** Introduced a comprehensive suite of fluent extension methods to configure global security schemes.
-  - Methods supported: `UseJwtBearerGatewaySecurity`, `UseApiKeyGatewaySecurity`, `UseBasicAuthGatewaySecurity`, `UseOAuth2ClientCredentialsGatewaySecurity`, `UseOAuth2AuthCodeGatewaySecurity`, and `UseOpenIdConnectGatewaySecurity`.
 
 > **Note 1:** When using Koalesce as a pipeline Middleware, to keep your `appsettings.json` simple, it is recommended to use `OpenApiSecurityExtensions` methods via `.ForOpenAPI(options => ... )` instead of manually configuring the `OpenApiSecurityScheme` section.
 >
@@ -175,53 +181,10 @@ This ensures downstream API security is properly preserved in the merged documen
   - `ApiGatewayBaseUrl` was moved from `KoalesceOptions` **(Core)** to `OpenApiOptions` **(OpenAPI Extension)** to ensure proper separation of concerns.
 - **Security Enforcement:** When `ApiGatewayBaseUrl` is set in `OpenApiOptions`, a `OpenApiSecurityScheme` is now **required** (unless `IgnoreGatewaySecurity` is true). Startup will fail if the gateway URL is present but no security scheme is defined.
 
-### 🐛 Fixes
+### Fixed
 
 - **Dependency Injection Double Binding:** Fixed an issue where `KoalesceOptions` were being bound twice in the DI container when using `AddProvider`, causing configuration conflicts in test scenarios.
 - **Middleware Registration:** Fixed a bug where `UseKoalesce()` would silently fail to register the middleware pipeline when using custom provider configurations.
-<br/>
-
-### 🔄 Migration Guide (appsettings.json)
-
-Due to the agnostic refactoring of the core options, you must update your configuration files:
-
-**Before (Alpha 2)**
-```json
-"Koalesce": {
-  "OpenApiSources": [ 
-    { "Url": "..." } 
-  ],
-  "MergedOpenApiPath": "/swagger/v1/swagger.json",
-}
-```
-
-**After (Alpha 3):**
-```json
-"Koalesce": {
-  "Sources": [ 
-    { "Url": "..." } 
-  ],
-  "MergedDocumentPath": "/swagger/v1/swagger.json",
-}
-```
-
-**Koalesce.OpenAPI.CLI After (Alpha 3): Security configured explicitly in JSON.**
-```json
-"Koalesce": {
-  "Sources": [ 
-    { "Url": "..." } 
-  ],
-  "MergedDocumentPath": "/swagger/v1/swagger.json",
-  "ApiGatewayBaseUrl": "https://localhost:5000",
-  // OpenApiSecurityScheme is REQUIRED here for CLI usage if ApiGatewayBaseUrl is set
-  "OpenApiSecurityScheme": {
-    "Type": "Http",
-    "Scheme": "bearer",
-    "BearerFormat": "JWT", 
-    "Description": "Enter your JWT token"
-  }
-}
-```
 
 ---
 

@@ -23,13 +23,13 @@ public static class KoalesceForOpenApiBuilderExtensions
 		services.TryAddSingleton(typeof(IMergedDocumentSerializer<OpenApiDocument>), typeof(OpenApiDocumentSerializer));
 
 		// Supporting Services for merging
-		services.AddTransient<OpenApiDefinitionLoader>();
-		services.AddTransient<OpenApiPathMerger>();
+		services.TryAddSingleton<OpenApiDefinitionLoader>();
+		services.TryAddSingleton<OpenApiPathMerger>();
 
 		// Conflict Resolution Services
-		services.AddTransient<IConflictResolutionStrategy, DefaultConflictResolutionStrategy>();
-		services.AddTransient<SchemaRenamer>();
-		services.AddTransient<SchemaConflictCoordinator>();
+		services.TryAddSingleton<IConflictResolutionStrategy, DefaultConflictResolutionStrategy>();
+		services.TryAddSingleton<SchemaRenamer>();
+		services.TryAddSingleton<SchemaConflictCoordinator>();
 
 		// Registering provider
 		services.TryAddSingleton<KoalesceOpenApiProvider>();

@@ -10,7 +10,7 @@
 		<PackageId>Koalesce.OpenAPI.CLI</PackageId>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IsPackable>true</IsPackable>
-		<Version>1.0.0-alpha.10</Version>
+		<Version>1.0.0-alpha.11</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The CLI for Koalesce.OpenAPI.</Description>
