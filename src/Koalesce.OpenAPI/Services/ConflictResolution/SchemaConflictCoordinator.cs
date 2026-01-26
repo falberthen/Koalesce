@@ -73,7 +73,7 @@ internal class SchemaConflictCoordinator
 		// Applying renames to Target Document
 		_renamer.ApplyRenamesToTarget(targetDocument, targetRenames, schemaOrigins);
 
-		// Restoreing "Keep Original" Schemas
+		// Restoring "Keep Original" Schemas
 		// These are source schemas that replaced existing target schemas
 		foreach (var key in schemasToKeepOriginalName)
 		{

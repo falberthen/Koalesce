@@ -2,19 +2,44 @@
 
 **Koalesce** is a .NET library designed to merge multiple API definitions into a unified document. It enables seamless API Gateway integration and simplifies frontend client generation for microservices-based architectures.
 
-## ⚡ Key Features
+## How It Works
+
+- Koalesce fetches API definitions from the specified **Sources**.
+- It merges them using an available provider (e.g., `Koalesce.OpenAPI`), generating a single schema at **MergedDocumentPath**.
+- The final *Koalesced* API definition is serialized and available in `JSON` or `YAML` format.
+
+### ⚡ Key Features
 
 - ✅ **Merge Multiple APIs**: Coalesce multiple API definitions into one unified schema.
-- ✅ **Flexible Security**: Apply global Gateway security OR preserve downstream API security configurations.
-- ✅ **Conflict Resolution**: Deterministic schema renaming and path collision detection.
-- ✅ **Resilience vs. Strictness**: Choose between fault-tolerant production modes or strict validation for CI/CD.
-- ✅ **Configurable Caching**: Fine-grained cache control with absolute/sliding expiration settings.
-- ✅ **Gateway Integration**: Works seamlessly with **Ocelot**, **YARP**, and other API Gateways.
-- ✅ **Client Generation**: Streamlines API client generation (e.g., **NSwag**, **Kiota**) with a single unified schema.
+- ✅ **Conflict Resolution**: Automatic schema renaming and path collision detection.
 - ✅ **Flexible Configuration**: Configure via `appsettings.json` or Fluent API.
+- ✅ **Fail-Fast Validation**: Validates URLs and paths at startup to prevent runtime errors.
+- ✅ **Gateway Integration**: Works seamlessly with **Ocelot**, **YARP**, and other API Gateways.
+- ✅ **Configurable Caching**: Fine-grained cache control with absolute/sliding expiration settings.
+- ✅ **Ease Client Generation**: Streamlines API client generation (e.g., **NSwag**, **Kiota**) with a single unified schema.
 - ✅ **Format Agnostic Output**: Output `JSON` or `YAML` regardless of source document format.
-- ✅ **Multi-targeting**: Native support for **.NET 8.0 (LTS)** and **.NET 10.0**.
 - ✅ **Extensible Core**: Designed to support future providers for other API specification formats.
+
+### 🧠 Design Philosophy
+
+**Koalesce** balances **Developer Experience** with architectural governance:
+
+* **Resilient by Default:** If a microservice is down, Koalesce skips it without breaking your Gateway.
+* **Strict by Choice:** Can be configured to fail on unreachable services or route collisions - useful for CI/CD pipelines.
+* **Purposefully Opinionated:** Ensures merged definitions have clean, deterministic, and conflict-free naming.
+
+### 🌞 Where Koalesce Shines
+
+**Koalesce** is ideal for **Backend-for-Frontend (BFF)** patterns where external consumers need a unified API view:
+
+- **Frontend applications** consuming an API Gateway.
+- **Mobile apps** with a single unified SDK.
+- **Third-party developer portals** exposing your APIs.
+- **External API consumers** needing consolidated documentation.
+
+> 💡 **Tip:** For internal service-to-service communication, prefer direct service calls with dedicated clients per service to avoid tight coupling and unnecessary Gateway overhead.
+
+---
 
 ## Quick Start
 
@@ -28,8 +53,7 @@
       { "Url": "https://service-b/swagger/v1/swagger.json", "VirtualPrefix": "/inventory" }
     ],
     "MergedDocumentPath": "/swagger/v1/gateway.json",
-    "ApiGatewayBaseUrl": "https://localhost:5000",
-    "FailOnServiceLoadError": false
+    "ApiGatewayBaseUrl": "https://localhost:5000"
   }
 }
 ```
@@ -43,22 +67,6 @@ builder.Services.AddKoalesce(builder.Configuration)
 var app = builder.Build();
 app.UseKoalesce();
 ```
-
-### 3. Optional: Configure Global Security
-
-```csharp
-builder.Services.AddKoalesce(builder.Configuration)
-    .ForOpenAPI(options =>
-    {
-        // Override all downstream security with Gateway auth
-        options.ApplyGlobalJwtBearerSecurityScheme(
-            schemeName: "Bearer",
-            description: "Enter your JWT token"
-        );
-    });
-```
-
-**Note:** If you don't configure global security, Koalesce preserves each downstream API's security as-is.
 
 ## CLI Tool
 
@@ -93,7 +101,6 @@ koalesce --config ./appsettings.json --output ./gateway.yaml
 Visit [GitHub Repository](https://github.com/falberthen/Koalesce) for:
 
 - Complete configuration reference
-- Security options and extension methods
 - Caching configuration
 - Sample projects with Ocelot integration
 - Troubleshooting guide
