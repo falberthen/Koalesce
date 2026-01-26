@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.11] - 2026-01-25
+
+### Changed
+
+- **Internal Optimizations:** Improved DI service lifetimes, thread-safety, and tag merging performance.
+
+### ⚠️ Breaking Changes
+
+- Removed optional support to `OpenApiSecurityScheme` and `KoalesceOpenApiOptionsExtensions` to always keep downstream security scheme by design.
+
+---
+
 ## [1.0.0-alpha.10] - 2026-01-22
 
 ### Added
@@ -192,7 +204,7 @@ All notable changes to this project will be documented in this file.
 - Upgraded NuGet dependencies to versions fully compatible with **.NET 8.0**.
 - Enhanced CLI UI/UX with ANSI styling and clearer messages.
 
-### 🐛 Fixes
+### Fixed
 - Improved error handling when writing output files.
 
 ---
