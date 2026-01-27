@@ -1,8 +1,12 @@
-![CI Status](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg)
+# Koalesce
 
-<img src="img/koalesce_small.png" />
+![Koalesce](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/koalesce_small.png)
 
-**Koalesce** is a .NET library designed to merge multiple API definitions into a unified document. It enables seamless API Gateway integration and simplifies frontend client generation for microservices-based architectures.
+**Koalesce** is an open-source, lightweight and extensible library designed to merge multiple API definitions into a unified document.
+
+⭐ **If you find Koalesce useful, please consider giving it a star!** It helps others discover the project.
+
+![CI Status](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg) ![GitHub Issues](https://img.shields.io/github/issues/falberthen/Koalesce) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/donate?business=CFZAMDPCTKZY6&item_name=Koalesce&currency_code=CAD)
 
 ---
 
@@ -34,10 +38,10 @@
 
 ### 🌞 Where Koalesce Shines
 
-**Koalesce** is ideal for **Backend-for-Frontend (BFF)** patterns where external consumers need a unified API view:
+**Koalesce** is ideal for **Backend-for-Frontend (BFF)** patterns where external consumers need a unified API view.
 
 - **Frontend applications** consuming an API Gateway.
-- **Mobile apps** with a single unified SDK.
+- **SDK generation** with tools like `NSwag`/`Kiota` from a single unified schema.
 - **Third-party developer portals** exposing your APIs.
 - **External API consumers** needing consolidated documentation.
 
@@ -46,6 +50,8 @@
 ---
 
 ## 📦 Installation
+
+> **Official packages are published exclusively to [NuGet.org](https://www.nuget.org/packages?q=Koalesce) by the maintainer.** Do not trust packages from unofficial sources.
 
 #### 🟢 Koalesce for OpenAPI Middleware (ASP.NET Core)
 
@@ -137,7 +143,7 @@ app.UseKoalesce();
 
 <br/>
 
-### 💻 As CLI (Command Line Interface) Tool
+### <img src="img/cli_icon_256x256.png" heigth="32" width="32" />  As CLI (Command Line Interface) Tool
 
 The `Koalesce.OpenAPI.CLI` is a standalone tool that uses `Koalesce.OpenAPI` to merge OpenAPI definitions directly into a file `without hosting a .NET application`.
 
@@ -341,7 +347,7 @@ Use when you want to enforce unique routes and fail if conflicts are detected:
 ## 📧 Support & Contributing
 
 - **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/falberthen/Koalesce/issues)
-- **Contributing**: Contributions are welcome! Feel free to open issues and submit PRs.
+- **Contributing**: Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting PRs.
 - **Sample Projects**: Check out [Koalesce.Samples.sln](https://github.com/falberthen/Koalesce/blob/master/samples/Koalesce.Samples.sln) for a complete implementation
 
 ---
