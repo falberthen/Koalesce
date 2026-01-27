@@ -36,11 +36,14 @@ jobs:
       - name: Build CLI project (needed for CLI integration tests)
         run: dotnet build src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --configuration Release --property:DefineConstants=USE_PROJECT_REFS
 
-      - name: Run unit tests
-        run: dotnet test tests/Koalesce.Tests.Unit --no-build --configuration Release --logger trx --results-directory TestResults/Unit --property:DefineConstants=USE_PROJECT_REFS
+      - name: Run Core unit tests
+        run: dotnet test tests/Koalesce.Core.Tests --no-build --configuration Release --logger trx --results-directory TestResults/Core --property:DefineConstants=USE_PROJECT_REFS
 
-      - name: Run integration tests
-        run: dotnet test tests/Koalesce.Tests.Integration --no-build --configuration Release --logger trx --results-directory TestResults/Integration --property:DefineConstants=USE_PROJECT_REFS
+      - name: Run OpenAPI tests
+        run: dotnet test tests/Koalesce.OpenAPI.Tests --no-build --configuration Release --logger trx --results-directory TestResults/OpenAPI --property:DefineConstants=USE_PROJECT_REFS
+
+      - name: Run CLI tests
+        run: dotnet test tests/Koalesce.OpenAPI.CLI.Tests --no-build --configuration Release --logger trx --results-directory TestResults/CLI --property:DefineConstants=USE_PROJECT_REFS
 
       - name: Upload test results (if failure)
         if: failure()
