@@ -13,7 +13,7 @@ services.AddEndpointsApiExplorer();
 // Register Swagger services before Koalesce
 services.AddSwaggerGen();
 
-// 🐨 Register Koalesce
+// 🐨 Register Koalesce for OpenAPI
 services.AddKoalesce(builder.Configuration)
 	.ForOpenAPI();
 
@@ -35,7 +35,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// 🐨 Enable Koalesce before Swagger Middleware
+// 🐨 Enable Koalesce
 app.UseKoalesce();
 
 // Enable Swagger 

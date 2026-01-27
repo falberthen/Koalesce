@@ -26,7 +26,7 @@ services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 services.AddOcelot(builder.Configuration);
 
-// 🐨 Add Koalesce for Ocelot
+// 🐨 Register Koalesce for OpenAPI
 services.AddKoalesce(builder.Configuration)
 	.ForOpenAPI();
 
@@ -48,7 +48,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-// 🐨 Enable Koalesce before Swagger Middleware
+// 🐨 Enable Koalesce
 app.UseKoalesce();
 
 // Enable Swagger 
