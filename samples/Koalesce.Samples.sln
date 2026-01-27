@@ -1,19 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.1.11312.151 d18.0
+VisualStudioVersion = 18.1.11312.151
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RestAPIs", "RestAPIs", "{1011EECF-70C4-4046-B6B4-D9A8388C46E6}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.OpenAPI.Samples.CustomersAPI", "Koalesce.OpenAPI\Koalesce.OpenAPI.Samples.CustomersAPI\Koalesce.OpenAPI.Samples.CustomersAPI.csproj", "{52D105A1-3C2E-F086-A7FD-7E2E02936612}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.Swagger", "Koalesce.Samples.Swagger\Koalesce.Samples.Swagger.csproj", "{67E31CD9-142C-4551-938B-F09EA93265C1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.OpenAPI.Samples.InventoryAPI", "Koalesce.OpenAPI\Koalesce.OpenAPI.Samples.InventoryAPI\Koalesce.OpenAPI.Samples.InventoryAPI.csproj", "{36BF01AD-3F73-6F65-452A-F565CA59967A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.Swagger.Ocelot", "Koalesce.Samples.Swagger.Ocelot\Koalesce.Samples.Swagger.Ocelot.csproj", "{600E59C3-3405-4FD6-9FF6-257B4771F742}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.OpenAPI.Samples.ProductsAPI", "Koalesce.OpenAPI\Koalesce.OpenAPI.Samples.ProductsAPI\Koalesce.OpenAPI.Samples.ProductsAPI.csproj", "{B3D6DCFF-F45D-DCF9-25C9-7DA0C649031D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.CustomersAPI", "Koalesce.Samples.CustomersAPI\Koalesce.Samples.CustomersAPI.csproj", "{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.OpenAPI.Samples.Swagger", "Koalesce.OpenAPI\Koalesce.OpenAPI.Samples.Swagger\Koalesce.OpenAPI.Samples.Swagger.csproj", "{2860E9C2-6973-C81C-208E-AF080D5EAB00}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Koalesce.Samples.ProductsAPI", "Koalesce.Samples.ProductsAPI\Koalesce.Samples.ProductsAPI.csproj", "{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.OpenAPI.Samples.Swagger.Ocelot", "Koalesce.OpenAPI\Koalesce.OpenAPI.Samples.Swagger.Ocelot\Koalesce.OpenAPI.Samples.Swagger.Ocelot.csproj", "{CB7B52E0-17C7-D4B0-37B7-0FD3F9EE9132}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.Samples.InventoryAPI", "Koalesce.Samples.InventoryAPI\Koalesce.Samples.InventoryAPI.csproj", "{37B5DF83-A453-5DD8-8735-69304FBAABE3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Koalesce.OpenAPI", "Koalesce.OpenAPI", "{6EFC4701-9ADF-458B-BB9E-3E2B496C91A5}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "RestAPIs", "RestAPIs", "{C62290A1-D555-44BC-9399-789F9799E526}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,34 +23,37 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{67E31CD9-142C-4551-938B-F09EA93265C1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{67E31CD9-142C-4551-938B-F09EA93265C1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{67E31CD9-142C-4551-938B-F09EA93265C1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{67E31CD9-142C-4551-938B-F09EA93265C1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{600E59C3-3405-4FD6-9FF6-257B4771F742}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{600E59C3-3405-4FD6-9FF6-257B4771F742}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{600E59C3-3405-4FD6-9FF6-257B4771F742}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{600E59C3-3405-4FD6-9FF6-257B4771F742}.Release|Any CPU.Build.0 = Release|Any CPU
-		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{37B5DF83-A453-5DD8-8735-69304FBAABE3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{37B5DF83-A453-5DD8-8735-69304FBAABE3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{37B5DF83-A453-5DD8-8735-69304FBAABE3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{37B5DF83-A453-5DD8-8735-69304FBAABE3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{52D105A1-3C2E-F086-A7FD-7E2E02936612}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52D105A1-3C2E-F086-A7FD-7E2E02936612}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52D105A1-3C2E-F086-A7FD-7E2E02936612}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52D105A1-3C2E-F086-A7FD-7E2E02936612}.Release|Any CPU.Build.0 = Release|Any CPU
+		{36BF01AD-3F73-6F65-452A-F565CA59967A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{36BF01AD-3F73-6F65-452A-F565CA59967A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{36BF01AD-3F73-6F65-452A-F565CA59967A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{36BF01AD-3F73-6F65-452A-F565CA59967A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B3D6DCFF-F45D-DCF9-25C9-7DA0C649031D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3D6DCFF-F45D-DCF9-25C9-7DA0C649031D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3D6DCFF-F45D-DCF9-25C9-7DA0C649031D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3D6DCFF-F45D-DCF9-25C9-7DA0C649031D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2860E9C2-6973-C81C-208E-AF080D5EAB00}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2860E9C2-6973-C81C-208E-AF080D5EAB00}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2860E9C2-6973-C81C-208E-AF080D5EAB00}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2860E9C2-6973-C81C-208E-AF080D5EAB00}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CB7B52E0-17C7-D4B0-37B7-0FD3F9EE9132}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CB7B52E0-17C7-D4B0-37B7-0FD3F9EE9132}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CB7B52E0-17C7-D4B0-37B7-0FD3F9EE9132}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CB7B52E0-17C7-D4B0-37B7-0FD3F9EE9132}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{48CD7B05-90C7-4432-ACCF-A5BD87D3ADCD} = {1011EECF-70C4-4046-B6B4-D9A8388C46E6}
-		{FE04F501-7C23-41F9-BB47-3D4DDB0783B4} = {1011EECF-70C4-4046-B6B4-D9A8388C46E6}
-		{37B5DF83-A453-5DD8-8735-69304FBAABE3} = {1011EECF-70C4-4046-B6B4-D9A8388C46E6}
+		{52D105A1-3C2E-F086-A7FD-7E2E02936612} = {C62290A1-D555-44BC-9399-789F9799E526}
+		{36BF01AD-3F73-6F65-452A-F565CA59967A} = {C62290A1-D555-44BC-9399-789F9799E526}
+		{B3D6DCFF-F45D-DCF9-25C9-7DA0C649031D} = {C62290A1-D555-44BC-9399-789F9799E526}
+		{2860E9C2-6973-C81C-208E-AF080D5EAB00} = {6EFC4701-9ADF-458B-BB9E-3E2B496C91A5}
+		{CB7B52E0-17C7-D4B0-37B7-0FD3F9EE9132} = {6EFC4701-9ADF-458B-BB9E-3E2B496C91A5}
+		{C62290A1-D555-44BC-9399-789F9799E526} = {6EFC4701-9ADF-458B-BB9E-3E2B496C91A5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AB1241EC-E4BC-4518-A486-776F861DCFA5}
