@@ -1,6 +1,4 @@
-﻿using Koalesce.OpenAPI.Options;
-
-namespace Koalesce.OpenAPI.Providers;
+﻿namespace Koalesce.OpenAPI.Providers;
 
 /// <summary>
 /// OpenAPI provider for Koalesce.
