@@ -1,9 +1,9 @@
-﻿namespace Koalesce.Tests.Integration;
+﻿namespace Koalesce.OpenAPI.Tests.Base;
 
 /// <summary>
-/// Base class for Koalesce integration tests.
+/// Base class for Koalesce.OpenAPI integration tests.
 /// </summary>
-[Collection("Koalesce Integration Tests")]
+[Collection("Koalesce.OpenAPI Integration Tests")]
 public abstract class KoalesceIntegrationTestBase : IAsyncLifetime
 {
 	protected Uri _gatewayUri = null!;

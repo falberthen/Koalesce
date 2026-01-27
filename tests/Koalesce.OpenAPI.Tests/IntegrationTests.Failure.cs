@@ -1,6 +1,6 @@
-﻿namespace Koalesce.Tests.Integration;
+﻿namespace Koalesce.OpenAPI.Tests;
 
-public partial class KoalesceForOpenApiTests
+public partial class IntegrationTests
 {
 	const string _identicalPathSettings = "RestAPIs/appsettings.identicalpaths.json";	
 

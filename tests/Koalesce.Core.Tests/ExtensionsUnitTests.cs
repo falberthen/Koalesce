@@ -1,7 +1,7 @@
-namespace Koalesce.Tests.Unit;
+namespace Koalesce.Core.Tests;
 
-[Collection("Koalesce Core Extension Unit Tests")]
-public class KoalesceCoreExtensionsTests : KoalesceUnitTestBase
+[Collection("Koalesce Core Extensions Unit Tests")]
+public class ExtensionsUnitTests : KoalesceUnitTestBase
 {
 	[Fact]
 	public void Koalesce_WhenServicesAndConfigurationProvided_ShouldRegisterDependenciesAndBindOptions()

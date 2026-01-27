@@ -1,4 +1,4 @@
-﻿namespace Koalesce.Tests.Unit.DummyProviders;
+﻿namespace Koalesce.Core.Tests.DummyProviders;
 
 // Fake middleware application builder
 internal class FakeApplicationBuilder : IApplicationBuilder

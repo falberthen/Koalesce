@@ -1,4 +1,4 @@
-﻿namespace Koalesce.Tests.Unit.DummyProviders;
+﻿namespace Koalesce.Core.Tests.DummyProviders;
 
 // Dummy provider for testing
 internal class DummyProvider : IKoalesceProvider

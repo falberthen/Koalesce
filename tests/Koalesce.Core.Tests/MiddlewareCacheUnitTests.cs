@@ -1,7 +1,7 @@
-﻿namespace Koalesce.Tests.Unit;
+﻿namespace Koalesce.Core.Tests;
 
 [Collection("Koalesce Core Middleware Cache Unit Tests")]
-public class KoalesceMiddlewareCacheTests : KoalesceUnitTestBase
+public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 {
 	private const string _mergedDocumentPath = "/mergedapidefinition.json";
 
@@ -11,7 +11,7 @@ public class KoalesceMiddlewareCacheTests : KoalesceUnitTestBase
 		// Arrange
 		string mergedDocumentPath = "/mergedapidefinition.json";
 		var cache = new MemoryCache(new MemoryCacheOptions());
-		var options = Options.Create(new KoalesceOptions
+		var options = Microsoft.Extensions.Options.Options.Create(new KoalesceOptions
 		{
 			MergedDocumentPath = mergedDocumentPath,
 			Cache = new KoalesceCacheOptions
@@ -44,7 +44,7 @@ public class KoalesceMiddlewareCacheTests : KoalesceUnitTestBase
 		// Arrange
 		string mergedDocumentPath = "/mergedapidefinition.json";
 		var cache = new MemoryCache(new MemoryCacheOptions());
-		var options = Options.Create(new KoalesceOptions
+		var options = Microsoft.Extensions.Options.Options.Create(new KoalesceOptions
 		{
 			MergedDocumentPath = mergedDocumentPath,
 			Cache = new KoalesceCacheOptions { DisableCache = true }

@@ -1,7 +1,7 @@
-﻿namespace Koalesce.Tests.Unit;
+﻿namespace Koalesce.Core.Tests;
 
 [Collection("Koalesce Core Options Unit Tests")]
-public class KoalesceCoreOptionsTests : KoalesceUnitTestBase
+public class CoreOptionsUnitTests : KoalesceUnitTestBase
 {
 	[Fact]
 	public void Koalesce_WhenNonRequiredConfigValuesAreMissing_ShouldUseDefaultValues()

@@ -1,4 +1,4 @@
-﻿namespace Koalesce.Tests.Integration.RestAPIs;
+﻿namespace Koalesce.OpenAPI.Tests.RestAPIs;
 
 public class CustomersApi
 {

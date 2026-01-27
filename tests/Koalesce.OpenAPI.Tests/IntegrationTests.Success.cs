@@ -1,8 +1,6 @@
-﻿using Koalesce.Core.Options;
+﻿namespace Koalesce.OpenAPI.Tests;
 
-namespace Koalesce.Tests.Integration;
-
-public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
+public partial class IntegrationTests : KoalesceIntegrationTestBase
 {
 	private const string _appSettings = "RestAPIs/appsettings.openapi.json";
 	private const string _mergedOpenApiPath = "/swagger/v1/swagger.json";
@@ -143,7 +141,7 @@ public partial class KoalesceForOpenApiTests : KoalesceIntegrationTestBase
 		// Assert that security schemes from downstream APIs are preserved
 		Assert.Contains("\"securitySchemes\"", mergedResult, StringComparison.OrdinalIgnoreCase);
 		Assert.Contains("\"api_key\"", mergedResult, StringComparison.OrdinalIgnoreCase);
-		
+
 		// Operations with security keep it, operations without security remain public
 		// No automatic inheritance or transformation is performed
 		await koalescingApi.StopAsync();

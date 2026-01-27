@@ -1,6 +1,7 @@
-﻿namespace Koalesce.Tests.Integration;
+﻿namespace Koalesce.OpenAPI.CLI.Tests;
 
-public class KoalesceForOpenApiCLITests : KoalesceIntegrationTestBase
+[Collection("Koalesce.OpenAPI.CLI Integration Tests")]
+public class IntegrationTests : KoalesceIntegrationTestBase
 {
 	private static readonly string _outputFileName = $"apigateway-cli-output-{Guid.NewGuid()}.json";
 	private static readonly string _outputPath = Path.Combine(Path.GetTempPath(), _outputFileName);

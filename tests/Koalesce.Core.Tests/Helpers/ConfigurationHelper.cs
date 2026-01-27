@@ -1,6 +1,6 @@
-﻿namespace Koalesce.Tests.Unit;
+﻿namespace Koalesce.Core.Tests.Helpers;
 
-internal static class ConfigurationHelper
+public static class ConfigurationHelper
 {
 	/// <summary>
 	/// Converts a C# object into an IConfigurationRoot via JSON Stream.

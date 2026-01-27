@@ -1,6 +1,6 @@
-﻿namespace Koalesce.Tests.Integration.RestAPIs;
+﻿namespace Koalesce.OpenAPI.Tests.RestAPIs;
 
-public class ProductsApi
+public class InventoryApi
 {
 	public static WebApplication Create()
 	{
@@ -8,7 +8,7 @@ public class ProductsApi
 
 		// Bind to a fixed port for testing
 		builder.WebHost.UseKestrel()
-			.UseUrls("http://localhost:8002");
+			.UseUrls("http://localhost:8003");
 
 		var app = builder.Build();
 
@@ -17,12 +17,11 @@ public class ProductsApi
 			var json = """
             {
                 "openapi": "3.0.1",
-                "info": { "title": "Products API", "version": "v1" },
+                "info": { "title": "Inventory API", "version": "v1" },
                 "paths": {
                     "/api/products": {
                         "get": {
-                            "summary": "Get Products",
-                            "tags": ["Products"],
+                            "summary": "Get Inventory Products",
                             "responses": {
                                 "200": {
                                     "description": "OK",
@@ -45,27 +44,18 @@ public class ProductsApi
                             "type": "object",
                             "properties": {
                                 "id": { "type": "string", "format": "uuid" },
-                                "name": { "type": "string" }
+                                "name": { "type": "string" },
+                                "quantityInStock": { "type": "integer" }
                             }
-                        }
-                    },
-                    "securitySchemes": {
-                        "api_key": {
-                            "type": "apiKey",
-                            "name": "X-API-Key",
-                            "in": "header"
                         }
                     }
                 },
-                "security": [
-                  { "api_key": [] }
-                ],
                 "tags": [
-                {
-                    "name": "Products",
-                    "description": "Operations related to products"
-                }
-               ]
+                    {
+                        "name": "Inventory Products",
+                        "description": "Operations related to inventory products"
+                    }
+                ]
             }
             """;
 			return Results.Text(json, "application/json");

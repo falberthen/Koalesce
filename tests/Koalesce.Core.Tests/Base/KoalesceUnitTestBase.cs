@@ -1,4 +1,4 @@
-﻿namespace Koalesce.Tests.Unit;
+﻿namespace Koalesce.Core.Tests.Base;
 
 /// <summary>
 /// Base class for Koalesce unit tests.

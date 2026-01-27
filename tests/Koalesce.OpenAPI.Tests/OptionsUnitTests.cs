@@ -1,9 +1,7 @@
-using Koalesce.OpenAPI.Options;
+namespace Koalesce.OpenAPI.Tests;
 
-namespace Koalesce.Tests.Unit;
-
-[Collection("Koalesce ForOpenAPI Unit Tests")]
-public class KoalesceForOpenApiOptionsTests : KoalesceUnitTestBase
+[Collection("Koalesce.OpenAPI Options Unit Tests")]
+public class OptionsUnitTests : KoalesceUnitTestBase
 {	
 	[Fact]
 	public void KoalesceForOpenAPI_WithInvalidGatewayUrl_ShouldThrowValidationException()

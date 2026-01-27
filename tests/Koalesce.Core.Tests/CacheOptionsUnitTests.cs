@@ -1,7 +1,7 @@
-namespace Koalesce.Tests.Unit;
+namespace Koalesce.Core.Tests;
 
-[Collection("Koalesce Core Cache Options Unit Tests")]
-public class KoalesceCoreCacheOptionsTests : KoalesceUnitTestBase
+[Collection("Koalesce Cache Options Unit Tests")]
+public class CacheOptionsUnitTests : KoalesceUnitTestBase
 {
 	[Fact]
 	public void Koalesce_WhenCacheConfigured_ShouldBindCacheOptions()
