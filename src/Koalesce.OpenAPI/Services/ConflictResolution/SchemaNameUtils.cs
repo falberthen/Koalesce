@@ -44,7 +44,7 @@ internal static class SchemaNameUtils
 		int collisionCount = 0;
 
 		// Loop until we find a key that doesn't exist in the Target or the Current Batch
-		while (targetDocument.Components.Schemas.ContainsKey(candidateKey) ||
+		while (targetDocument.Components?.Schemas?.ContainsKey(candidateKey) == true ||
 			   currentBatchRenames.ContainsValue(candidateKey))
 		{
 			// First attempt: Apply the standard conflict pattern (e.g., ApiName + SchemaName)
