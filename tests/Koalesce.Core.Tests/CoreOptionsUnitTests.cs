@@ -23,12 +23,12 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 			.BuildConfigurationFromObject(appSettingsStub);
 
 		Services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, KoalesceOptions>();
+			.AddProvider<DummyProvider, DummyOptions>();
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act
-		var options = provider.GetService<IOptions<KoalesceOptions>>()?.Value;
+		var options = provider.GetService<IOptions<DummyOptions>>()?.Value;
 
 		// Assert
 		Assert.NotNull(options);
@@ -560,6 +560,365 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
 		Assert.NotNull(options);
 		Assert.Equal(3, options.Sources.Count);
+	}
+
+	#endregion
+
+	#region HttpTimeoutSeconds Validation Tests
+
+	[Fact]
+	public void Koalesce_WithDefaultHttpTimeout_ShouldUseDefaultValue()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+
+		// Assert - Default timeout
+		Assert.Equal(CoreConstants.DefaultHttpTimeoutSeconds, options.HttpTimeoutSeconds);
+	}
+
+	[Fact]
+	public void Koalesce_WithCustomHttpTimeout_ShouldBindCorrectly()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				},
+				HttpTimeoutSeconds = 30
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+
+		// Assert - Custom timeout
+		Assert.Equal(30, options.HttpTimeoutSeconds);
+	}
+
+	[Theory]
+	[InlineData(0)]
+	[InlineData(-1)]
+	[InlineData(-100)]
+	public void Koalesce_WithInvalidHttpTimeout_ShouldThrowValidationException(int invalidTimeout)
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { Url = "https://api1.com/v1/apidefinition.json" }
+				},
+				HttpTimeoutSeconds = invalidTimeout
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains(CoreConstants.HttpTimeoutMustBePositive, exception.Message);
+	}
+
+	#endregion
+
+	#region Duplicate Source Validation Tests
+
+	[Fact]
+	public void Koalesce_WhenDuplicateSourceUrl_ShouldThrowValidationException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+				{
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
+					new ApiSource { Url = "https://api2.com/v1/apidefinition.json" },
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" } // Duplicate!
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("Duplicate source", exception.Message);
+		Assert.Contains("api1.com", exception.Message);
+	}
+
+	[Fact]
+	public void Koalesce_WhenDuplicateSourceUrlWithDifferentCasing_ShouldThrowValidationException()
+	{
+		// Arrange - URL comparison should be case-insensitive
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+				{
+					new ApiSource { Url = "https://API1.COM/v1/apidefinition.json" },
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" } // Same URL, different casing
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("Duplicate source", exception.Message);
+	}
+
+	[Fact]
+	public void Koalesce_WhenDuplicateFilePath_ShouldThrowValidationException()
+	{
+		// Arrange - Create a temp file to pass file existence validation
+		var tempFile = Path.GetTempFileName();
+		try
+		{
+			var appSettingsStub = new
+			{
+				Koalesce = new KoalesceOptions
+				{
+					MergedDocumentPath = "/v1/mergedapidefinition.json",
+					Sources = new List<ApiSource>
+					{
+						new ApiSource { FilePath = tempFile },
+						new ApiSource { FilePath = tempFile } // Duplicate!
+					}
+				}
+			};
+
+			var configuration = ConfigurationHelper
+				.BuildConfigurationFromObject(appSettingsStub);
+
+			Services.AddKoalesce(configuration)
+				.ForOpenAPI();
+
+			var provider = Services.BuildServiceProvider();
+
+			// Act & Assert
+			var exception = Assert.Throws<OptionsValidationException>(() =>
+			{
+				var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			});
+
+			Assert.Contains("Duplicate source", exception.Message);
+		}
+		finally
+		{
+			File.Delete(tempFile);
+		}
+	}
+
+	[Fact]
+	public void Koalesce_WhenUniqueSources_ShouldNotThrowException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new KoalesceOptions
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new List<ApiSource>
+				{
+					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
+					new ApiSource { Url = "https://api2.com/v1/apidefinition.json" },
+					new ApiSource { Url = "https://api3.com/v1/apidefinition.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert - Should not throw
+		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		Assert.NotNull(options);
+		Assert.Equal(3, options.Sources.Count);
+	}
+
+	#endregion
+
+	#region FilePath Source Validation Tests
+
+	[Fact]
+	public void Koalesce_WithBothUrlAndFilePath_ShouldThrowValidationException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new
+					{
+						Url = "https://api1.com/v1/apidefinition.json",
+						FilePath = "C:/specs/api.json"
+					}
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("either Url or FilePath", exception.Message);
+	}
+
+	[Fact]
+	public void Koalesce_WithNeitherUrlNorFilePath_ShouldThrowValidationException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { VirtualPrefix = "/api" } // Neither Url nor FilePath
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("either Url or FilePath", exception.Message);
+	}
+
+	[Fact]
+	public void Koalesce_WithNonExistentFilePath_ShouldThrowValidationException()
+	{
+		// Arrange
+		var appSettingsStub = new
+		{
+			Koalesce = new
+			{
+				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				Sources = new[]
+				{
+					new { FilePath = "C:/non/existent/path/api.json" }
+				}
+			}
+		};
+
+		var configuration = ConfigurationHelper
+			.BuildConfigurationFromObject(appSettingsStub);
+
+		Services.AddKoalesce(configuration)
+			.ForOpenAPI();
+
+		var provider = Services.BuildServiceProvider();
+
+		// Act & Assert
+		var exception = Assert.Throws<OptionsValidationException>(() =>
+		{
+			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		});
+
+		Assert.Contains("does not exist", exception.Message);
 	}
 
 	#endregion

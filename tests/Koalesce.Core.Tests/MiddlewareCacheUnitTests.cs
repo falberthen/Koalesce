@@ -158,6 +158,9 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 
 	private IServiceProvider BuildServiceProvider(KoalesceCacheOptions cacheOptions, DummyProvider dummyProvider)
 	{
+		// Create a fresh ServiceCollection for each test to avoid cross-test pollution
+		var services = new ServiceCollection();
+
 		// Create configuration structure using anonymous objects + typed cache options
 		var appSettingsStub = new
 		{
@@ -169,7 +172,7 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 					new { Url = "https://api1.com/v1/apidefinition.json" },
 					new { Url = "https://api2.com/v1/apidefinition.json" }
 				},
-				// Pass the typed options object directly. JsonSerializer will serialize 
+				// Pass the typed options object directly. JsonSerializer will serialize
 				// its properties (AbsoluteExpirationSeconds, etc.) correctly into the JSON stream.
 				Cache = cacheOptions
 			}
@@ -178,15 +181,15 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper.BuildConfigurationFromObject(appSettingsStub);
 
 		// Register Services (Standard DI Pattern)
-		Services.AddLogging(); // Required by Middleware
-		Services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, KoalesceOptions>();
+		services.AddLogging(); // Required by Middleware
+		services.AddKoalesce(configuration)
+			.AddProvider<DummyProvider, DummyOptions>();
 
 		// Swap the provider for our spy instance
-		Services.RemoveAll<IKoalesceProvider>();
-		Services.AddSingleton<IKoalesceProvider>(dummyProvider);
+		services.RemoveAll<IKoalesceProvider>();
+		services.AddSingleton<IKoalesceProvider>(dummyProvider);
 
-		return Services.BuildServiceProvider();
+		return services.BuildServiceProvider();
 	}
 
 	// Helper to instantiate middleware using the DI container

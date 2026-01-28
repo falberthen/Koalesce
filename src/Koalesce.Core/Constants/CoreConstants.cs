@@ -3,6 +3,7 @@
 public static class CoreConstants
 {
 	public const string KoalesceClient = "KoalesceClient";
+	public const int DefaultHttpTimeoutSeconds = 15;
 
 	#region SchemaConflictPattern Placeholders
 	public const string PrefixPlaceholder = "{Prefix}";
@@ -22,5 +23,17 @@ public static class CoreConstants
 
 	public const string SchemaConflictPatternValidationError =
 		$"SchemaConflictPattern must contain both {PrefixPlaceholder} and {SchemaNamePlaceholder} placeholders.";
+
+	public const string HttpTimeoutMustBePositive =
+		"HttpTimeoutSeconds must be greater than zero.";
+
+	public const string SourceMustHaveUrlOrFilePath =
+		"Source at index {0} must have either Url or FilePath specified, but not both.";
+
+	public const string SourceFilePathNotFound =
+		"Source at index {0} has FilePath '{1}' that does not exist.";
+
+	public const string DuplicateSourceFound =
+		"Duplicate source '{0}' found at indices [{1}]. Each source must be unique.";
 	#endregion
 }
