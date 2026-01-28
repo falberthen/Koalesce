@@ -135,8 +135,8 @@ app.UseKoalesce();
     ],
     "MergedDocumentPath": "/swagger/v1/apigateway.json",
     "Title": "API Gateway",
-    "ApiGatewayBaseUrl": "https://localhost:5000",
-    "Cache": {
+    "ApiGatewayBaseUrl": "https://localhost:5000", // <-----
+    "Cache": {  // <-----
       "AbsoluteExpirationSeconds": 86400,
       "SlidingExpirationSeconds": 300
     }
@@ -144,7 +144,26 @@ app.UseKoalesce();
 }
 ```
 
-### Strict Mode (CI/CD)
+### Mixed Sources (HTTP + Local Files)
+
+Useful when merging live APIs with downloaded specifications from public APIs:
+
+```json
+{
+  "Koalesce": {
+    "Sources": [
+      { "Url": "https://localhost:8001/swagger/v1/swagger.json" },
+      { "FilePath": "./specs/external-api.json" }
+    ],
+    "MergedDocumentPath": "/swagger/v1/merged.json",
+    "Title": "Combined API Documentation"
+  }
+}
+```
+
+> **Note:** File paths can be absolute or relative. Relative paths are resolved from the application's base directory.
+
+### Strict Mode
 
 ```json
 {
@@ -154,8 +173,10 @@ app.UseKoalesce();
       { "Url": "https://localhost:8002/swagger/v1/swagger.json" }
     ],
     "MergedDocumentPath": "/swagger/v1/apigateway.yaml",
-    "FailOnServiceLoadError": true,
-    "SkipIdenticalPaths": false
+    "Title": "API Gateway",
+    "ApiGatewayBaseUrl": "https://localhost:5000",
+    "FailOnServiceLoadError": true, // <-----
+    "SkipIdenticalPaths": false     // <-----
   }
 }
 ```

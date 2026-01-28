@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.12] - 2026-01-28
+
+### Added
+
+- **OpenAPI 3.1.0 Support:** Upgraded to Microsoft.OpenApi 2.0.0, enabling full support for OpenAPI 3.1.0 specifications.
+  - Now compatible with modern APIs using OpenAPI 3.1.0.
+  - Supports latest Swashbuckle versions that generate OpenAPI 3.1.0.
+- **File-Based Sources:** Added `FilePath` property to `ApiSource`, allowing local OpenAPI specification files (JSON or YAML) to be merged alongside HTTP sources.
+  - Useful for merging downloaded specifications from public APIs that don't expose OpenAPI endpoints.
+  - Supports both absolute and relative paths (relative paths are resolved from the application's base directory)
+  - Mutually exclusive with `Url` - each source must have one or the other, but not both
+- **Configurable HTTP Timeout:** Added `HttpTimeoutSeconds` property to `KoalesceOptions` (default: 15 seconds).
+  - Allows customizing the HTTP request timeout for fetching API specifications.
+  - Useful for slow networks or large OpenAPI documents.
+
+**Example configuration:**
+
+```json
+{
+  "Koalesce": {
+    "Sources": [
+      { "Url": "https://api.example.com/swagger.json" },
+      { "FilePath": "./specs/external-api.json" }
+    ],
+    "MergedDocumentPath": "/merged.json",
+    "HttpTimeoutSeconds": 30
+  }
+}
+```
+
+### Changed
+
+- **Microsoft.OpenApi Upgrade:** Upgraded from Microsoft.OpenApi 1.6.x to 2.0.0.
+  - Internal types now use interfaces (IOpenApiSchema, IOpenApiSecurityScheme, etc.)
+  - Tags now use `ISet<OpenApiTag>` instead of `List<OpenApiTag>`.
+  - YAML support now via separate `Microsoft.OpenApi.YamlReader` package.
+  - Schema reference rewriting adapted for immutable references in v2.0.
+  - Renamed OpenAPIConstants to KoalesceOpenAPIConstants to avoid conflicts.
+- **Duplicate Source Validation:** Sources configuration now validates and rejects duplicate URLs or file paths.
+
+### ⚠️ Breaking Changes
+
+- **Swashbuckle Compatibility:** If using Koalesce **in the same project** as Swashbuckle.AspNetCore, you must use Swashbuckle 10.x (which also uses Microsoft.OpenApi 2.x). This does **not** affect .NET 8 compatibility—Koalesce still supports both .NET 8 and .NET 10.
+
+---
+
 ## [1.0.0-alpha.11] - 2026-01-25
 
 ### Changed

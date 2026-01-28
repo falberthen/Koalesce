@@ -433,4 +433,128 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 	}
 
 	#endregion
+
+	#region TESTS USING FilePath SOURCE
+
+	private const string _filePathSettings = "RestAPIs/appsettings.filepath.json";
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WithFilePathSource_ShouldMergeFileBasedSpec()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_filePathSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI());
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Should contain paths from HTTP source
+		Assert.Contains("/api/customers", mergedResult);
+
+		// Should contain paths from file source
+		Assert.Contains("/api/orders", mergedResult);
+		Assert.Contains("/api/orders/{id}", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WithFilePathSource_ShouldIncludeSchemasFromFile()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_filePathSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI());
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Should contain schemas from file source
+		Assert.Contains("Order", mergedResult);
+		Assert.Contains("CreateOrderRequest", mergedResult);
+		Assert.Contains("OrderItem", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WithFilePathSource_ShouldIncludeTagsFromFile()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_filePathSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI());
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Should contain tags from file source
+		Assert.Contains("Orders", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WithMixedSources_ShouldMergeHttpAndFileSources()
+	{
+		// Arrange & Act
+		// This test verifies that HTTP and file-based sources can coexist
+		var koalescingApi = await StartWebApplicationAsync(_appSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI(options =>
+				{
+					// Programmatically add a file-based source
+					options.Sources ??= new List<ApiSource>();
+					options.Sources.Add(new ApiSource
+					{
+						FilePath = "Fixtures/sample-openapi.json"
+					});
+				}));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Should contain paths from HTTP sources
+		Assert.Contains("/api/customers", mergedResult);
+		Assert.Contains("/api/products", mergedResult);
+
+		// Should contain paths from file source
+		Assert.Contains("/api/orders", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task KoalesceForOpenAPI_WithFilePathSource_ShouldPreserveServersFromSourceDocument()
+	{
+		// Arrange & Act
+		// This test verifies that servers defined in the file-based source are preserved
+		var koalescingApi = await StartWebApplicationAsync(_filePathSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration)
+				.ForOpenAPI());
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Should contain servers from HTTP source
+		Assert.Contains("http://localhost:8001", mergedResult);
+
+		// Should contain servers from file source (defined in sample-openapi.json)
+		Assert.Contains("https://orders-api.example.com", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	#endregion
 }

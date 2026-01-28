@@ -34,7 +34,7 @@ public class OptionsUnitTests : KoalesceUnitTestBase
 			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
 		});
 
-		Assert.Contains(OpenAPIConstants.ApiGatewayBaseUrlValidationError, exception.Message);
+		Assert.Contains(KoalesceOpenAPIConstants.ApiGatewayBaseUrlValidationError, exception.Message);
 	}	
 
 	[Fact]

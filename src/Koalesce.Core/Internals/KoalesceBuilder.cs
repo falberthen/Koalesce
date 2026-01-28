@@ -36,12 +36,16 @@ internal sealed class KoalesceBuilder : IKoalesceBuilder
 			.ValidateDataAnnotations() // Validate attributes like [Required]
 			.ValidateOnStart();        // Forces validation at app startup
 
-		// Configure a named HttpClient for Koalesce		
+		// Configure a named HttpClient for Koalesce
+		var koalesceSection = Configuration.GetSection(KoalesceOptions.ConfigurationSectionName);
+		var httpTimeout = koalesceSection.GetValue<int?>(nameof(KoalesceOptions.HttpTimeoutSeconds))
+			?? CoreConstants.DefaultHttpTimeoutSeconds;
+
 		Services.AddHttpClient(CoreConstants.KoalesceClient, client =>
 		{
 			client.DefaultRequestVersion = HttpVersion.Version11;
 			client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
-			client.Timeout = TimeSpan.FromSeconds(15);
+			client.Timeout = TimeSpan.FromSeconds(httpTimeout);
 		})
 		.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
 		{

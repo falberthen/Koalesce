@@ -1,5 +1,8 @@
-﻿namespace Koalesce.OpenAPI.Services;
+namespace Koalesce.OpenAPI.Services;
 
+/// <summary>
+/// Service responsible for serializing OpenAPI documents to JSON or YAML format.
+/// </summary>
 internal class OpenApiDocumentSerializer : IMergedDocumentSerializer<OpenApiDocument>
 {
 	private readonly ILogger<OpenApiDocumentSerializer> _logger;
@@ -21,36 +24,38 @@ internal class OpenApiDocumentSerializer : IMergedDocumentSerializer<OpenApiDocu
 	public string Serialize(OpenApiDocument document)
 	{
 		OpenApiSpecVersion version = GetOpenApiSpecVersion();
-		OpenApiFormat format = GetFormatFromPath();
+		bool isYaml = IsYamlFormat();
 
-		// Serialize the document
-		string serialized = document.Serialize(version, format);
+		// Serialize the document using async API (run synchronously for interface compatibility)
+		string serialized = isYaml
+			? document.SerializeAsYamlAsync(version).GetAwaiter().GetResult()
+			: document.SerializeAsJsonAsync(version).GetAwaiter().GetResult();
 
 		// Ensure the correct OpenAPI version is enforced in the output
-		string pattern = format == OpenApiFormat.Json
-			? "\"openapi\":\\s*\"[^\"]+\""
-			: "openapi:\\s*[^\n]+";
+		string pattern = isYaml
+			? "openapi:\\s*[^\n]+"
+			: "\"openapi\":\\s*\"[^\"]+\"";
 
-		string replacement = format == OpenApiFormat.Json
-			? $"\"openapi\": \"{_options.OpenApiVersion}\""
-			: $"openapi: {_options.OpenApiVersion}";
+		string replacement = isYaml
+			? $"openapi: {_options.OpenApiVersion}"
+			: $"\"openapi\": \"{_options.OpenApiVersion}\"";
 
 		serialized = Regex.Replace(serialized, pattern, replacement);
 
 		_logger.LogInformation("Serialized Koalesced document using version {Version} as {Format}",
-			_options.OpenApiVersion, format);
+			_options.OpenApiVersion, isYaml ? "YAML" : "JSON");
 
 		return serialized;
 	}
 
 	/// <summary>
-	/// Determines the OpenAPI format from the file extension.
+	/// Determines if the output format should be YAML.
 	/// </summary>
-	private OpenApiFormat GetFormatFromPath() =>
+	private bool IsYamlFormat() =>
 		Path.GetExtension(_options.MergedDocumentPath).ToLowerInvariant() switch
 		{
-			".yaml" => OpenApiFormat.Yaml,
-			_ => OpenApiFormat.Json, // Default to JSON
+			".yaml" or ".yml" => true,
+			_ => false
 		};
 
 	/// <summary>
@@ -78,16 +83,14 @@ internal class OpenApiDocumentSerializer : IMergedDocumentSerializer<OpenApiDocu
 	{
 		if (string.IsNullOrWhiteSpace(_options.OpenApiVersion) ||
 			!AllowedOpenApiVersions.Contains(_options.OpenApiVersion))
-		{
 			throw new NotSupportedException($"Unsupported OpenAPI version: {_options.OpenApiVersion}");
-		}
 	}
 
 	/// <summary>
 	/// Allowed OpenAPI versions.
 	/// </summary>
-	private static readonly HashSet<string> AllowedOpenApiVersions = new()
-	{
-		"3.0.0", "3.0.1", "3.0.4", "3.1.0", "2.0"
-	};
+	private static readonly HashSet<string> AllowedOpenApiVersions =
+	[
+		"2.0", "3.0.0", "3.0.1", "3.0.4", "3.1.0"
+	];
 }

@@ -1,6 +1,6 @@
 ﻿namespace Koalesce.OpenAPI.Constants;
 
-public static class OpenAPIConstants
+public static class KoalesceOpenAPIConstants
 {
 	#region OpenApiOptions Validation Messages
 	public const string ApiGatewayBaseUrlValidationError =
@@ -10,5 +10,6 @@ public static class OpenAPIConstants
 	#region OpenApiDocumentMerger
 	public const string V1 = "v1";
 	public const string UnknownApi = "Unknown API";
+	public const string UnknownTagName = "Unknown";
 	#endregion
 }
