@@ -1,3 +1,5 @@
+using Microsoft.OpenApi;
+
 var builder = WebApplication.CreateBuilder(args);
 IServiceCollection services = builder.Services;
 
@@ -18,30 +20,19 @@ services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
 {
-	c.AddSecurityDefinition("ApiKey", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+	c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
 	{
-		Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
-		In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+		Type = SecuritySchemeType.ApiKey,
+		In = ParameterLocation.Header,
 		Name = "X-API-KEY",
 		Description = "API Key authentication using X-API-KEY header"
 	});
 
-	c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+	c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
 	{
-		{
-			new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-			{
-				Reference = new Microsoft.OpenApi.Models.OpenApiReference
-				{
-					Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-					Id = "ApiKey"
-				}
-			},
-			Array.Empty<string>()
-		}
+		[new OpenApiSecuritySchemeReference("ApiKey", document)] = new List<string>()
 	});
 });
-
 
 var app = builder.Build();
 
@@ -70,7 +61,7 @@ app.MapGet("/api/products", () =>
 
 // Create a product (admin only, to be a skipped endpoint using ExcludePaths)
 app.MapPost("/api/admin/products", (Product newProduct) =>
-{	
+{
 	return Results.Created($"/api/admin/products/{newProduct.Id}", newProduct);
 })
 .WithName("CreateProduct");

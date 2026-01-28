@@ -37,16 +37,14 @@ public class KoalesceMiddleware
 	}
 
 	/// <summary>
-	/// Middleware invocation logic
+	/// Middleware invocation logic.
 	/// </summary>
 	public async Task InvokeAsync(HttpContext context)
 	{
 		// Only log the generic request path if Debug level is actually enabled
 		// This prevents "spamming" logs for every single API request in Production
 		if (_logger.IsEnabled(LogLevel.Debug))
-		{
 			_logger.LogDebug("Koalesce Middleware inspecting path: {RequestPath}", context.Request.Path);
-		}
 
 		// If the request path matches the expected merged merged path
 		if (context.Request.Path.Equals(_mergedDocumentPath, StringComparison.OrdinalIgnoreCase))
@@ -122,7 +120,7 @@ public class KoalesceMiddleware
 			context.Response.ContentType = "application/json";
 			await context.Response.WriteAsync(mergedDocument);
 		}
-		catch (Exception ex) when (ex is KoalesceIdenticalPathFoundException || ex is Exception)
+		catch (Exception ex)
 		{
 			_logger.LogError(ex, "Failed to generate Koalesce document.");
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;

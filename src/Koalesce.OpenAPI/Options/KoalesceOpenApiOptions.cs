@@ -31,7 +31,7 @@ public class KoalesceOpenApiOptions : KoalesceOptions
 			if (!isUriValid)
 			{
 				yield return new ValidationResult(
-					OpenAPIConstants.ApiGatewayBaseUrlValidationError,
+					KoalesceOpenAPIConstants.ApiGatewayBaseUrlValidationError,
 					[nameof(ApiGatewayBaseUrl)]);
 			}
 		}

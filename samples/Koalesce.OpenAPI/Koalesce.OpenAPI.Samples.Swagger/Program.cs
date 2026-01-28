@@ -20,7 +20,6 @@ services.AddKoalesce(builder.Configuration)
 // Build the app
 var app = builder.Build();
 
-// 🐨 Accessing the automatically registered OpenApiOptions based on your appsettings.json
 KoalesceOpenApiOptions openApiOptions;
 using (var scope = app.Services.CreateScope())
 {

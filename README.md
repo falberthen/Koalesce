@@ -93,12 +93,16 @@ Koalesce configuration is divided into **Core Options** and **Provider Options**
 | `SkipIdenticalPaths` | `boolean` | `true` | If `false`, throws exception on duplicate paths. If `true`, logs warning and skips duplicates |
 | `SchemaConflictPattern` | `string` | `"{Prefix}_{SchemaName}"` | Pattern for resolving schema name conflicts. Available placeholders: `{Prefix}`, `{SchemaName}` |
 | `FailOnServiceLoadError` | `boolean` | `false` | If `true`, aborts startup if ANY source is unreachable. If `false` (default), logs error and skips the source. |
+| `HttpTimeoutSeconds` | `integer` | `15` | HTTP request timeout in seconds for fetching API specifications |
 
 #### Source Configuration
 
+Each source must have either `Url` **or** `FilePath`, but not both.
+
 | Setting | Type | Default | Description |
 |---|---|---|---|
-| `Url` | `string` | 🔺 | URL of the API definition (must be absolute URL) |
+| `Url` | `string` | — | URL of the API definition (must be absolute HTTP/HTTPS URL). Mutually exclusive with `FilePath`. |
+| `FilePath` | `string` | — | Local file path to the API definition (JSON or YAML). Mutually exclusive with `Url`. |
 | `VirtualPrefix` | `string` | `null` | Optional prefix to apply to routes (e.g., `/inventory`) |
 | `ExcludePaths` | `array` | `null` | Optional list of paths to exclude from merge. Supports exact matches and wildcards (e.g., `"/api/admin/*"`) |
 
@@ -314,6 +318,25 @@ Use when you want to enforce unique routes and fail if conflicts are detected:
   }
 }
 ```
+
+### Mixed Sources (HTTP + Local Files)
+
+Useful when merging live APIs with downloaded specifications from public APIs:
+
+```json
+{
+  "Koalesce": {
+    "Sources": [
+      { "Url": "https://localhost:8001/swagger/v1/swagger.json" },
+      { "FilePath": "./specs/external-api.json" }
+    ],
+    "MergedDocumentPath": "/swagger/v1/merged.json",
+    "Title": "Combined API Documentation"
+  }
+}
+```
+
+> 💡 **Note:** File paths can be absolute or relative. Relative paths are resolved from the application's base directory.
 
 ### Strict Mode
 

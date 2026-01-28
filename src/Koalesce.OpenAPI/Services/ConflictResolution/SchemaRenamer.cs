@@ -20,7 +20,11 @@ internal class SchemaRenamer
 		Dictionary<string, string> targetRenames,
 		Dictionary<string, SchemaOrigin> schemaOrigins)
 	{
-		if (targetRenames.Count == 0) return;
+		if (targetRenames.Count == 0) 
+			return;
+
+		if (targetDocument.Components?.Schemas is null) 
+			return;
 
 		foreach (var (oldKey, newKey) in targetRenames)
 		{
@@ -36,15 +40,12 @@ internal class SchemaRenamer
 					schemaOrigins[newKey] = origin;
 				}
 
-				// Changed to Debug to avoid log noise on large merges
 				_logger.LogDebug("Target Schema Renamed: '{Old}' -> '{New}'", oldKey, newKey);
 			}
 		}
 
 		// Rewrite internal references within the target document
-		var rewriter = new SchemaReferenceRewriter(targetRenames);
-		var walker = new OpenApiWalker(rewriter);
-		walker.Walk(targetDocument);
+		SchemaReferenceRewriter.RewriteReferences(targetDocument, targetRenames);
 	}
 
 	/// <summary>
@@ -54,7 +55,11 @@ internal class SchemaRenamer
 		OpenApiDocument sourceDocument,
 		Dictionary<string, string> sourceRenames)
 	{
-		if (sourceRenames.Count == 0) return;
+		if (sourceRenames.Count == 0) 
+			return;
+
+		if (sourceDocument.Components?.Schemas is null) 
+			return;
 
 		foreach (var (oldKey, newKey) in sourceRenames)
 		{
@@ -67,8 +72,6 @@ internal class SchemaRenamer
 		}
 
 		// Rewrite internal references within the source document
-		var rewriter = new SchemaReferenceRewriter(sourceRenames);
-		var walker = new OpenApiWalker(rewriter);
-		walker.Walk(sourceDocument);
+		SchemaReferenceRewriter.RewriteReferences(sourceDocument, sourceRenames);
 	}
 }

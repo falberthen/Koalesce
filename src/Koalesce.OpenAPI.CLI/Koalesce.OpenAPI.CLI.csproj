@@ -10,7 +10,7 @@
 		<PackageId>Koalesce.OpenAPI.CLI</PackageId>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IsPackable>true</IsPackable>
-		<Version>1.0.0-alpha.11</Version>
+		<Version>1.0.0-alpha.12</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The CLI for Koalesce.OpenAPI.</Description>
@@ -52,7 +52,8 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
-		<PackageReference Include="Microsoft.OpenApi.Readers" Version="1.6.28" />
+		<PackageReference Include="Microsoft.OpenApi" Version="2.0.0" />
+		<PackageReference Include="Microsoft.OpenApi.YamlReader" Version="2.0.0" />
 		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />		
 	</ItemGroup>
 

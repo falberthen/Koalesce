@@ -49,7 +49,7 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			// Fetch concurrently using the Loader
 			var fetchDocumentTasks = _options.Sources.Select(async source =>
 			{
-				var doc = await _loader.LoadAsync(source.Url);
+				var doc = await _loader.LoadAsync(source);
 				return (ApiSource: source, Document: doc);
 			});
 
@@ -75,8 +75,7 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	}
 
 	/// <summary>
-	/// Initializes a new OpenAPI document with default metadata, empty paths, components, servers, security requirements,
-	/// and tags.
+	/// Initializes a new OpenAPI document with default metadata, empty paths, components, servers, security requirements, and tags.
 	/// </summary>
 	private OpenApiDocument InitializeMergedDocument()
 	{
@@ -86,17 +85,16 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			Info = new OpenApiInfo
 			{
 				Title = _options.Title,
-				Version = version ?? OpenAPIConstants.V1
+				Version = version ?? KoalesceOpenAPIConstants.V1
 			},
 			Paths = new OpenApiPaths(),
 			Components = new OpenApiComponents
 			{
-				SecuritySchemes = new Dictionary<string, OpenApiSecurityScheme>(),
-				Schemas = new Dictionary<string, OpenApiSchema>()
+				Schemas = new Dictionary<string, IOpenApiSchema>(),
+				SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>()
 			},
-			Servers = new List<OpenApiServer>(),
-			SecurityRequirements = new List<OpenApiSecurityRequirement>(),
-			Tags = new List<OpenApiTag>()
+			Servers = [],
+			Tags = new HashSet<OpenApiTag>()
 		};
 	}
 
@@ -109,8 +107,8 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 		ApiSource apiSource,
 		Dictionary<string, SchemaOrigin> schemaOrigins)
 	{
-		string apiName = sourceDoc.Info?.Title ?? OpenAPIConstants.UnknownApi;
-		string apiVersion = sourceDoc.Info?.Version ?? OpenAPIConstants.V1;
+		string apiName = sourceDoc.Info?.Title ?? KoalesceOpenAPIConstants.UnknownApi;
+		string apiVersion = sourceDoc.Info?.Version ?? KoalesceOpenAPIConstants.V1;
 
 		// Resolve Conflicts
 		_schemaConflictCoordinator.ResolveConflicts(
@@ -119,13 +117,40 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 
 		// Prepare Server Entry (for Aggregation Mode)
 		OpenApiServer? serverEntry = null;
+		bool isFileBased = !string.IsNullOrWhiteSpace(apiSource.FilePath);
+
 		if (string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
 		{
-			string baseUrl = new Uri(apiSource.Url).GetLeftPart(UriPartial.Authority);
-			serverEntry = new OpenApiServer { Url = baseUrl, Description = $"{apiName} ({apiVersion})" };
+			targetDoc.Servers ??= [];
+			if (isFileBased)
+			{
+				// For file-based sources, preserve servers from the source document
+				if (sourceDoc.Servers?.Count > 0)
+				{
+					foreach (var server in sourceDoc.Servers)
+					{
+						if (!targetDoc.Servers.Any(s => s.Url == server.Url))
+						{
+							var serverCopy = new OpenApiServer
+							{
+								Url = server.Url,
+								Description = server.Description ?? $"{apiName} ({apiVersion})"
+							};
+							targetDoc.Servers.Add(serverCopy);
+							serverEntry ??= serverCopy; // Use first server as operation server
+						}
+					}
+				}
+			}
+			else
+			{
+				// For URL-based sources, extract base URL
+				string baseUrl = new Uri(apiSource.Url!).GetLeftPart(UriPartial.Authority);
+				serverEntry = new OpenApiServer { Url = baseUrl, Description = $"{apiName} ({apiVersion})" };
 
-			if (!targetDoc.Servers.Any(s => s.Url == baseUrl))
-				targetDoc.Servers.Add(serverEntry);
+				if (!targetDoc.Servers.Any(s => s.Url == baseUrl))
+					targetDoc.Servers.Add(serverEntry);
+			}
 		}
 
 		// Merge Paths
@@ -133,24 +158,26 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 
 		// Merge Components & Tags
 		MergeComponents(sourceDoc.Components, targetDoc.Components, apiName, apiSource.VirtualPrefix, schemaOrigins);
-		MergeTags(sourceDoc, targetDoc, apiSource.Url);
+		MergeTags(sourceDoc, targetDoc, apiSource);
 	}
 	
 	/// <summary>
 	/// Merges schemas and security scheme definitions
 	/// </summary>
 	private void MergeComponents(
-		OpenApiComponents sourceComponents,
-		OpenApiComponents targetComponents,
+		OpenApiComponents? sourceComponents,
+		OpenApiComponents? targetComponents,
 		string apiName,
 		string? virtualPrefix,
 		Dictionary<string, SchemaOrigin> schemaOrigins)
 	{
-		if (sourceComponents is null) return;
+		if (sourceComponents is null || targetComponents is null) 
+			return;
 
 		// Merge Schemas
 		if (sourceComponents.Schemas is not null)
 		{
+			targetComponents.Schemas ??= new Dictionary<string, IOpenApiSchema>();
 			foreach (var (key, schema) in sourceComponents.Schemas)
 			{
 				if (targetComponents.Schemas.TryAdd(key, schema))
@@ -160,9 +187,10 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 			}
 		}
 
-		// Merge Security Schemes (preserve downstream security)
+		// Merge Security Schemes
 		if (sourceComponents.SecuritySchemes is not null)
 		{
+			targetComponents.SecuritySchemes ??= new Dictionary<string, IOpenApiSecurityScheme>();
 			foreach (var (key, securityScheme) in sourceComponents.SecuritySchemes)
 			{
 				targetComponents.SecuritySchemes.TryAdd(key, securityScheme);
@@ -171,51 +199,78 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	}
 
 	/// <summary>
-	/// Merges tags prioritizing: Operation Tags > Document Global Tags > URL Fallback
+	/// Merges tags prioritizing: Operation Tags > Document Global Tags > Source Fallback
 	/// </summary>
 	private static void MergeTags(
 		OpenApiDocument sourceDoc,
 		OpenApiDocument targetDoc,
-		string sourceUrl)
+		ApiSource apiSource)
 	{
 		// Use HashSet for O(1) lookup
-		var existingTagNames = new HashSet<string>(targetDoc.Tags.Select(t => t.Name));
+		var existingTagNames = new HashSet<string>(
+			targetDoc.Tags?.Select(t => t.Name).Where(n => n != null).Cast<string>() ?? []);
 
 		if (sourceDoc.Tags != null)
 		{
 			foreach (var tag in sourceDoc.Tags)
 			{
-				if (existingTagNames.Add(tag.Name))
-					targetDoc.Tags.Add(tag);
+				if (tag.Name != null && existingTagNames.Add(tag.Name))
+					targetDoc.Tags?.Add(tag);
 			}
 		}
+		
+		if (sourceDoc.Paths is null) 
+			return;
 
-		var defaultTagName = new Uri(sourceUrl).Host.Replace(".", "-");
+		// Derive default tag name from URL host or file name
+		var defaultTagName = GetDefaultTagName(apiSource);
+
 		foreach (var path in sourceDoc.Paths.Values)
 		{
+			if (path.Operations is null) 
+				continue;
+
 			foreach (var operation in path.Operations.Values)
-			{
-				operation.Tags ??= [];
+			{				
+				operation.Tags ??= new HashSet<OpenApiTagReference>();
 				if (operation.Tags.Count == 0)
 				{
 					if (sourceDoc.Tags?.Count > 0)
 					{
 						foreach (var t in sourceDoc.Tags)
-							operation.Tags.Add(new OpenApiTag { Name = t.Name });
+						{
+							if (t.Name != null)
+								operation.Tags.Add(new OpenApiTagReference(t.Name));
+						}
 					}
 					else
 					{
-						operation.Tags.Add(new OpenApiTag { Name = defaultTagName });
+						operation.Tags.Add(new OpenApiTagReference(defaultTagName));
 					}
 				}
 
-				foreach (var tag in operation.Tags)
+				// Add referenced tags to document-level tags
+				foreach (var tagRef in operation.Tags)
 				{
-					if (existingTagNames.Add(tag.Name))
-						targetDoc.Tags.Add(tag);
+					if (tagRef.Name != null && existingTagNames.Add(tagRef.Name))
+						targetDoc.Tags?.Add(new OpenApiTag { Name = tagRef.Name });
 				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Gets the default tag name based on the API source (URL host or file name).
+	/// </summary>
+	private static string GetDefaultTagName(ApiSource apiSource)
+	{
+		if (!string.IsNullOrWhiteSpace(apiSource.Url))
+			return new Uri(apiSource.Url).Host.Replace(".", "-");		
+
+		if (!string.IsNullOrWhiteSpace(apiSource.FilePath)) 		
+			return Path.GetFileNameWithoutExtension(apiSource.FilePath).CleanName(); // Use file name without extension as default tag
+
+		return KoalesceOpenAPIConstants.UnknownTagName;
 	}
 
 	/// <summary>
@@ -223,6 +278,7 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 	/// </summary>
 	private void ConsolidateServerDefinitions(OpenApiDocument doc)
 	{
+		doc.Servers ??= [];
 		if (!string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
 		{
 			doc.Servers.Clear();
@@ -232,5 +288,5 @@ internal class OpenApiDocumentMerger : IDocumentMerger<OpenApiDocument>
 		{
 			doc.Servers.Add(new OpenApiServer { Url = "/" });
 		}
-	}	
+	}
 }

@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-	  <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.4" />
+	  <PackageReference Include="Swashbuckle.AspNetCore" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,5 +18,12 @@
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\products-api.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>products-api.json</Link>
+    </None>
   </ItemGroup>
 </Project>

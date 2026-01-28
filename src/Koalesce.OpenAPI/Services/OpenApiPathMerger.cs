@@ -1,5 +1,8 @@
 ﻿namespace Koalesce.OpenAPI.Services;
 
+/// <summary>
+/// Service responsible for merging OpenAPI paths from source documents into a target document.
+/// </summary>
 internal class OpenApiPathMerger
 {
 	private readonly KoalesceOpenApiOptions _options;
@@ -13,14 +16,21 @@ internal class OpenApiPathMerger
 		_logger = logger;
 	}
 
+	/// <summary>
+	/// Merges the paths from the specified OpenAPI source document into the target paths collection, applying exclusions,
+	/// virtual prefixing, and collision handling as configured.
+	/// </summary>	
 	public void MergePaths(
 		OpenApiDocument sourceDocument,
 		OpenApiPaths targetPaths,
 		string apiName,
 		ApiSource apiSource,
 		OpenApiServer? sourceServerEntry)
-	{
-		var globalSecurityRequirements = sourceDocument.SecurityRequirements;
+	{	
+		if (sourceDocument.Paths is null)
+			return;
+
+		var globalSecurityRequirements = sourceDocument.Security;
 
 		foreach (var (originalPath, pathItem) in sourceDocument.Paths)
 		{
@@ -54,20 +64,27 @@ internal class OpenApiPathMerger
 			{
 				Summary = pathItem.Summary,
 				Description = pathItem.Description,
-				Parameters = pathItem.Parameters?.Select(p => p).ToList() ?? new List<OpenApiParameter>()
+				Parameters = pathItem.Parameters?.ToList() ?? []
 			};
 
 			targetPaths[newPathKey] = newPathItem;
 
 			// Process Operations
+			if (pathItem.Operations is null) continue;
+
 			foreach (var (opType, operation) in pathItem.Operations)
 			{
 				ProcessOperation(operation, apiSource, sourceServerEntry, globalSecurityRequirements);
+				newPathItem.Operations ??= new Dictionary<HttpMethod, OpenApiOperation>();
 				newPathItem.Operations[opType] = operation;
 			}
 		}
 	}
 
+	/// <summary>
+	/// Processes and updates the specified OpenAPI operation with namespacing, server information, and summary defaults
+	/// based on the provided API source and server entry.
+	/// </summary>	
 	private void ProcessOperation(
 		OpenApiOperation operation,
 		ApiSource apiSource,
@@ -88,11 +105,9 @@ internal class OpenApiPathMerger
 		}
 		else if (serverEntry != null)
 		{
-			operation.Servers ??= new List<OpenApiServer>();
-			if (!operation.Servers.Any(s => s.Url == serverEntry.Url))
-			{
-				operation.Servers.Add(serverEntry);
-			}
+			operation.Servers ??= [];
+			if (!operation.Servers.Any(s => s.Url == serverEntry.Url))			
+				operation.Servers.Add(serverEntry);			
 		}
 
 		// Materialize Security
@@ -104,13 +119,18 @@ internal class OpenApiPathMerger
 		operation.Summary ??= string.Empty;
 	}
 
+	/// <summary>
+	/// Determines whether the specified path matches any of the provided exclusion patterns.
+	/// </summary>	
 	private static bool IsPathExcluded(string path, List<string>? excludePaths)
 	{
-		if (excludePaths == null || excludePaths.Count == 0) return false;
+		if (excludePaths == null || excludePaths.Count == 0) 
+			return false;
 
 		foreach (var pattern in excludePaths)
 		{
-			if (string.IsNullOrWhiteSpace(pattern)) continue;
+			if (string.IsNullOrWhiteSpace(pattern)) 
+				continue;
 
 			string normalizedPath = path.TrimEnd('/');
 			string normalizedPattern = pattern.TrimEnd('/');

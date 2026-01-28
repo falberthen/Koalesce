@@ -1,48 +1,40 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿using Microsoft.OpenApi;
+
+var builder = WebApplication.CreateBuilder(args);
 IServiceCollection services = builder.Services;
 
 // Define CORS Policy
 const string corsPolicy = "CorsPolicy";
 services.AddCors(o =>
-	o.AddPolicy(corsPolicy, builder =>
+	o.AddPolicy(corsPolicy, cors =>
 	{
-		builder
-		.AllowAnyMethod()
-		.AllowAnyHeader()
-		.AllowCredentials()
-		.SetIsOriginAllowed(x => true);
+		cors
+			.AllowAnyMethod()
+			.AllowAnyHeader()
+			.AllowCredentials()
+			.SetIsOriginAllowed(_ => true);
 	})
 );
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+services.AddEndpointsApiExplorer();
+
+services.AddSwaggerGen(options =>
 {
-	c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+	options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
-		Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+		Type = SecuritySchemeType.Http,
 		Scheme = "bearer",
 		BearerFormat = "JWT",
-		In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+		In = ParameterLocation.Header,
 		Name = "Authorization",
 		Description = "JWT Authorization header using the Bearer scheme."
 	});
 
-	c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+	options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
 	{
-		{
-			new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-			{
-				Reference = new Microsoft.OpenApi.Models.OpenApiReference
-				{
-					Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-					Id = "Bearer"
-				}
-			},
-			Array.Empty<string>()
-		}
+		[new OpenApiSecuritySchemeReference("Bearer", document)] = new List<string>()
 	});
 });
-
 
 var app = builder.Build();
 
