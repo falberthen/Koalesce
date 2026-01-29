@@ -71,7 +71,7 @@ public static class KoalesceConsoleUI
 	/// <param name="sources">The list of OpenAPI URLs.</param>
 	public static void PrintSourceList(IEnumerable<ApiSource> sources)
 	{
-		Console.WriteLine($"{Cyan}🔍 Loaded {sources.Count()} source OpenAPI docs from config:{Reset}\n");
+		Console.WriteLine($"{Cyan}🔍 Loaded {sources.Count()} OpenAPI definitions from config:{Reset}\n");
 		foreach (var source in sources)
 		{			
 			string displayPrefix = "";
@@ -82,7 +82,8 @@ public static class KoalesceConsoleUI
 				displayPrefix = $"{Magenta}[/{cleanPrefix}]{Reset} ";
 			}
 			
-			Console.WriteLine($" {Green}•{Reset} {displayPrefix}{source.Url}");
+			string apiPath = source.Url ?? source.FilePath!;
+			Console.WriteLine($" {Green}•{Reset} {displayPrefix}{apiPath}");
 		}
 
 		Console.WriteLine();
