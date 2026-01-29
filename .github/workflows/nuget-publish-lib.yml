@@ -1,0 +1,54 @@
+name: Publish Libraries to NuGet
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-libraries:
+    # Only run for tags matching v* (e.g., v1.0.0-alpha.13)
+    if: startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/tags/cli-v')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore --property:DefineConstants=USE_PROJECT_REFS
+
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release --property:DefineConstants=USE_PROJECT_REFS
+
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release --property:DefineConstants=USE_PROJECT_REFS
+
+      - name: Pack Koalesce.Core
+        run: dotnet pack src/Koalesce.Core/Koalesce.Core.csproj --no-build --configuration Release --output ./nupkgs
+
+      - name: Pack Koalesce.OpenAPI
+        run: dotnet pack src/Koalesce.OpenAPI/Koalesce.OpenAPI.csproj --no-build --configuration Release --output ./nupkgs
+
+      - name: Publish packages to NuGet
+        run: dotnet nuget push './nupkgs/*.nupkg' --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Upload packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages-lib-${{ github.ref_name }}
+          path: ./nupkgs/*.nupkg

@@ -1,12 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\..\Versions.props" />
+
 	<PropertyGroup>
 		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>Koalesce.OpenAPI</PackageId>
 		<IsPackable>true</IsPackable>
 		<Nullable>enable</Nullable>
-		<Version>1.0.0-alpha.12</Version>
+		<Version>$(KoalesceLibVersion)</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The OpenAPI Provider for Koalesce.</Description>

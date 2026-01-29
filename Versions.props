@@ -1,0 +1,9 @@
+<Project>
+  <PropertyGroup>
+    <!-- Library version (Core + OpenAPI always together) -->
+    <KoalesceLibVersion>1.0.0-alpha.12</KoalesceLibVersion>
+    
+    <!-- CLI version (independent, can evolve separately) -->
+    <KoalesceCLIVersion>1.0.0-alpha.12.3</KoalesceCLIVersion>
+  </PropertyGroup>
+</Project>
