@@ -5,15 +5,29 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-## [1.0.0-alpha.12.1] - 2026-01-28
+## [1.0.0-alpha.12.2] - 2026-01-28
+
+### Changed
+
+- **LTS Targeting:** The CLI project now targets both **.NET 8.0 (LTS)** and **.NET 10.0 (LTS)**.
+  - Users with .NET 10 will use the optimized .NET 10 build.
+  - Users with .NET 8 or .NET 9 will automatically use the .NET 8 build.
 
 ### Fixed
 
-- **Installation Error:** Fixed a critical issue where `dotnet tool install` would fail with "Settings file 'DotnetToolSettings.xml' was not found".
+- **Runtime Compatibility:** Fixed installation failure ("Settings file not found") on environments running .NET 8 or .NET 9. The tool now correctly supports these runtimes via multi-targeting.
+
+---
+
+## [1.0.0-alpha.12.1] - 2026-01-28
 
 ### Changed
 
 - **Packaging Strategy:** The CLI package is now **self-contained**. It bundles the `Koalesce.Core` and `Koalesce.OpenAPI` dependencies (v1.0.0-alpha.12) internally.
+
+### Fixed
+
+- **Installation Error:** Fixed a critical issue where `dotnet tool install` would fail with "Settings file 'DotnetToolSettings.xml' was not found".
 
 ---
 
