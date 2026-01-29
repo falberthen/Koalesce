@@ -10,7 +10,10 @@
 		<PackageId>Koalesce.OpenAPI.CLI</PackageId>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IsPackable>true</IsPackable>
-		<Version>1.0.0-alpha.12</Version>
+
+		<Version>1.0.0-alpha.12.1</Version>
+		<KoalesceLibVersion>1.0.0-alpha.12</KoalesceLibVersion>
+
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The CLI for Koalesce.OpenAPI.</Description>
@@ -18,31 +21,36 @@
 		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
 		<PackageIcon>cli_icon_256x256.png</PackageIcon>
-		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
+		<PackageReadmeFile>README-CLI.nuget.md</PackageReadmeFile>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
-
-		<!-- Detect USE_PROJECT_REFS constant -->
-		<UseProjectRefs Condition="'$(DefineConstants)' != '' and '$(DefineConstants)' != '$(DefineConstants:USE_PROJECT_REFS=)'">true</UseProjectRefs>
 	</PropertyGroup>
 
+	<ItemGroup Condition="'$(DefineConstants)' == '' or !$(DefineConstants.Contains('USE_PROJECT_REFS'))">
+		<PackageReference Include="Koalesce.Core" Version="$(KoalesceLibVersion)" />
+		<PackageReference Include="Koalesce.OpenAPI" Version="$(KoalesceLibVersion)" />
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(DefineConstants)' != '' and $(DefineConstants.Contains('USE_PROJECT_REFS'))">
+		<ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" />
+		<ProjectReference Include="..\Koalesce.OpenAPI\Koalesce.OpenAPI.csproj" />
+	</ItemGroup>
+
 	<ItemGroup>
-	  <Compile Remove="Img\**" />
-	  <EmbeddedResource Remove="Img\**" />
-	  <None Remove="Img\**" />
+		<Compile Remove="Img\**" />
+		<EmbeddedResource Remove="Img\**" />
+		<None Remove="Img\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="README-CLI.nuget.md" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
-		<None Include="README.nuget.md" Pack="true" PackagePath="\" />
-		<None Include="CHANGELOG.md" Pack="false" PackagePath="\" />
+		<None Include="..\..\docs\cli\README-CLI.nuget.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\docs\cli\CHANGELOG.md" Pack="false" PackagePath="\" />
 		<None Include="..\..\img\cli_icon_256x256.png" Pack="true" PackagePath="\" />
-	</ItemGroup>
-
-	<!-- Use project references if USE_PROJECT_REFS is defined -->
-	<ItemGroup Condition="'$(UseProjectRefs)' == 'true'">
-		<ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" />
-		<ProjectReference Include="..\Koalesce.OpenAPI\Koalesce.OpenAPI.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -54,7 +62,7 @@
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.1" />
 		<PackageReference Include="Microsoft.OpenApi" Version="2.0.0" />
 		<PackageReference Include="Microsoft.OpenApi.YamlReader" Version="2.0.0" />
-		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />		
+		<PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
 	</ItemGroup>
 
 </Project>
