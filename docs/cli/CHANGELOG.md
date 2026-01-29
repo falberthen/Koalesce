@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.0.0-alpha.12.3] - 2026-01-28
+
+### Changed
+
+- Changed message when displaying loaded sources
+  - From: "🔍 Loaded {SourcesCount} source OpenAPI docs from config:"
+  - To:   "🔍 Loaded {SourcesCount} OpenAPI definitions from config:"
+- Changed message when koalescing is finished
+  - From: "✅ Koalesced OpenAPI written to:"
+  - To:   "✅ Koalesced OpenAPI definition written to:"
+
+
+### Fixed
+
+- **Display FilePath:** FilePath is now displayed among the source list when used as a source.
+
+---
+
 ## [1.0.0-alpha.12.2] - 2026-01-28
 
 ### Changed
