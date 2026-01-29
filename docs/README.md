@@ -362,15 +362,15 @@ Useful when merging live APIs with downloaded specifications from public APIs:
 
 ## 📜 Changelog
 
-- [Koalesce Changelog](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md)
-- [Koalesce CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/src/Koalesce.OpenAPI.CLI/CHANGELOG.md)
+- [Koalesce Changelog](https://github.com/falberthen/Koalesce/blob/master/docs/CHANGELOG.md)
+- [Koalesce CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/docs/cli/CHANGELOG.md)
 
 ---
 
 ## 📧 Support & Contributing
 
 - **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/falberthen/Koalesce/issues)
-- **Contributing**: Contributions are welcome! Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting PRs.
+- **Contributing**: Contributions are welcome! Please read [CONTRIBUTING.md](https://github.com/falberthen/Koalesce/tree/master/docs/CONTRIBUTING.md) before submitting PRs.
 - **Sample Projects**: Check out [Koalesce.Samples.sln](https://github.com/falberthen/Koalesce/blob/master/samples/Koalesce.Samples.sln) for a complete implementation
 
 ---

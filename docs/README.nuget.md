@@ -229,9 +229,9 @@ koalesce --config ./appsettings.json --output ./gateway.yaml --verbose
 
 - [Full Documentation](https://github.com/falberthen/Koalesce#readme)
 - [Sample Projects](https://github.com/falberthen/Koalesce/tree/master/samples)
-- [Changelog](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md)
-- [CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/src/Koalesce.OpenAPI.CLI/CHANGELOG.md)
-- [Contributing](https://github.com/falberthen/Koalesce/blob/master/CONTRIBUTING.md)
+- [Koalesce Changelog](https://github.com/falberthen/Koalesce/blob/master/docs/CHANGELOG.md)
+- [Koalesce CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/docs/cli/CHANGELOG.md)
+- [Contributing](https://github.com/falberthen/Koalesce/blob/master/docs/CONTRIBUTING.md)
 
 ---
 
