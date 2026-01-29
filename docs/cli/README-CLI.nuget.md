@@ -1,6 +1,6 @@
 # Koalesce CLI for OpenAPI
 
-![Koalesce](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/koalesce_small.png)<img src="https://raw.githubusercontent.com/falberthen/Koalesce/master/img/cli_icon_256x256.png" heigth="170" width="170" />
+![Koalesce](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/cli_small.png)
 
 The `Koalesce.OpenAPI.CLI` is a standalone tool that uses [Koalesce.OpenAPI](https://github.com/falberthen/Koalesce#readme) to merge OpenAPI definitions directly into a file in the disk.
 
@@ -26,7 +26,7 @@ koalesce --config ./appsettings.json --output ./gateway.yaml --verbose
 
 <br/>
 
-<img src="https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI.png"/>
+![CLI](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI.png)
 
 #### Arguments:
 
@@ -127,9 +127,9 @@ Useful when merging live APIs with downloaded specifications from public APIs:
 
 - [Full Documentation](https://github.com/falberthen/Koalesce#readme)
 - [Sample Projects](https://github.com/falberthen/Koalesce/tree/master/samples)
-- [Changelog](https://github.com/falberthen/Koalesce/blob/master/CHANGELOG.md)
-- [CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/src/Koalesce.OpenAPI.CLI/CHANGELOG.md)
-- [Contributing](https://github.com/falberthen/Koalesce/blob/master/CONTRIBUTING.md)
+- [Koalesce Changelog](https://github.com/falberthen/Koalesce/blob/master/docs/CHANGELOG.md)
+- [Koalesce CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/docs/cli/CHANGELOG.md)
+- [Contributing](https://github.com/falberthen/Koalesce/blob/master/docs/CONTRIBUTING.md)
 
 ---
 
