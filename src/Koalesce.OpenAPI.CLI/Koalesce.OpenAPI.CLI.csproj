@@ -11,7 +11,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IsPackable>true</IsPackable>
 
-		<Version>1.0.0-alpha.12.2</Version>
+		<Version>1.0.0-alpha.12.3</Version>
 		<KoalesceLibVersion>1.0.0-alpha.12</KoalesceLibVersion>
 
 		<Authors>Felipe Henrique (Falberthen)</Authors>
