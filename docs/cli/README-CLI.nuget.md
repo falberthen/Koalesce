@@ -24,8 +24,6 @@ dotnet tool install --global Koalesce.OpenAPI.CLI --prerelease
 koalesce --config ./appsettings.json --output ./gateway.yaml --verbose
 ```
 
-<br/>
-
 ![CLI](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI.png)
 
 #### Arguments:
@@ -35,7 +33,6 @@ koalesce --config ./appsettings.json --output ./gateway.yaml --verbose
 - `--verbose` - Enable detailed logging
 - `--version` - Display current version
 
-<br/>
 
 > 💡 **Note:** The CLI uses the same configuration model as the Middleware. All settings are defined in `appsettings.json`.
 
