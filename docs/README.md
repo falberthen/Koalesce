@@ -147,11 +147,11 @@ app.UseKoalesce();
 
 <br/>
 
-### <img src="img/cli_icon_256x256.png" heigth="32" width="32" />  As CLI (Command Line Interface) Tool
+### <img src="https://raw.githubusercontent.com/falberthen/Koalesce/master/img/cli_icon_256x256.png" heigth="32" width="32" />  As CLI (Command Line Interface) Tool
 
 The `Koalesce.OpenAPI.CLI` is a standalone tool that uses `Koalesce.OpenAPI` to merge OpenAPI definitions directly into a file `without hosting a .NET application`.
 
-<img src="img/Screenshot_CLI.png"/>
+<img src="https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI.png"/>
 
 #### Arguments:
 

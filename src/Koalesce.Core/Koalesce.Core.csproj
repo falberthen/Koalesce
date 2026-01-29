@@ -23,8 +23,8 @@
 
 	<ItemGroup>
 		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
-		<None Include="..\..\README.nuget.md" Pack="true" PackagePath="\" />
-		<None Include="..\..\CHANGELOG.md" Pack="false" PackagePath="\" />
+		<None Include="..\..\docs\README.nuget.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\docs\CHANGELOG.md" Pack="false" PackagePath="\" />
 		<None Include="..\..\img\icon_256x256.png" Pack="true" PackagePath="\" />
 	</ItemGroup>
 
