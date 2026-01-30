@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>Koalesce.OpenAPI</id>
+    <version>1.0.0-alpha.12</version>
+    <authors>Felipe Henrique (Falberthen)</authors>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="file">LICENSE</license>
+    <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
+    <icon>icon_256x256.png</icon>
+    <readme>README.nuget.md</readme>
+    <projectUrl>https://github.com/falberthen/Koalesce</projectUrl>
+    <description>The OpenAPI Provider for Koalesce.</description>
+    <tags>Koalesce, API, OpenAPI, Swagger, Microservices</tags>
+    <repository type="git" url="https://github.com/falberthen/Koalesce.git" commit="faeec17d05f85052c3f39c26a8dc9549c5397884" />
+    <dependencies>
+      <group targetFramework="net8.0">
+        <dependency id="Koalesce.Core" version="1.0.0-alpha.12" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.OpenApi" version="2.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.OpenApi.YamlReader" version="2.0.0" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net10.0">
+        <dependency id="Koalesce.Core" version="1.0.0-alpha.12" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.OpenApi" version="2.0.0" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.OpenApi.YamlReader" version="2.0.0" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+    <frameworkReferences>
+      <group targetFramework="net8.0">
+        <frameworkReference name="Microsoft.AspNetCore.App" />
+      </group>
+      <group targetFramework="net10.0">
+        <frameworkReference name="Microsoft.AspNetCore.App" />
+      </group>
+    </frameworkReferences>
+  </metadata>
+</package>

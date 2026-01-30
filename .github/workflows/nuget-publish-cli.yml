@@ -32,11 +32,11 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore --property:DefineConstants=USE_PROJECT_REFS
 
-      - name: Build CLI project
-        run: dotnet build src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --no-restore --configuration Release --property:DefineConstants=USE_PROJECT_REFS
+      - name: Build solution (including dependencies)
+        run: dotnet build --no-restore --configuration Release --property:DefineConstants=USE_PROJECT_REFS
 
       - name: Pack Koalesce.OpenAPI.CLI
-        run: dotnet pack src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --no-build --configuration Release --output ./nupkgs
+        run: dotnet pack src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --no-build --configuration Release --output ./nupkgs --property:DefineConstants=USE_PROJECT_REFS
 
       - name: Publish package to NuGet
         run: dotnet nuget push './nupkgs/*.nupkg' --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
