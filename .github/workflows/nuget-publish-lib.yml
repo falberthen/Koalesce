@@ -9,6 +9,9 @@ jobs:
     # Only run for tags matching v* (e.g., v1.0.0-alpha.13)
     if: startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/tags/cli-v')
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout repository
