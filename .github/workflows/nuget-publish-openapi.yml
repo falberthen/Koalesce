@@ -1,0 +1,64 @@
+name: Publish Koalesce.OpenAPI to NuGet
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-openapi:
+    # Only run for tags matching openapi-v* (e.g., openapi-v1.0.0-alpha.13)
+    if: startsWith(github.ref, 'refs/tags/openapi-v')
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Validate version matches tag
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#openapi-v}"
+          PROPS_VERSION=$(grep -oP '(?<=<KoalesceOpenAPIVersion>)[^<]+' Directory.Build.props)
+          if [ "$TAG_VERSION" != "$PROPS_VERSION" ]; then
+            echo "❌ Tag version ($TAG_VERSION) does not match Directory.Build.props ($PROPS_VERSION)"
+            exit 1
+          fi
+          echo "✅ Version validation passed: $TAG_VERSION"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release
+
+      - name: Pack Koalesce.OpenAPI
+        run: dotnet pack src/Koalesce.OpenAPI/Koalesce.OpenAPI.csproj --no-build --configuration Release --output ./nupkgs
+
+      - name: Publish package to NuGet
+        run: dotnet nuget push './nupkgs/*.nupkg' --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Upload package as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-package-openapi-${{ github.ref_name }}
+          path: ./nupkgs/*.nupkg
