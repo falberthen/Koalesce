@@ -1,5 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Type="http://schemas.microsoft.com/packaging/2010/07/manifest" Target="/Koalesce.OpenAPI.nuspec" Id="R415E118A5F150C77" />
-  <Relationship Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="/package/services/metadata/core-properties/7d68b1234d934221b5ae5fbf5a36663b.psmdcp" Id="R481D8C16521A572F" />
-</Relationships>
