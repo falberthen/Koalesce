@@ -8,7 +8,7 @@
 		<PackageId>Koalesce.OpenAPI</PackageId>
 		<IsPackable>true</IsPackable>
 		<Nullable>enable</Nullable>
-		<Version>$(KoalesceLibVersion)</Version>
+		<Version>$(KoalesceOpenAPIVersion)</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
 		<Description>The OpenAPI Provider for Koalesce.</Description>

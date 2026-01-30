@@ -1,0 +1,80 @@
+name: Publish All Packages to NuGet
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  publish-all:
+    # Only run for tags matching v* (e.g., v1.0.0)
+    # Exclude tags that start with package-specific prefixes
+    if: startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/tags/core-v') && !startsWith(github.ref, 'refs/tags/openapi-v') && !startsWith(github.ref, 'refs/tags/openapi-cli-v')
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            8.0.x
+            10.0.x
+
+      - name: Validate versions match tag
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          CORE_VERSION=$(grep -oP '(?<=<KoalesceCoreVersion>)[^<]+' Versions.props)
+          OPENAPI_VERSION=$(grep -oP '(?<=<KoalesceOpenAPIVersion>)[^<]+' Versions.props)
+          CLI_VERSION=$(grep -oP '(?<=<KoalesceCLIVersion>)[^<]+' Versions.props)
+          
+          echo "Tag version: $TAG_VERSION"
+          echo "Core version: $CORE_VERSION"
+          echo "OpenAPI version: $OPENAPI_VERSION"
+          echo "CLI version: $CLI_VERSION"
+          
+          if [ "$TAG_VERSION" != "$CORE_VERSION" ] || [ "$TAG_VERSION" != "$OPENAPI_VERSION" ] || [ "$TAG_VERSION" != "$CLI_VERSION" ]; then
+            echo "❌ All versions in Versions.props must match the tag version ($TAG_VERSION) when publishing all packages"
+            echo "   Core: $CORE_VERSION, OpenAPI: $OPENAPI_VERSION, CLI: $CLI_VERSION"
+            exit 1
+          fi
+          echo "✅ Version validation passed: $TAG_VERSION"
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release
+
+      - name: Pack Koalesce.Core
+        run: dotnet pack src/Koalesce.Core/Koalesce.Core.csproj --no-build --configuration Release --output ./nupkgs
+
+      - name: Pack Koalesce.OpenAPI
+        run: dotnet pack src/Koalesce.OpenAPI/Koalesce.OpenAPI.csproj --no-build --configuration Release --output ./nupkgs
+
+      - name: Pack Koalesce.OpenAPI.CLI
+        run: dotnet pack src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --no-build --configuration Release --output ./nupkgs
+
+      - name: Publish packages to NuGet
+        run: dotnet nuget push './nupkgs/*.nupkg' --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Upload packages as artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuget-packages-all-${{ github.ref_name }}
+          path: ./nupkgs/*.nupkg

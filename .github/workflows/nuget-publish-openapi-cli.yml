@@ -1,4 +1,4 @@
-name: Publish CLI to NuGet
+name: Publish Koalesce.OpenAPI.CLI to NuGet
 
 on:
   release:
@@ -6,8 +6,8 @@ on:
 
 jobs:
   publish-cli:
-    # Only run for tags matching cli-v* (e.g., cli-v1.0.0-alpha.12.4)
-    if: startsWith(github.ref, 'refs/tags/cli-v')
+    # Only run for tags matching openapi-cli-v* (e.g., openapi-cli-v1.0.0-alpha.12.4)
+    if: startsWith(github.ref, 'refs/tags/openapi-cli-v')
     runs-on: ubuntu-latest
     
     permissions:
@@ -24,6 +24,16 @@ jobs:
             8.0.x
             10.0.x
 
+      - name: Validate version matches tag
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#openapi-cli-v}"
+          PROPS_VERSION=$(grep -oP '(?<=<KoalesceCLIVersion>)[^<]+' Versions.props)
+          if [ "$TAG_VERSION" != "$PROPS_VERSION" ]; then
+            echo "❌ Tag version ($TAG_VERSION) does not match Versions.props ($PROPS_VERSION)"
+            exit 1
+          fi
+          echo "✅ Version validation passed: $TAG_VERSION"
+
       - name: Cache NuGet packages
         uses: actions/cache@v4
         with:
@@ -33,13 +43,13 @@ jobs:
             ${{ runner.os }}-nuget-
 
       - name: Restore dependencies
-        run: dotnet restore --property:DefineConstants=USE_PROJECT_REFS
+        run: dotnet restore
 
-      - name: Build solution (including dependencies)
-        run: dotnet build --no-restore --configuration Release --property:DefineConstants=USE_PROJECT_REFS
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
 
       - name: Pack Koalesce.OpenAPI.CLI
-        run: dotnet pack src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --no-build --configuration Release --output ./nupkgs --property:DefineConstants=USE_PROJECT_REFS
+        run: dotnet pack src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --no-build --configuration Release --output ./nupkgs
 
       - name: Publish package to NuGet
         run: dotnet nuget push './nupkgs/*.nupkg' --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate

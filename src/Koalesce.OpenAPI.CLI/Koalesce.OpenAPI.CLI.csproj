@@ -27,12 +27,7 @@
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(DefineConstants)' == '' or !$(DefineConstants.Contains('USE_PROJECT_REFS'))">
-		<PackageReference Include="Koalesce.Core" Version="$(KoalesceLibVersion)" />
-		<PackageReference Include="Koalesce.OpenAPI" Version="$(KoalesceLibVersion)" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(DefineConstants)' != '' and $(DefineConstants.Contains('USE_PROJECT_REFS'))">
+	<ItemGroup>
 		<ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" />
 		<ProjectReference Include="..\Koalesce.OpenAPI\Koalesce.OpenAPI.csproj" />
 	</ItemGroup>
