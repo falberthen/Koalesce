@@ -11,8 +11,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<IsPackable>true</IsPackable>
 
-		<Version>1.0.0-alpha.12.3</Version>
-		<KoalesceLibVersion>1.0.0-alpha.12</KoalesceLibVersion>
+		<Version>$(KoalesceCLIVersion)</Version>
 
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
@@ -26,12 +25,7 @@
 		<IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
 	</PropertyGroup>
 
-	<ItemGroup Condition="'$(DefineConstants)' == '' or !$(DefineConstants.Contains('USE_PROJECT_REFS'))">
-		<PackageReference Include="Koalesce.Core" Version="$(KoalesceLibVersion)" />
-		<PackageReference Include="Koalesce.OpenAPI" Version="$(KoalesceLibVersion)" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(DefineConstants)' != '' and $(DefineConstants.Contains('USE_PROJECT_REFS'))">
+	<ItemGroup>
 		<ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" />
 		<ProjectReference Include="..\Koalesce.OpenAPI\Koalesce.OpenAPI.csproj" />
 	</ItemGroup>

@@ -51,11 +51,9 @@
 
 ## 📦 Installation
 
-> **Official packages are published exclusively to [NuGet.org](https://www.nuget.org/packages?q=Koalesce) by the maintainer.** Do not trust packages from unofficial sources.
-
 #### 🟢 Koalesce for OpenAPI Middleware (ASP.NET Core)
 
-![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg)
+![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.svg) ![NuGet Downloads](https://img.shields.io/nuget/dt/Koalesce.OpenAPI.svg)
 
 ```sh
 # Package Manager
@@ -68,11 +66,15 @@ dotnet add package Koalesce.OpenAPI --prerelease
 
 #### 🟢 Koalesce.OpenAPI.CLI as a Global Tool
 
-![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg)
+![NuGet](https://img.shields.io/nuget/vpre/Koalesce.OpenAPI.CLI.svg) ![NuGet Downloads](https://img.shields.io/nuget/dt/Koalesce.OpenAPI.CLI.svg)
 
 ```bash
 dotnet tool install --global Koalesce.OpenAPI.CLI --prerelease
 ```
+
+<br/>
+
+> ⚠️ **Official packages are published exclusively to [NuGet.org](https://www.nuget.org/packages?q=Koalesce) by the maintainer.** Do not trust packages from unofficial sources.
 
 ---
 
