@@ -27,23 +27,23 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nuget-
 
-      - name: Restore dependencies with project refs
-        run: dotnet restore --property:DefineConstants=USE_PROJECT_REFS
+      - name: Restore dependencies
+        run: dotnet restore
 
       - name: Build entire solution
-        run: dotnet build --no-restore --configuration Release --property:DefineConstants=USE_PROJECT_REFS
+        run: dotnet build --no-restore --configuration Release
 
       - name: Build CLI project (needed for CLI integration tests)
-        run: dotnet build src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --configuration Release --property:DefineConstants=USE_PROJECT_REFS
+        run: dotnet build src/Koalesce.CLI/Koalesce.CLI.csproj --configuration Release
 
       - name: Run Core unit tests
-        run: dotnet test tests/Koalesce.Core.Tests --no-build --configuration Release --logger trx --results-directory TestResults/Core --property:DefineConstants=USE_PROJECT_REFS
+        run: dotnet test tests/Koalesce.Core.Tests --no-build --configuration Release --logger trx --results-directory TestResults/Core
 
-      - name: Run OpenAPI tests
-        run: dotnet test tests/Koalesce.OpenAPI.Tests --no-build --configuration Release --logger trx --results-directory TestResults/OpenAPI --property:DefineConstants=USE_PROJECT_REFS
+      - name: Run Koalesce tests
+        run: dotnet test tests/Koalesce.Tests --no-build --configuration Release --logger trx --results-directory TestResults/Koalesce
 
       - name: Run CLI tests
-        run: dotnet test tests/Koalesce.OpenAPI.CLI.Tests --no-build --configuration Release --logger trx --results-directory TestResults/CLI --property:DefineConstants=USE_PROJECT_REFS
+        run: dotnet test tests/Koalesce.CLI.Tests --no-build --configuration Release --logger trx --results-directory TestResults/CLI
 
       - name: Upload test results (if failure)
         if: failure()

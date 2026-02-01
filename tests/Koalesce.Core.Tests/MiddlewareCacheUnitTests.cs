@@ -3,18 +3,18 @@
 [Collection("Koalesce Core Middleware Cache Unit Tests")]
 public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 {
-	private const string _mergedDocumentPath = "/mergedapidefinition.json";
+	private const string _MergedEndpoint = "/mergedapidefinition.json";
 
 	[Fact]
 	public async Task Koalesce_WhenCacheEnabled_ShouldCacheMergedDocument()
 	{
 		// Arrange
-		string mergedDocumentPath = "/mergedapidefinition.json";
+		string MergedEndpoint = "/mergedapidefinition.json";
 		var cache = new MemoryCache(new MemoryCacheOptions());
-		var options = Microsoft.Extensions.Options.Options.Create(new KoalesceOptions
+		var options = Microsoft.Extensions.Options.Options.Create(new CoreOptions
 		{
-			MergedDocumentPath = mergedDocumentPath,
-			Cache = new KoalesceCacheOptions
+			MergedEndpoint = MergedEndpoint,
+			Cache = new CacheOptions
 			{
 				DisableCache = false,
 				AbsoluteExpirationSeconds = 10,
@@ -22,19 +22,19 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 			}
 		});
 
-		var provider = new DummyProvider(); // Simulated API Merge
+		var mergeService = new DummyMergeService();
 		var logger = CreateLogger<KoalesceMiddleware>();
 
 		var middleware = new KoalesceMiddleware(
-			options, logger, provider, context => Task.CompletedTask, cache);
+			options, logger, mergeService, context => Task.CompletedTask, cache);
 
-		var context = CreateHttpContext(mergedDocumentPath);
+		var context = CreateHttpContext(MergedEndpoint);
 
 		// Act
 		await middleware.InvokeAsync(context);
 
 		// Assert
-		Assert.True(cache.TryGetValue(mergedDocumentPath, out string cachedDocument));
+		Assert.True(cache.TryGetValue(MergedEndpoint, out string? cachedDocument));
 		Assert.False(string.IsNullOrWhiteSpace(cachedDocument));
 	}
 
@@ -42,87 +42,87 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 	public async Task Koalesce_WhenCacheDisabled_ShouldNotCache()
 	{
 		// Arrange
-		string mergedDocumentPath = "/mergedapidefinition.json";
+		string MergedEndpoint = "/mergedapidefinition.json";
 		var cache = new MemoryCache(new MemoryCacheOptions());
-		var options = Microsoft.Extensions.Options.Options.Create(new KoalesceOptions
+		var options = Microsoft.Extensions.Options.Options.Create(new CoreOptions
 		{
-			MergedDocumentPath = mergedDocumentPath,
-			Cache = new KoalesceCacheOptions { DisableCache = true }
+			MergedEndpoint = MergedEndpoint,
+			Cache = new CacheOptions { DisableCache = true }
 		});
 
-		var provider = new DummyProvider();
+		var mergeService = new DummyMergeService();
 		var logger = CreateLogger<KoalesceMiddleware>();
 
 		var middleware = new KoalesceMiddleware(
-			options, logger, provider, context => Task.CompletedTask, cache);
+			options, logger, mergeService, context => Task.CompletedTask, cache);
 
-		var context = CreateHttpContext(mergedDocumentPath);
+		var context = CreateHttpContext(MergedEndpoint);
 
 		// Act
 		await middleware.InvokeAsync(context);
 
 		// Assert
-		Assert.False(cache.TryGetValue(mergedDocumentPath, out _));
+		Assert.False(cache.TryGetValue(MergedEndpoint, out _));
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenDisableCacheIsTrue_ShouldAlwaysCallProvider()
+	public async Task Koalesce_WhenDisableCacheIsTrue_ShouldAlwaysCallMergeService()
 	{
 		// Arrange
-		var dummyProvider = new DummyProvider();
-		var options = new KoalesceCacheOptions { DisableCache = true };
+		var mergeService = new DummyMergeService();
+		var options = new CacheOptions { DisableCache = true };
 
-		var serviceProvider = BuildServiceProvider(options, dummyProvider);
+		var serviceProvider = BuildServiceProvider(options, mergeService);
 		var middleware = CreateMiddlewareFromContainer(serviceProvider);
 
 		var cache = serviceProvider.GetRequiredService<IMemoryCache>();
 		var context = new DefaultHttpContext();
-		context.Request.Path = _mergedDocumentPath;
+		context.Request.Path = _MergedEndpoint;
 
 		// Act
 		await middleware.InvokeAsync(context); // 1st call
 		await middleware.InvokeAsync(context); // 2nd call
 
 		// Assert
-		Assert.Equal(2, dummyProvider.CallCount); // Provider called twice
-		Assert.False(cache.TryGetValue(_mergedDocumentPath, out _)); // Cache empty
+		Assert.Equal(2, mergeService.CallCount); // Service called twice
+		Assert.False(cache.TryGetValue(_MergedEndpoint, out _)); // Cache empty
 	}
 
 	[Fact]
 	public async Task Koalesce_WhenCacheEnabled_ShouldRespectCacheHit()
 	{
 		// Arrange
-		var dummyProvider = new DummyProvider();
+		var mergeService = new DummyMergeService();
 
-		var options = new KoalesceCacheOptions
+		var options = new CacheOptions
 		{
 			DisableCache = false,
 			AbsoluteExpirationSeconds = 60,
 			SlidingExpirationSeconds = 30
 		};
 
-		var serviceProvider = BuildServiceProvider(options, dummyProvider);
+		var serviceProvider = BuildServiceProvider(options, mergeService);
 		var middleware = CreateMiddlewareFromContainer(serviceProvider);
 		var cache = serviceProvider.GetRequiredService<IMemoryCache>();
 
 		var context = new DefaultHttpContext();
-		context.Request.Path = _mergedDocumentPath;
+		context.Request.Path = _MergedEndpoint;
 
 		// Act
 		await middleware.InvokeAsync(context); // 1st call (Miss)
 		await middleware.InvokeAsync(context); // 2nd call (Hit)
 
 		// Assert
-		Assert.Equal(1, dummyProvider.CallCount); // Provider called once
-		Assert.True(cache.TryGetValue(_mergedDocumentPath, out _)); // Item in cache
+		Assert.Equal(1, mergeService.CallCount); // Service called once
+		Assert.True(cache.TryGetValue(_MergedEndpoint, out _)); // Item in cache
 	}
 
 	[Fact]
 	public async Task Koalesce_WhenSlidingExpiration_ShouldExtendLifetime()
 	{
 		// Arrange
-		var dummyProvider = new DummyProvider();
-		var options = new KoalesceCacheOptions
+		var mergeService = new DummyMergeService();
+		var options = new CacheOptions
 		{
 			DisableCache = false,
 			AbsoluteExpirationSeconds = 10,
@@ -130,21 +130,21 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 			MinExpirationSeconds = 0
 		};
 
-		var serviceProvider = BuildServiceProvider(options, dummyProvider);
+		var serviceProvider = BuildServiceProvider(options, mergeService);
 		var middleware = CreateMiddlewareFromContainer(serviceProvider);
 
 		var context = new DefaultHttpContext();
-		context.Request.Path = _mergedDocumentPath;
+		context.Request.Path = _MergedEndpoint;
 
 		// Act 1: Initial Call
 		await middleware.InvokeAsync(context);
 
-		// Wait 1.5s (< 2s) 
+		// Wait 1.5s (< 2s)
 		await Task.Delay(1500);
 
 		// Act 2: Access again (Resets timer)
 		await middleware.InvokeAsync(context);
-		Assert.Equal(1, dummyProvider.CallCount); // Hit confirmed
+		Assert.Equal(1, mergeService.CallCount); // Hit confirmed
 
 		// Wait another 1.5s (Total 3s > 2s original sliding)
 		await Task.Delay(1500);
@@ -153,10 +153,10 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 		await middleware.InvokeAsync(context);
 
 		// Assert
-		Assert.Equal(1, dummyProvider.CallCount); // Still hit (Sliding worked)
+		Assert.Equal(1, mergeService.CallCount); // Still hit (Sliding worked)
 	}
 
-	private IServiceProvider BuildServiceProvider(KoalesceCacheOptions cacheOptions, DummyProvider dummyProvider)
+	private IServiceProvider BuildServiceProvider(CacheOptions cacheOptions, DummyMergeService mergeService)
 	{
 		// Create a fresh ServiceCollection for each test to avoid cross-test pollution
 		var services = new ServiceCollection();
@@ -166,28 +166,25 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = _mergedDocumentPath,
+				MergedEndpoint = _MergedEndpoint,
 				Sources = new[]
 				{
 					new { Url = "https://api1.com/v1/apidefinition.json" },
 					new { Url = "https://api2.com/v1/apidefinition.json" }
 				},
-				// Pass the typed options object directly. JsonSerializer will serialize
-				// its properties (AbsoluteExpirationSeconds, etc.) correctly into the JSON stream.
 				Cache = cacheOptions
 			}
 		};
 
 		var configuration = ConfigurationHelper.BuildConfigurationFromObject(appSettingsStub);
 
-		// Register Services (Standard DI Pattern)
-		services.AddLogging(); // Required by Middleware
-		services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, DummyOptions>();
+		// Register Services
+		services.AddLogging();
+		services.AddKoalesce(configuration);
 
-		// Swap the provider for our spy instance
-		services.RemoveAll<IKoalesceProvider>();
-		services.AddSingleton<IKoalesceProvider>(dummyProvider);
+		// Swap the merge service for our spy instance
+		services.RemoveAll<IKoalesceMergeService>();
+		services.AddSingleton<IKoalesceMergeService>(mergeService);
 
 		return services.BuildServiceProvider();
 	}
@@ -199,5 +196,19 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 			provider,
 			(RequestDelegate)(context => Task.CompletedTask)
 		);
+	}
+
+	/// <summary>
+	/// Dummy implementation of IKoalesceMergeService for testing
+	/// </summary>
+	private class DummyMergeService : IKoalesceMergeService
+	{
+		public int CallCount { get; private set; }
+
+		public Task<string> MergeDefinitionsAsync(string? outputPath = null)
+		{
+			CallCount++;
+			return Task.FromResult("{\"openapi\":\"3.0.1\",\"info\":{\"title\":\"Merged API\",\"version\":\"1.0\"}}");
+		}
 	}
 }

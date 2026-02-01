@@ -9,9 +9,9 @@ public class CacheOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				Cache = new KoalesceCacheOptions
+				Cache = new CacheOptions
 				{
 					AbsoluteExpirationSeconds = 86400,
 					SlidingExpirationSeconds = 300,
@@ -28,11 +28,11 @@ public class CacheOptionsUnitTests : KoalesceUnitTestBase
 			.AddJsonStream(memoryStream)
 			.Build();
 
-		Services.Configure<KoalesceOptions>(config.GetSection(KoalesceOptions.ConfigurationSectionName));
+		Services.Configure<CoreOptions>(config.GetSection(CoreOptions.ConfigurationSectionName));
 		var provider = Services.BuildServiceProvider();
 
 		// Act
-		var options = provider.GetService<IOptions<KoalesceOptions>>()?.Value;
+		var options = provider.GetService<IOptions<CoreOptions>>()?.Value;
 
 		// Assert
 		Assert.NotNull(options);
@@ -48,7 +48,7 @@ public class CacheOptionsUnitTests : KoalesceUnitTestBase
 	public void Koalesce_WhenCacheHasAbsoluteExpirationBelowDefaultMin_ShouldThrowException()
 	{
 		// Arrange
-		var options = new KoalesceOptions
+		var options = new CoreOptions
 		{
 			Sources = new List<ApiSource>
 			{
@@ -57,8 +57,8 @@ public class CacheOptionsUnitTests : KoalesceUnitTestBase
 					Url = "http://fakeapi.com/v1/apidefinition.json"
 				}
 			},
-			MergedDocumentPath = "/mergedapidefinition.json",
-			Cache = new KoalesceCacheOptions
+			MergedEndpoint = "/mergedapidefinition.json",
+			Cache = new CacheOptions
 			{
 				AbsoluteExpirationSeconds = 10, // < 30 (Default)
 												// Implicit MinExpirationSeconds is default value
@@ -74,7 +74,7 @@ public class CacheOptionsUnitTests : KoalesceUnitTestBase
 	public void Koalesce_WhenCacheHasAbsoluteExpirationBelowCustomMin_ShouldThrowException()
 	{
 		// Arrange
-		var options = new KoalesceOptions
+		var options = new CoreOptions
 		{
 			Sources = new List<ApiSource> 
 			{
@@ -83,8 +83,8 @@ public class CacheOptionsUnitTests : KoalesceUnitTestBase
 					Url = "http://fakeapi.com/v1/apidefinition.json",
 				}
 			},
-			MergedDocumentPath = "/mergedapidefinition.json",
-			Cache = new KoalesceCacheOptions
+			MergedEndpoint = "/mergedapidefinition.json",
+			Cache = new CacheOptions
 			{
 				MinExpirationSeconds = 600,
 				AbsoluteExpirationSeconds = 300  // Logical error
@@ -100,7 +100,7 @@ public class CacheOptionsUnitTests : KoalesceUnitTestBase
 	public void Koalesce_WhenCacheHasSlidingExpirationExceedsAbsolute_ShouldThrowException()
 	{
 		// Arrange
-		var options = new KoalesceOptions
+		var options = new CoreOptions
 		{
 			Sources = new List<ApiSource> 
 			{
@@ -109,8 +109,8 @@ public class CacheOptionsUnitTests : KoalesceUnitTestBase
 					Url = "http://fakeapi.com/v1/apidefinition.json",
 				}
 			},
-			MergedDocumentPath = "/mergedapidefinition.json",
-			Cache = new KoalesceCacheOptions
+			MergedEndpoint = "/mergedapidefinition.json",
+			Cache = new CacheOptions
 			{
 				AbsoluteExpirationSeconds = 600,
 				SlidingExpirationSeconds = 700 // Logical error

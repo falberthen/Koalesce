@@ -9,9 +9,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://localhost:5001/v1/apidefinition.json" }
@@ -22,17 +22,16 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, DummyOptions>();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act
-		var options = provider.GetService<IOptions<DummyOptions>>()?.Value;
+		var options = provider.GetService<IOptions<KoalesceOptions>>()?.Value;
 
 		// Assert
 		Assert.NotNull(options);
-		Assert.Equal(KoalesceOptions.TitleDefaultValue, options.Title); // Default title should be set        
+		Assert.Equal(CoreOptions.TitleDefaultValue, options.Title); // Default title should be set
 	}
 
 	[Fact]
@@ -41,10 +40,10 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
 				Title = "My Koalesced API",
-				MergedDocumentPath = "/v1/mergedapidefinition.yaml",
+				MergedEndpoint = "/v1/mergedapidefinition.yaml",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://localhost:5001/v1/apidefinition.json" },
@@ -56,8 +55,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, DummyOptions>();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
@@ -68,14 +66,13 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		};
 
 		// Act
-		var options = provider.GetService<IOptions<DummyOptions>>()?.Value;
+		var options = provider.GetService<IOptions<KoalesceOptions>>()?.Value;
 
 		// Assert
 		Assert.NotNull(options);
 		Assert.Equal("My Koalesced API", options.Title);
-		Assert.Equal("/v1/mergedapidefinition.yaml", options.MergedDocumentPath);
+		Assert.Equal("/v1/mergedapidefinition.yaml", options.MergedEndpoint);
 
-		// Nota: Isso assume que ApiSource é um record ou implementa Equals corretamente
 		Assert.Equal(expectedRoutes.Count, options.Sources.Count);
 		Assert.Equal(expectedRoutes[0].Url, options.Sources[0].Url);
 		Assert.Equal(expectedRoutes[1].Url, options.Sources[1].Url);
@@ -91,8 +88,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 
 		// Act & Assert: Expect custom exception when attempting to use Koalesce
 		Assert.Throws<KoalesceConfigurationNotFoundException>(() =>
-			Services.AddKoalesce(configuration)
-				.AddProvider<DummyProvider, KoalesceOptions>());
+			Services.AddKoalesce(configuration));
 	}
 
 	[Fact]
@@ -101,9 +97,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
@@ -115,15 +111,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("must be a valid absolute URL", exception.Message);
@@ -140,7 +135,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new { Url = "https://api1.com/v1/apidefinition.json" }
@@ -151,16 +146,15 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act
-		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 
 		// Assert - Default pattern
-		Assert.Equal("{Prefix}_{SchemaName}", options.SchemaConflictPattern);
+		Assert.Equal("{Prefix}{SchemaName}", options.SchemaConflictPattern);
 	}
 
 	[Fact]
@@ -171,7 +165,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new { Url = "https://api1.com/v1/apidefinition.json" }
@@ -183,13 +177,12 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act
-		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 
 		// Assert - Custom pattern
 		Assert.Equal("{SchemaName}_{Prefix}", options.SchemaConflictPattern);
@@ -207,7 +200,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new { Url = "https://api1.com/v1/apidefinition.json" }
@@ -219,15 +212,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains(CoreConstants.SchemaConflictPatternValidationError, exception.Message);
@@ -243,9 +235,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 			{
 				new ApiSource
@@ -260,15 +252,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("cannot be empty", exception.Message);
@@ -280,9 +271,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 			{
 				new ApiSource
@@ -297,15 +288,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("must start with '/'", exception.Message);
@@ -321,9 +311,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 			{
 				new ApiSource
@@ -338,15 +328,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("invalid wildcard", exception.Message);
@@ -362,9 +351,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 			{
 				new ApiSource
@@ -379,13 +368,12 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert - Should not throw
-		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		Assert.NotNull(options);
 		Assert.Contains(validPath, options.Sources[0].ExcludePaths!);
 	}
@@ -400,9 +388,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource
@@ -422,15 +410,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("Duplicate VirtualPrefix", exception.Message);
@@ -443,9 +430,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange - VirtualPrefix comparison should be case-insensitive
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource
@@ -465,15 +452,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("Duplicate VirtualPrefix", exception.Message);
@@ -485,9 +471,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource
@@ -507,13 +493,12 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert - Should not throw
-		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		Assert.NotNull(options);
 		Assert.Equal(2, options.Sources.Count);
 	}
@@ -524,9 +509,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange - Only non-empty VirtualPrefixes should be checked for duplicates
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource
@@ -551,13 +536,12 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert - Should not throw (null and empty are not considered duplicates)
-		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		Assert.NotNull(options);
 		Assert.Equal(3, options.Sources.Count);
 	}
@@ -574,7 +558,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new { Url = "https://api1.com/v1/apidefinition.json" }
@@ -585,13 +569,12 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act
-		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 
 		// Assert - Default timeout
 		Assert.Equal(CoreConstants.DefaultHttpTimeoutSeconds, options.HttpTimeoutSeconds);
@@ -605,7 +588,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new { Url = "https://api1.com/v1/apidefinition.json" }
@@ -617,13 +600,12 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act
-		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 
 		// Assert - Custom timeout
 		Assert.Equal(30, options.HttpTimeoutSeconds);
@@ -640,7 +622,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new { Url = "https://api1.com/v1/apidefinition.json" }
@@ -652,15 +634,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains(CoreConstants.HttpTimeoutMustBePositive, exception.Message);
@@ -676,9 +657,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
@@ -691,15 +672,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("Duplicate source", exception.Message);
@@ -712,9 +692,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange - URL comparison should be case-insensitive
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://API1.COM/v1/apidefinition.json" },
@@ -726,15 +706,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("Duplicate source", exception.Message);
@@ -749,9 +728,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			var appSettingsStub = new
 			{
-				Koalesce = new KoalesceOptions
+				Koalesce = new CoreOptions
 				{
-					MergedDocumentPath = "/v1/mergedapidefinition.json",
+					MergedEndpoint = "/v1/mergedapidefinition.json",
 					Sources = new List<ApiSource>
 					{
 						new ApiSource { FilePath = tempFile },
@@ -763,15 +742,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 			var configuration = ConfigurationHelper
 				.BuildConfigurationFromObject(appSettingsStub);
 
-			Services.AddKoalesce(configuration)
-				.ForOpenAPI();
+			Services.AddKoalesce(configuration);
 
 			var provider = Services.BuildServiceProvider();
 
 			// Act & Assert
 			var exception = Assert.Throws<OptionsValidationException>(() =>
 			{
-				var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+				var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 			});
 
 			Assert.Contains("Duplicate source", exception.Message);
@@ -788,9 +766,9 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
@@ -803,13 +781,12 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert - Should not throw
-		var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		Assert.NotNull(options);
 		Assert.Equal(3, options.Sources.Count);
 	}
@@ -826,7 +803,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new
@@ -841,15 +818,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("either Url or FilePath", exception.Message);
@@ -863,7 +839,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new { VirtualPrefix = "/api" } // Neither Url nor FilePath
@@ -874,15 +850,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("either Url or FilePath", exception.Message);
@@ -896,7 +871,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new[]
 				{
 					new { FilePath = "C:/non/existent/path/api.json" }
@@ -907,15 +882,14 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.ForOpenAPI();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act & Assert
 		var exception = Assert.Throws<OptionsValidationException>(() =>
 		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
 		Assert.Contains("does not exist", exception.Message);

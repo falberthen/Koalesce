@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageId>Koalesce</PackageId>
+		<IsPackable>true</IsPackable>
+		<Nullable>enable</Nullable>
+		<Version>$(KoalesceVersion)</Version>
+		<Authors>Felipe Henrique (Falberthen)</Authors>
+		<Company>falberthen.github.io</Company>
+		<Description>The OpenAPI merger for .NET.</Description>
+		<PackageTags>Koalesce, API, OpenAPI, Swagger, Microservices</PackageTags>
+		<RepositoryType>git</RepositoryType>
+		<RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
+		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>
+		<PackageLicenseFile>LICENSE</PackageLicenseFile>
+		<PackageIcon>icon_256x256.png</PackageIcon>
+		<PackageReadmeFile>README.nuget.md</PackageReadmeFile>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\LICENSE" Pack="true" PackagePath="\" />
+		<None Include="..\..\docs\README.nuget.md" Pack="true" PackagePath="\" />
+		<None Include="..\..\docs\CHANGELOG.md" Pack="false" PackagePath="\" />
+		<None Include="..\..\img\icon_256x256.png" Pack="true" PackagePath="\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.OpenApi" Version="2.0.0" />
+		<PackageReference Include="Microsoft.OpenApi.YamlReader" Version="2.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Koalesce.Core\Koalesce.Core.csproj" PrivateAssets="all" />
+	</ItemGroup>
+
+	<!-- Include Core DLL in package since it's not a separate NuGet package -->
+	<ItemGroup>
+		<None Include="..\Koalesce.Core\bin\$(Configuration)\net8.0\Koalesce.Core.dll"
+			  Pack="true" PackagePath="lib/net8.0" Visible="false" />
+		<None Include="..\Koalesce.Core\bin\$(Configuration)\net10.0\Koalesce.Core.dll"
+			  Pack="true" PackagePath="lib/net10.0" Visible="false" />
+	</ItemGroup>
+</Project>

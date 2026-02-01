@@ -1,199 +1,43 @@
-# Changelog
+# Changelog [Koalesce.CLI]
 
-All notable changes to this project will be documented in this file.
-> This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adheres to [Semantic Versioning](https://semver.org/).
+All notable changes to **Koalesce.CLI** will be documented in this file.
 
----
-
-## [1.0.0-alpha.12.3] - 2026-01-28
-
-### Changed
-
-- Changed message when displaying loaded sources
-  - From: "🔍 Loaded {SourcesCount} source OpenAPI docs from config:"
-  - To:   "🔍 Loaded {SourcesCount} OpenAPI definitions from config:"
-- Changed message when koalescing is finished
-  - From: "✅ Koalesced OpenAPI written to:"
-  - To:   "✅ Koalesced OpenAPI definition written to:"
-
-
-### Fixed
-
-- **Display FilePath:** FilePath is now displayed among the source list when used as a source.
+> This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.0.0-alpha.12.2] - 2026-01-28
+## [1.0.0-beta.1] - 2026-02-01
 
-### Changed
+First **beta release** of `Koalesce.CLI` - a command-line tool for merging OpenAPI specifications using `Koalesce`.
 
-- **LTS Targeting:** The CLI project now targets both **.NET 8.0 (LTS)** and **.NET 10.0 (LTS)**.
-  - Users with .NET 10 will use the optimized .NET 10 build.
-  - Users with .NET 8 or .NET 9 will automatically use the .NET 8 build.
+### Features
 
-### Fixed
+- **Merge Command**: Merge multiple OpenAPI specs into a single file.
+- **Configuration-Based**: Uses a `.json` file for source definitions.
+- **Multiple Output Formats**: JSON and YAML output support.
+- **Verbose Mode**: `--verbose` flag for detailed operation logging.
 
-- **Runtime Compatibility:** Fixed installation failure ("Settings file not found") on environments running .NET 8 or .NET 9. The tool now correctly supports these runtimes via multi-targeting.
+### Installation
 
----
+```bash
+dotnet tool install --global Koalesce.CLI --prerelease
+```
 
-## [1.0.0-alpha.12.1] - 2026-01-28
+### Usage
 
-### Changed
+```bash
+koalesce --config ./config/appsettings.json --output ./merged-specs/apigateway.yaml --verbose
+```
 
-- **Packaging Strategy:** The CLI package is now **self-contained**. It bundles the `Koalesce.Core` and `Koalesce.OpenAPI` dependencies (v1.0.0-alpha.12) internally.
+### Targets
 
-### Fixed
+- .NET 8.0 (LTS)
+- .NET 10.0 (LTS)
 
-- **Installation Error:** Fixed a critical issue where `dotnet tool install` would fail with "Settings file 'DotnetToolSettings.xml' was not found".
+### Migration from Alpha
 
----
+If upgrading from `Koalesce.OpenAPI.CLI` alpha versions:
 
-## [1.0.0-alpha.12] - 2026-01-28
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.12**.
-
-### ⚠️ Breaking Changes (via Core libraries)
-
-- **Configuration Validation:** The CLI will now **fail to start** if the `appsettings.json` contains duplicate URLs or FilePaths in the `Sources` list. Previously, duplicates might have been processed redundantly.
-- **OpenAPI 3.1.0 Output:** Due to the upgrade to `Microsoft.OpenApi` 2.0, the generated output document may now utilize OpenAPI 3.1.0 features. Downstream tools that only support OpenAPI 2.0 or 3.0 may need updates.
-
----
-
-## [1.0.0-alpha.11] - 2026-01-25
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.11**.
-
-### ⚠️ Breaking Changes (via Core libraries)
-
-- **Security Logic:** Removed optional support for mixed security schemes. The system now always preserves downstream security schemes by design.
-
----
-
-## [1.0.0-alpha.10] - 2026-01-22
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.10**.
-
-### ⚠️ Breaking Changes (via Core libraries)
-
-- **Schema Naming Strategy (Output Change):** The logic for resolving conflicting schema names is now deterministic. Sources with `VirtualPrefix` will **always** prefix their schemas (e.g., `Inventory_Product`), changing the output structure.
-
----
-
-## [1.1.0-alpha.9] - 2026-01-21
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.1.0-alpha.9**.
-
----
-
-## [1.1.0-alpha.8] - 2026-01-19
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.1.0-alpha.8**.
-
----
-
-## [1.1.0-alpha.7] - 2026-01-19
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.1.0-alpha.7**.
-
----
-
-## [1.0.0-alpha.6] - 2026-01-18
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.6**.
-
-### ⚠️ Breaking Changes (via Core libraries)
-
-- **Configuration Rename:** `GatewaySecurityScheme` property in `appsettings.json` is now named **`OpenApiSecurityScheme`**.
-- **Removed Property:** `IgnoreGatewaySecurity` is no longer supported.
-
----
-
-## [1.0.0-alpha.5] - 2026-01-15
-
-### Added
-
-- **NuGet Metadata:** Added official project icon.
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.5**.
-
----
-
-## [1.0.0-alpha.4] - 2026-01-13
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.4**.
-
----
-
-## [1.0.0-alpha.3] - 2026-01-11
-
-### Changed
-
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.3**.
-
-### ⚠️ Breaking Changes (via Core libraries)
-
-- **Configuration Renames:** `OpenApiSources` → **`Sources`**; `MergedOpenApiPath` → **`MergedDocumentPath`**.
-- **Security Requirement:** If `ApiGatewayBaseUrl` is defined, `OpenApiSecurityScheme` is now required.
-
----
-
-## [1.0.0-alpha.2] - 2026-01-02
-
-### Changed
-
-- **CLI Output:** `VirtualPrefix` is now highlighted in **Magenta**.
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.2**.
-
-### ⚠️ Breaking Changes (via Core libraries)
-
-- **Configuration Rename:** `SourceOpenApiUrls` → **`OpenApiSources`**.
-
----
-
-## [1.0.0-alpha.1] - 2026-01-02
-
-### ⚠️ Breaking Changes
-- Removed `--v` argument (use `--version`).
-
-### Added
-- `--verbose` argument.
-
-### Changed
-- **Core Update:** Upgraded `Koalesce` core libraries to version **1.0.0-alpha.1**.
-
----
-
-## [0.1.1-alpha.1] - 2025-04-10
-
-### Changed
-- Upgraded NuGet dependencies to versions fully compatible with **.NET 8.0**.
-- Enhanced CLI UI/UX.
-
-### Fixed
-- Improved error handling when writing output files.
-
----
-
-## [0.1.0-alpha] - 2025-04-10
-
-### Added
-- Initial alpha release of **Koalesce.OpenAPI.CLI**.
+- Package renamed from `Koalesce.OpenAPI.CLI (now Deprecated)` to `Koalesce.CLI`.
+- Command syntax unchanged.
+- Configuration files remain compatible.

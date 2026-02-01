@@ -1,12 +1,8 @@
 <Project>
-  <PropertyGroup>
-    <!-- Each Koalesce package has independent versioning -->
-
-	<!-- Koalesce.Core -->
-    <KoalesceCoreVersion>1.0.0-alpha.12</KoalesceCoreVersion>
-	<!-- Koalesce.OpenAPI -->
-    <KoalesceOpenAPIVersion>1.0.0-alpha.12</KoalesceOpenAPIVersion>
-	<!-- Koalesce.OpenAPI.CLI -->
-    <KoalesceCLIVersion>1.0.0-alpha.12.3</KoalesceCLIVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<!-- Koalesce -->
+		<KoalesceVersion>1.0.0-beta.1</KoalesceVersion>
+		<!-- Koalesce.CLI -->
+		<KoalesceCLIVersion>1.0.0-beta.1</KoalesceCLIVersion>
+	</PropertyGroup>
 </Project>
