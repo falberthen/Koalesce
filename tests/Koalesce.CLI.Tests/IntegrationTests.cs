@@ -1,6 +1,6 @@
-﻿namespace Koalesce.OpenAPI.CLI.Tests;
+﻿namespace Koalesce.CLI.Tests;
 
-[Collection("Koalesce.OpenAPI.CLI Integration Tests")]
+[Collection("Koalesce.CLI Integration Tests")]
 public class IntegrationTests : KoalesceIntegrationTestBase
 {
 	private static readonly string _outputFileName = $"apigateway-cli-output-{Guid.NewGuid()}.json";
@@ -14,8 +14,7 @@ public class IntegrationTests : KoalesceIntegrationTestBase
 
 		var koalescingApi = await StartWebApplicationAsync(_appSettings,
 			builder => builder.Services
-				.AddKoalesce(builder.Configuration)
-				.ForOpenAPI());
+				.AddKoalesce(builder.Configuration));
 
 		if (File.Exists(_outputPath))
 			File.Delete(_outputPath);
@@ -115,14 +114,14 @@ public class IntegrationTests : KoalesceIntegrationTestBase
 		{
 			var candidate = Path.Combine(
 				repoRoot,
-				"src", "Koalesce.OpenAPI.CLI", "bin", config, "net10.0", "Koalesce.OpenAPI.CLI.dll"
+				"src", "Koalesce.CLI", "bin", config, "net10.0", "Koalesce.CLI.dll"
 			);
 
 			if (File.Exists(candidate))
 				return candidate;
 		}
 
-		throw new FileNotFoundException("Could not locate Koalesce.OpenAPI.CLI.dll in either Release or Debug configuration.");
+		throw new FileNotFoundException("Could not locate Koalesce.CLI.dll in either Release or Debug configuration.");
 	}
 
 	private static string GetSolutionRoot()
