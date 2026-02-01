@@ -6,6 +6,14 @@ All notable changes to **Koalesce.CLI** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.2] - 2026-02-01
+
+### Changed
+
+- Updated `Koalesce` dependency to `1.0.0-beta.2`.
+
+---
+
 ## [1.0.0-beta.1] - 2026-02-01
 
 First **beta release** of `Koalesce.CLI` - a command-line tool for merging OpenAPI specifications using `Koalesce`.

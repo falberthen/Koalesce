@@ -5,7 +5,7 @@
 /// </summary>
 public class KoalesceMiddleware
 {
-	private readonly string _mergedEndpoint;
+	private readonly string? _mergedEndpoint;
 	private readonly IKoalesceMergeService _mergeService;
 	private readonly ILogger<KoalesceMiddleware> _logger;
 	private readonly RequestDelegate _next;
@@ -43,7 +43,7 @@ public class KoalesceMiddleware
 	{
 		// When using the middleware, MergedEndpoint must be configured
 		if (string.IsNullOrEmpty(_mergedEndpoint))	
-			throw new KoalesceInvalidConfigurationValuesException("MergedEndpoint is not configured.");		
+			throw new KoalesceInvalidConfigurationValuesException(CoreConstants.MergedEndpointCannotBeEmpty);
 
 		// Only log the generic request path if Debug level is actually enabled
 		// This prevents "spamming" logs for every single API request in Production
@@ -114,7 +114,7 @@ public class KoalesceMiddleware
 				);
 
 				// Setting cache entry
-				_cache.Set(_mergedEndpoint, mergedDocument,
+				_cache.Set(_mergedEndpoint!, mergedDocument,
 				new MemoryCacheEntryOptions()
 					.SetAbsoluteExpiration(TimeSpan.FromSeconds(safeAbsoluteExpiration))
 					.SetSlidingExpiration(TimeSpan.FromSeconds(safeSlidingExpiration))

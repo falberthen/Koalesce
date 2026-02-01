@@ -12,6 +12,9 @@ public static class CoreConstants
 	#endregion
 
 	#region KoalesceOptions Validation Messages
+	public const string MergedEndpointCannotBeEmpty =
+		"MergedEndpoint cannot be null or empty when using KoalesceMiddleware.";
+
 	public const string ExcludePathCannotBeEmpty =
 		"ExcludePaths[{0}] at Source index {1} cannot be empty.";
 

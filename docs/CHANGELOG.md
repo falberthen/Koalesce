@@ -6,6 +6,15 @@ All notable changes to **Koalesce** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.2] - 2026-02-01
+
+### Fixed
+
+- **URL-based sources now prefer servers from source document**: When fetching OpenAPI specs via URL (e.g., internal Docker hostnames), Koalesce now uses the `servers` declared in the source document instead of extracting the base URL from the fetch URL. This fixes Swagger UI "Failed to fetch" errors when APIs declare public URLs different from their internal fetch URLs. Falls back to previous behavior if no servers are declared.
+- **Nullable warning in `KoalesceMiddleware`**: Fixed CS8618 warning for `_mergedEndpoint` field.
+
+---
+
 ## [1.0.0-beta.1] - 2026-02-01
 
 First **beta release** of `Koalesce` - a library for merging multiple OpenAPI specifications into a single unified definition.
