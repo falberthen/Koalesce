@@ -116,43 +116,10 @@ internal class OpenApiDocumentMerger
 			sourceDoc, targetDoc, apiName, apiSource.VirtualPrefix,
 			_options.SchemaConflictPattern, schemaOrigins);
 
-		// Prepare Server Entry (for Aggregation Mode)
-		OpenApiServer? serverEntry = null;
-		bool isFileBased = !string.IsNullOrWhiteSpace(apiSource.FilePath);
-
-		if (string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
-		{
-			targetDoc.Servers ??= [];
-			if (isFileBased)
-			{
-				// For file-based sources, preserve servers from the source document
-				if (sourceDoc.Servers?.Count > 0)
-				{
-					foreach (var server in sourceDoc.Servers)
-					{
-						if (!targetDoc.Servers.Any(s => s.Url == server.Url))
-						{
-							var serverCopy = new OpenApiServer
-							{
-								Url = server.Url,
-								Description = server.Description ?? $"{apiName} ({apiVersion})"
-							};
-							targetDoc.Servers.Add(serverCopy);
-							serverEntry ??= serverCopy; // Use first server as operation server
-						}
-					}
-				}
-			}
-			else
-			{
-				// For URL-based sources, extract base URL
-				string baseUrl = new Uri(apiSource.Url!).GetLeftPart(UriPartial.Authority);
-				serverEntry = new OpenApiServer { Url = baseUrl, Description = $"{apiName} ({apiVersion})" };
-
-				if (!targetDoc.Servers.Any(s => s.Url == baseUrl))
-					targetDoc.Servers.Add(serverEntry);
-			}
-		}
+		// Merge Servers (unless using API Gateway)
+		var serverEntry = string.IsNullOrEmpty(_options.ApiGatewayBaseUrl)
+			? MergeServers(sourceDoc, targetDoc, apiSource, apiName, apiVersion)
+			: null;
 
 		// Merge Paths
 		_pathMerger.MergePaths(sourceDoc, targetDoc.Paths, apiName, apiSource, serverEntry);
@@ -160,6 +127,53 @@ internal class OpenApiDocumentMerger
 		// Merge Components & Tags
 		MergeComponents(sourceDoc.Components, targetDoc.Components, apiName, apiSource.VirtualPrefix, schemaOrigins);
 		MergeTags(sourceDoc, targetDoc, apiSource);
+	}
+
+	/// <summary>
+	/// Merges server definitions from source to target document.
+	/// Prefers servers declared in the source document; falls back to fetch URL for URL-based sources.
+	/// </summary>
+	private static OpenApiServer? MergeServers(
+		OpenApiDocument sourceDoc,
+		OpenApiDocument targetDoc,
+		ApiSource apiSource,
+		string apiName,
+		string apiVersion)
+	{
+		targetDoc.Servers ??= [];
+		OpenApiServer? serverEntry = null;
+
+		// Prefer servers from source document
+		if (sourceDoc.Servers?.Count > 0)
+		{
+			foreach (var server in sourceDoc.Servers)
+			{
+				if (targetDoc.Servers.Any(s => s.Url == server.Url))
+					continue;
+
+				var serverCopy = new OpenApiServer
+				{
+					Url = server.Url,
+					Description = server.Description ?? $"{apiName} ({apiVersion})"
+				};
+				targetDoc.Servers.Add(serverCopy);
+				serverEntry ??= serverCopy;
+			}
+
+			return serverEntry;
+		}
+
+		// Fallback for URL-based sources without declared servers
+		if (string.IsNullOrWhiteSpace(apiSource.Url))
+			return null;
+
+		string baseUrl = new Uri(apiSource.Url).GetLeftPart(UriPartial.Authority);
+		serverEntry = new OpenApiServer { Url = baseUrl, Description = $"{apiName} ({apiVersion})" };
+
+		if (!targetDoc.Servers.Any(s => s.Url == baseUrl))
+			targetDoc.Servers.Add(serverEntry);
+
+		return serverEntry;
 	}
 
 	/// <summary>
