@@ -38,4 +38,6 @@ If upgrading from `Koalesce.OpenAPI (now Deprecated)` alpha versions:
 - Configuration structure unchanged - `appsettings.json` files remain compatible.
   - #### ⚠️ Breaking Changes
     - `SchemaConflictPattern` default value is now `{Prefix}{SchemaName}`.
+    - `MergedDocumentPath` is now `MergedEndpoint`.
+
 
