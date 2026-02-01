@@ -22,13 +22,13 @@ Use this sln for library development and testing.
 ```text
 Koalesce.sln
 ├── Koalesce/
-│   ├── Koalesce.Core
-│   ├── Koalesce.OpenAPI
-│   └── Koalesce.OpenAPI.CLI
+│   ├── Koalesce
+│   ├── Koalesce.CLI
+│   └── Koalesce.Core
 └── Tests/
+    ├── Koalesce.Tests
     ├── Koalesce.Core.Tests
-    ├── Koalesce.OpenAPI.Tests
-    └── Koalesce.OpenAPI.CLI.Tests
+    └── Koalesce.CLI.Tests
 ```
 
 ### Samples Solution (`samples/Koalesce.Samples.sln`)
@@ -38,25 +38,16 @@ Use this sln for testing samples and integration scenarios.
 ```text
 samples/Koalesce.Samples.sln
 ├── Koalesce/
-│   ├── Koalesce.Core
-│   └── Koalesce.OpenAPI
+│   ├── Koalesce
+│   ├── Koalesce.CLI
+│   └── Koalesce.Core
 └── Samples/
     ├── RestAPIs/
-    │   ├── Koalesce.OpenAPI.Samples.CustomersAPI
-    │   ├── Koalesce.OpenAPI.Samples.InventoryAPI
-    │   └── Koalesce.OpenAPI.Samples.ProductsAPI
-    ├── Koalesce.OpenAPI.Samples.Swagger
-    └── Koalesce.OpenAPI.Samples.Ocelot
-```
-
----
-
-### Building with Project References
-
-During development, use the `USE_PROJECT_REFS` constant to enable project references:
-
-```bash
-dotnet build --property:DefineConstants=USE_PROJECT_REFS
+    │   ├── Koalesce.Samples.CustomersAPI
+    │   ├── Koalesce.Samples.InventoryAPI
+    │   └── Koalesce.Samples.ProductsAPI
+    ├── Koalesce.Samples.Swagger
+    └── Koalesce.Samples.Ocelot
 ```
 
 ---

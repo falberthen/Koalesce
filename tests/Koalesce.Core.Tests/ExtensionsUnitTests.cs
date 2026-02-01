@@ -6,12 +6,12 @@ public class ExtensionsUnitTests : KoalesceUnitTestBase
 	[Fact]
 	public void Koalesce_WhenServicesAndConfigurationProvided_ShouldRegisterDependenciesAndBindOptions()
 	{
-		// Arrange		
+		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" },
@@ -29,32 +29,26 @@ public class ExtensionsUnitTests : KoalesceUnitTestBase
 		var provider = Services.BuildServiceProvider();
 
 		// Assert
-		// Checks for builder registry
-		Assert.NotNull(provider.GetService<IKoalesceBuilder>());
-
-		// Getting the wrapper
-		var optionsWrapper = provider.GetService<IOptions<KoalesceOptions>>();
+		var optionsWrapper = provider.GetService<IOptions<CoreOptions>>();
 		Assert.NotNull(optionsWrapper);
 
-		// Forcing binding and validation via .Value
 		var options = optionsWrapper.Value;
 
-		// Validating bound values
-		Assert.Equal("/v1/mergedapidefinition.json", options.MergedDocumentPath);
+		Assert.Equal("/v1/mergedapidefinition.json", options.MergedEndpoint);
 		Assert.Equal(2, options.Sources.Count);
 		Assert.Equal("https://api1.com/v1/apidefinition.json", options.Sources[0].Url);
 		Assert.Equal("https://api2.com/v1/apidefinition.json", options.Sources[1].Url);
 	}
 
 	[Fact]
-	public void Koalesce_ShouldRegisterSingletonKoalesceBuilder()
+	public void Koalesce_ShouldRegisterMergeService()
 	{
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" }
@@ -65,29 +59,26 @@ public class ExtensionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		Services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, KoalesceOptions>();
+		Services.AddKoalesce(configuration);
 
 		var provider = Services.BuildServiceProvider();
 
 		// Act
-		var builder1 = provider.GetService<IKoalesceBuilder>();
-		var builder2 = provider.GetService<IKoalesceBuilder>();
+		var mergeService = provider.GetService<IKoalesceMergeService>();
 
 		// Assert
-		Assert.NotNull(builder1);
-		Assert.Same(builder1, builder2); // Singleton instance
+		Assert.NotNull(mergeService);
 	}
 
 	[Fact]
-	public void Koalesce_WhenAddProvider_ShouldEnableMiddleware()
+	public void Koalesce_ShouldRegisterMemoryCache()
 	{
 		// Arrange
 		var appSettingsStub = new
 		{
-			Koalesce = new KoalesceOptions
+			Koalesce = new CoreOptions
 			{
-				MergedDocumentPath = "/v1/mergedapidefinition.json",
+				MergedEndpoint = "/v1/mergedapidefinition.json",
 				Sources = new List<ApiSource>
 				{
 					new ApiSource { Url = "https://api1.com/v1/apidefinition.json" }
@@ -98,17 +89,12 @@ public class ExtensionsUnitTests : KoalesceUnitTestBase
 		var configuration = ConfigurationHelper
 			.BuildConfigurationFromObject(appSettingsStub);
 
-		var builder = Services.AddKoalesce(configuration)
-			.AddProvider<DummyProvider, DummyOptions>();
+		Services.AddKoalesce(configuration);
 
-		var provider = builder.Services.BuildServiceProvider();
-		var app = new FakeApplicationBuilder(provider);
-
-		// Act
-		app.UseKoalesce();
+		var provider = Services.BuildServiceProvider();
 
 		// Assert
-		Assert.True(app.MiddlewareRegistered);
+		Assert.NotNull(provider.GetService<IMemoryCache>());
 	}
 
 	[Fact]

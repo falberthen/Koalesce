@@ -1,290 +1,41 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
-> This changelog follows the [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) format and adheres to [Semantic Versioning](https://semver.org/).
+All notable changes to **Koalesce** will be documented in this file.
+
+> This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [1.0.0-alpha.12] - 2026-01-28
+## [1.0.0-beta.1] - 2026-02-01
 
-### Added
+First **beta release** of `Koalesce` - a library for merging multiple OpenAPI specifications into a single unified definition.
 
-- **OpenAPI 3.1.0 Support:** Upgraded to Microsoft.OpenApi 2.0.0, enabling full support for OpenAPI 3.1.0 specifications.
-  - Now compatible with modern APIs using OpenAPI 3.1.0.
-  - Supports latest Swashbuckle versions that generate OpenAPI 3.1.0.
-- **File-Based Sources:** Added `FilePath` property to `ApiSource`, allowing local OpenAPI specification files (JSON or YAML) to be merged alongside HTTP sources.
-  - Useful for merging downloaded specifications from public APIs that don't expose OpenAPI endpoints.
-  - Supports both absolute and relative paths (relative paths are resolved from the application's base directory)
-  - Mutually exclusive with `Url` - each source must have one or the other, but not both
-- **Configurable HTTP Timeout:** Added `HttpTimeoutSeconds` property to `KoalesceOptions` (default: 15 seconds).
-  - Allows customizing the HTTP request timeout for fetching API specifications.
-  - Useful for slow networks or large OpenAPI documents.
+### Features
 
-**Example configuration:**
+- **OpenAPI 3.1.0 Support**: Full compatibility with `OpenAPI 3.0` and `3.1` specifications via `Microsoft.OpenApi 2.0`.
+- **Multiple Source Types**
+  - HTTP/HTTPS URLs for live API endpoints.
+  - Local file paths (JSON/YAML) for offline specifications.
+- **Smart Schema Conflict Resolution**: Automatic renaming of conflicting schemas using configurable patterns.
+- **Virtual Prefix Routing**: Namespace paths per source to avoid route collisions (e.g., `/inventory/products`, `/orders/products`).
+- **Path Exclusion**: Filter out specific paths per source using exact matches or wildcards.
+- **Caching**: Built-in response caching with configurable expiration.
+- **ASP.NET Core Integration**: Middleware for serving merged specs at a configurable endpoint.
+- **Resilient Loading**: Configurable behavior for unreachable sources (skip or fail-fast).
+- **Security Preservation**: Maintains downstream API security schemes in merged output.
 
-```json
-{
-  "Koalesce": {
-    "Sources": [
-      { "Url": "https://api.example.com/swagger.json" },
-      { "FilePath": "./specs/external-api.json" }
-    ],
-    "MergedDocumentPath": "/merged.json",
-    "HttpTimeoutSeconds": 30
-  }
-}
-```
+### Targets
 
-### Changed
+- .NET 8.0 (LTS)
+- .NET 10.0 (LTS)
 
-- **Microsoft.OpenApi Upgrade:** Upgraded from Microsoft.OpenApi 1.6.x to 2.0.0.
-  - Internal types now use interfaces (IOpenApiSchema, IOpenApiSecurityScheme, etc.)
-  - Tags now use `ISet<OpenApiTag>` instead of `List<OpenApiTag>`.
-  - YAML support now via separate `Microsoft.OpenApi.YamlReader` package.
-  - Schema reference rewriting adapted for immutable references in v2.0.
-  - Renamed OpenAPIConstants to KoalesceOpenAPIConstants to avoid conflicts.
-- **Duplicate Source Validation:** Sources configuration now validates and rejects duplicate URLs or file paths.
+### Migration from Alpha
 
-### ⚠️ Breaking Changes
+If upgrading from `Koalesce.OpenAPI (now Deprecated)` alpha versions:
 
-- **Swashbuckle Compatibility:** If using Koalesce **in the same project** as Swashbuckle.AspNetCore, you must use Swashbuckle 10.x (which also uses Microsoft.OpenApi 2.x). This does **not** affect .NET 8 compatibility—Koalesce still supports both .NET 8 and .NET 10.
+- Package renamed from `Koalesce.OpenAPI` to `Koalesce`.
+- `Koalesce.Core` is now bundled internally (no separate package needed).
+- Configuration structure unchanged - `appsettings.json` files remain compatible.
+  - #### ⚠️ Breaking Changes
+    - `SchemaConflictPattern` default value is now `{Prefix}{SchemaName}`.
 
----
-
-## [1.0.0-alpha.11] - 2026-01-25
-
-### Changed
-
-- **Internal Optimizations:** Improved DI service lifetimes, thread-safety, and tag merging performance.
-
-### ⚠️ Breaking Changes
-
-- Removed optional support to `OpenApiSecurityScheme` and `KoalesceOpenApiOptionsExtensions` to always keep downstream security scheme by design.
-
----
-
-## [1.0.0-alpha.10] - 2026-01-22
-
-### Added
-
-- **Fail-Fast Configuration:** Introduced `FailOnServiceLoadError` option (default: `false`).
-  - When set to `true`, Koalesce will abort the startup process if **any** source API fails to load (network error, timeout, invalid JSON).
-  - When set to `false` (default), Koalesce continues to operate resiliently, skipping unreachable sources.
-
-### Changed
-
-- **Internal Architecture:**
-  - Implemented `DefaultConflictResolutionStrategy` for clearer conflict resolution.
-  - Refactored `OpenApiDocumentMerger` to adhere to Single Responsibility Principle (SRP).
-  - Extracted `OpenApiDefinitionLoader` for robust I/O handling.
-  - Extracted `SchemaConflictCoordinator` and `SchemaRenamer` for isolated conflict logic.
-
-### ⚠️ Breaking Changes
-
-- **Schema Conflict Resolution Strategy:**
-  - The logic for resolving schema name conflicts is now deterministic based on `VirtualPrefix`.
-  - **With Prefix:** Sources defining a `VirtualPrefix` will have their schemas scoped to that prefix (e.g., `Inventory_Product`).
-  - **No Prefix:** Sources without a prefix act as the "root" domain. If a conflict occurs with another non-prefixed source, the incoming source falls back to using its Sanitized API Title.
-  - *Impact:* Generated clients (Kiota/NSwag) will require refactoring as class names will change to match the new scoping rules.
-
----
-
-## [1.0.0-alpha.9] - 2026-01-21
-
-### Fixed
-
-- **Schema Conflict Resolution with VirtualPrefix:** When **both** conflicting sources have `VirtualPrefix` configured, **both** schemas are now renamed. Previously, only the second schema was renamed (first source "won"), making the output order-dependent and unpredictable.
-  - Before: `Product` (first wins), `Inventory_Product`
-  - After: `Products_Product`, `Inventory_Product`
-
-### Added
-
-- **Duplicate VirtualPrefix Validation:** Fail-fast validation now prevents configuration errors when multiple sources share the same `VirtualPrefix`. This avoids path collisions and asymmetric schema naming at runtime.
-
----
-
-## [1.1.0-alpha.8] - 2026-01-19
-
-### Added
-
-- **Exclude Paths from Merge:** Added `ExcludePaths` property to `ApiSource`. This allows excluding specific paths from the merged document on a per-source basis.
-  - Supports exact matches (e.g., `"/api/internal"`)
-  - Supports wildcard patterns (e.g., `"/api/admin/*"`)
-  - Useful for hiding internal/admin endpoints or preventing path conflicts
-  - **Fail-fast validation:** Paths must start with `/`, cannot be empty, and wildcards are only supported at the end (`/*`)
-
-### Changed
-
-- **Moved `SchemaConflictPattern` to Core Options:** `SchemaConflictPattern` has been moved from `OpenApiOptions` to `KoalesceOptions` (Core). This makes the setting provider-agnostic and available to future providers. No changes required in `appsettings.json` configuration.
-
-**Example configuration:**
-
-```json
-{
-  "Koalesce": {
-    "Sources": [
-      {
-        "Url": "https://api.example.com/swagger.json",
-        "ExcludePaths": [
-          "/api/internal",
-          "/api/admin/*"
-        ]
-      }
-    ]
-  }
-}
-```
-
----
-
-## [1.1.0-alpha.7] - 2026-01-19
-
-### Added
-
-- **Customizable Schema Conflict Pattern:** Added `SchemaConflictPattern` property to `KoalesceOptions` (Core). This allows customizing how schema name conflicts are resolved during merge.
-  - Available placeholders: `{Prefix}`, `{SchemaName}`
-  - Default: `"{Prefix}_{SchemaName}"` (e.g., `Inventory_Product`)
-  - Example alternatives: `"{SchemaName}_{Prefix}"`, `"{Prefix}{SchemaName}"`
-
-### Changed
-
-- **Renamed `SourceDefinition` to `ApiSource`:** The class representing a source API configuration has been renamed for clarity. This is an internal class rename - the `Sources` property name in configuration remains unchanged.
-
----
-
-## [1.0.0-alpha.6] - 2026-01-18
-
-### Changed
-
-- **Validation Logic:** `OpenApiSecurityScheme` is now fully optional. This allows:
-  - Mixed public/private Gateway scenarios
-  - Pure security passthrough from downstream APIs
-  - Explicit security when needed
-
-### Fixed
-
-- **Security Requirements Preservation:** Operations that inherit security from document-level `security` (per OpenAPI spec) now have those requirements explicitly materialized during merge. 
-This ensures downstream API security is properly preserved in the merged document.
-
-### ⚠️ Breaking Changes
-
-- **Validation Changes:** `ApiGatewayBaseUrl` no longer requires `OpenApiSecurityScheme` to be configured. Both are now independent, optional settings.
-- **Removed `IgnoreGatewaySecurity` property:** This property is no longer needed. Simply omit `OpenApiSecurityScheme` to preserve downstream security.
-- **Renamed `GatewaySecurityScheme`property:** to `OpenApiSecurityScheme` and seamlessly align with Microsoft.OpenApi.Models, since itis of that type.
-- **Renamed all method in `KoalesceOpenApiOptionsExtensions`:** to better reflect the purpose of applying a global security to the merged definition.  
-
----
-
-## [1.0.0-alpha.5] - 2026-01-15
-
-### Added
-
-- **NuGet Metadata:** Added official project icon.
-
----
-
-## [1.0.0-alpha.4] - 2026-01-13
-
-### Changed
-
-- **Defensive Cache Middleware (Clamping):** The caching middleware logic has been hardened to strictly enforce the `MinExpirationSeconds` setting at runtime.
-  - Previously, `MinExpirationSeconds` was available in the options but not actively enforced by the middleware logic during cache entry creation.
-  - Now, if `AbsoluteExpirationSeconds` or `SlidingExpirationSeconds` are configured with values **lower** than the configured `MinExpirationSeconds`, the middleware automatically clamps them to that minimum value.
-  - *Note: The default value for `MinExpirationSeconds` is 30 seconds.*
-  
-### Fixed
-
-- **Cache Reliability:** Resolved a stability issue where extremely short cache durations could cause excessive re-merging operations. The system now guarantees the cache duration respects the defined minimum floor.
-
----
-
-## [1.0.0-alpha.3] - 2026-01-11
-
-### Added
-
-- **Fail-Fast Validation:** Introduced aggressive startup validation to prevent runtime errors. The application will now refuse to start if configuration is invalid:
-  - **Source URLs:** All URLs in `Sources` must be valid absolute URIs (must start with `http://` or `https://`).
-  - **Gateway URL:** `ApiGatewayBaseUrl` (in OpenAPI options) must be a valid absolute URI.
-  - **Paths:** `MergedDocumentPath` must start with `/`.
-- **Global Security Options:**
-  - Added `OpenApiSecurityScheme` to `OpenApiOptions`, enabling configuration of global security schemes directly within the API Gateway context.
-  - Added `IgnoreGatewaySecurity` to `OpenApiOptions`, allowing downstream services to retain their own security definitions instead of being overridden by the Gateway's global scheme.
-- **Gateway Security Extensions:** Introduced a comprehensive suite of fluent extension methods to configure global security schemes.
-
-> **Note 1:** When using Koalesce as a pipeline Middleware, to keep your `appsettings.json` simple, it is recommended to use `OpenApiSecurityExtensions` methods via `.ForOpenAPI(options => ... )` instead of manually configuring the `OpenApiSecurityScheme` section.
->
-> **Note 2:** When using Koalesce through **Koalesce.OpenAPI.CLI**, you **must** include a `OpenApiSecurityScheme` section in the `appsettings.json` if `ApiGatewayBaseUrl` is defined, as the CLI cannot see configurations defined in C# code.
-
-### ⚠️ Breaking Changes
-
-- **Core Options Refactoring (Agnostic Design):** `KoalesceOptions` has been decoupled from OpenAPI-specific terminology to support future formats (AsyncAPI, GraphQL, etc.).
-  - **Renamed Properties (Breaking for `appsettings.json`):**
-    - `OpenApiSources` → **`Sources`**
-    - `MergedOpenApiPath` → **`MergedDocumentPath`**
-  - **Renamed Classes:**
-    - `OpenApiSourceDefinition` → **`SourceDefinition`**
-- **Configuration Moving:**
-  - `ApiGatewayBaseUrl` was moved from `KoalesceOptions` **(Core)** to `OpenApiOptions` **(OpenAPI Extension)** to ensure proper separation of concerns.
-- **Security Enforcement:** When `ApiGatewayBaseUrl` is set in `OpenApiOptions`, a `OpenApiSecurityScheme` is now **required** (unless `IgnoreGatewaySecurity` is true). Startup will fail if the gateway URL is present but no security scheme is defined.
-
-### Fixed
-
-- **Dependency Injection Double Binding:** Fixed an issue where `KoalesceOptions` were being bound twice in the DI container when using `AddProvider`, causing configuration conflicts in test scenarios.
-- **Middleware Registration:** Fixed a bug where `UseKoalesce()` would silently fail to register the middleware pipeline when using custom provider configurations.
-
----
-
-## [1.0.0-alpha.2] - 2026-01-04
-
-### ⚠️ Breaking Changes
-- **Configuration:** Renamed `SourceOpenApiUrls` property to `OpenApiSources`. This change allows adding a `VirtualPrefix` to prevent handle colisions with known identical routes.
-> *Note: When using `VirtualPrefix`, the route must be handled in the API Gateway configuration to map correctly to the merged OpenAPI document.*
-
-### Added
-- **Multi-targeting:** Added support for **.NET 8.0** (LTS) alongside **.NET 10.0**. The library now targets both frameworks to ensure stability for enterprise projects and performance for modern applications.
-
-### Changed
-- **HTTP Client:** The internal `HttpClient` now enforces **HTTP/1.1** protocol.
-- **Dev Experience:** The internal HTTP handler now bypasses SSL certificate validation for development environments, fixing issues with self-signed certificates on `https://localhost`.
-
-### Fixed
-- **Security Isolation:** Fixed an issue where global security schemes could leak across different APIs in the merged document. Global security requirements are now injected into individual operations during the merge to ensure strict security context isolation.
-- **Dependencies:** Removed redundant `Microsoft.Extensions.*` package references in `.csproj` files to eliminate build warnings.
-- Ocelot.customers definition now allows route with Id.
-
----
-
-## [1.0.0-alpha.1] - 2026-01-02
-
-### ⚠️ Breaking Changes
-- Upgraded to **.NET 10.0** + NuGet dependencies to compatible versions.
-- Removed `--v` argument from **Koalesce.OpenAPI.CLI**. Version is now auto-detected from assembly and displayed with built-in `--version`.
-
-### Added
-- '--verbose' argument for detailed logging output. Displaying logs is now optional by default.
-
----
-
-## [0.1.1-alpha.2] - 2025-04-11
-
-### ⚠️ Breaking Changes
-- Upgraded NuGet dependencies to versions fully compatible with **.NET 8.0**.
-
----
-
-## [0.1.1-alpha.1] - 2025-04-08
-
-### ⚠️ Breaking Changes
-- Dropped support for `.NET 6.0` and `.NET 7.0`.
-- The library now targets `.NET 8.0` exclusively for modern compatibility and to leverage latest runtime features.
-
----
-
-## [0.1.0-alpha] - 2025-03-16
-
-### Added
-- Alpha release of **Koalesce**.
-- OpenAPI merging from multiple sources.
-- Support for **API Gateway** integration.
-- **Caching options** for merged definitions.
-- Initial middleware for serving merged OpenAPI documents.
