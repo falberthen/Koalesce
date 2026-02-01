@@ -6,11 +6,10 @@ on:
 
 jobs:
   publish-all:
-    # Only run for tags matching v* (e.g., v1.0.0)
-    # Exclude tags that start with package-specific prefixes
-    if: startsWith(github.ref, 'refs/tags/v') && !startsWith(github.ref, 'refs/tags/core-v') && !startsWith(github.ref, 'refs/tags/openapi-v') && !startsWith(github.ref, 'refs/tags/openapi-cli-v')
+    # Only run for tags matching v* (e.g., v1.0.0-beta.1)
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    
+
     permissions:
       contents: read
 
@@ -28,18 +27,16 @@ jobs:
       - name: Validate versions match tag
         run: |
           TAG_VERSION="${GITHUB_REF_NAME#v}"
-          CORE_VERSION=$(grep -oP '(?<=<KoalesceCoreVersion>)[^<]+' Directory.Build.props)
-          OPENAPI_VERSION=$(grep -oP '(?<=<KoalesceOpenAPIVersion>)[^<]+' Directory.Build.props)
+          KOALESCE_VERSION=$(grep -oP '(?<=<KoalesceVersion>)[^<]+' Directory.Build.props)
           CLI_VERSION=$(grep -oP '(?<=<KoalesceCLIVersion>)[^<]+' Directory.Build.props)
-          
+
           echo "Tag version: $TAG_VERSION"
-          echo "Core version: $CORE_VERSION"
-          echo "OpenAPI version: $OPENAPI_VERSION"
+          echo "Koalesce version: $KOALESCE_VERSION"
           echo "CLI version: $CLI_VERSION"
-          
-          if [ "$TAG_VERSION" != "$CORE_VERSION" ] || [ "$TAG_VERSION" != "$OPENAPI_VERSION" ] || [ "$TAG_VERSION" != "$CLI_VERSION" ]; then
+
+          if [ "$TAG_VERSION" != "$KOALESCE_VERSION" ] || [ "$TAG_VERSION" != "$CLI_VERSION" ]; then
             echo "❌ All versions in Directory.Build.props must match the tag version ($TAG_VERSION) when publishing all packages"
-            echo "   Core: $CORE_VERSION, OpenAPI: $OPENAPI_VERSION, CLI: $CLI_VERSION"
+            echo "   Koalesce: $KOALESCE_VERSION, CLI: $CLI_VERSION"
             exit 1
           fi
           echo "✅ Version validation passed: $TAG_VERSION"
@@ -61,14 +58,11 @@ jobs:
       - name: Run tests
         run: dotnet test --no-build --configuration Release
 
-      - name: Pack Koalesce.Core
-        run: dotnet pack src/Koalesce.Core/Koalesce.Core.csproj --no-build --configuration Release --output ./nupkgs
+      - name: Pack Koalesce
+        run: dotnet pack src/Koalesce/Koalesce.csproj --no-build --configuration Release --output ./nupkgs
 
-      - name: Pack Koalesce.OpenAPI
-        run: dotnet pack src/Koalesce.OpenAPI/Koalesce.OpenAPI.csproj --no-build --configuration Release --output ./nupkgs
-
-      - name: Pack Koalesce.OpenAPI.CLI
-        run: dotnet pack src/Koalesce.OpenAPI.CLI/Koalesce.OpenAPI.CLI.csproj --no-build --configuration Release --output ./nupkgs
+      - name: Pack Koalesce.CLI
+        run: dotnet pack src/Koalesce.CLI/Koalesce.CLI.csproj --no-build --configuration Release --output ./nupkgs
 
       - name: Publish packages to NuGet
         run: dotnet nuget push './nupkgs/*.nupkg' --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
