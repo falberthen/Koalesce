@@ -1,5 +1,8 @@
 ﻿namespace Koalesce.CLI.Tests;
 
+/// <summary>
+/// Tests that require running APIs (integration tests with servers).
+/// </summary>
 [Collection("Koalesce.CLI Integration Tests")]
 public class IntegrationTests : KoalesceIntegrationTestBase
 {
@@ -19,7 +22,7 @@ public class IntegrationTests : KoalesceIntegrationTestBase
 		if (File.Exists(_outputPath))
 			File.Delete(_outputPath);
 
-		var result = await RunKoalesceCliAsync(configFullPath, _outputPath);
+		var result = await CliTestHelpers.RunKoalesceCliAsync(configFullPath, _outputPath);
 
 		await koalescingApi.StopAsync();
 
@@ -31,19 +34,64 @@ public class IntegrationTests : KoalesceIntegrationTestBase
 		Assert.Contains("/api/customers", content);
 		Assert.Contains("/api/products", content);
 	}
+}
+
+/// <summary>
+/// Standalone CLI tests that don't require running servers.
+/// </summary>
+public class CliStandaloneTests
+{
+	private static readonly string _outputPath = Path.Combine(Path.GetTempPath(), $"cli-test-{Guid.NewGuid()}.json");
 
 	[Fact]
 	public async Task KoalesceForOpenAPICLI_WhenMissingConfig_ShouldFailGracefully()
 	{
 		var missingConfigPath = Path.Combine(Path.GetTempPath(), $"nonexistent-{Guid.NewGuid()}.json");
 
-		var result = await RunKoalesceCliAsync(missingConfigPath, _outputPath);
+		var result = await CliTestHelpers.RunKoalesceCliAsync(missingConfigPath, _outputPath);
 
 		Assert.NotEqual(0, result.ExitCode);
 		Assert.Contains("Configuration file not found", result.Output);
 	}
 
-	private async Task<(int ExitCode, string Output)> RunKoalesceCliAsync(string configPath, string outputPath)
+	[Fact]
+	public async Task KoalesceForOpenAPICLI_WhenRunWithVersionCommand_ShouldDisplayVersionAndExit()
+	{
+		var cliDllPath = CliTestHelpers.GetCliDllPath();
+
+		var psi = new ProcessStartInfo
+		{
+			FileName = "dotnet",
+			Arguments = $"\"{cliDllPath}\" --version",
+			RedirectStandardOutput = true,
+			RedirectStandardError = true,
+			UseShellExecute = false,
+			CreateNoWindow = true,
+		};
+
+		using var process = Process.Start(psi)!;
+
+		string output = await process.StandardOutput.ReadToEndAsync();
+		string error = await process.StandardError.ReadToEndAsync();
+
+		await process.WaitForExitAsync();
+		var combinedOutput = output + error;
+
+		var expectedVersion = typeof(KoalesceCliApp).Assembly
+			.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
+			.InformationalVersion?
+			.Split('+')[0];
+
+		Assert.Contains(expectedVersion!, combinedOutput);
+	}
+}
+
+/// <summary>
+/// Shared helper methods for CLI tests.
+/// </summary>
+internal static class CliTestHelpers
+{
+	public static async Task<(int ExitCode, string Output)> RunKoalesceCliAsync(string configPath, string outputPath)
 	{
 		var cliDllPath = GetCliDllPath();
 		var psi = new ProcessStartInfo
@@ -74,38 +122,7 @@ public class IntegrationTests : KoalesceIntegrationTestBase
 		return (process.ExitCode, outputTask.Result + errorTask.Result);
 	}
 
-	[Fact]
-	public async Task KoalesceForOpenAPICLI_WhenRunWithVersionCommand_ShouldDisplayVersionAndExit()
-	{
-		var cliDllPath = GetCliDllPath();
-
-		var psi = new ProcessStartInfo
-		{
-			FileName = "dotnet",
-			Arguments = $"\"{cliDllPath}\" --version",
-			RedirectStandardOutput = true,
-			RedirectStandardError = true,
-			UseShellExecute = false,
-			CreateNoWindow = true,
-		};
-
-		using var process = Process.Start(psi)!;
-
-		string output = await process.StandardOutput.ReadToEndAsync();
-		string error = await process.StandardError.ReadToEndAsync();
-
-		await process.WaitForExitAsync();
-		var combinedOutput = output + error;
-
-		var expectedVersion = typeof(KoalesceCliApp).Assembly
-			.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?
-			.InformationalVersion?
-			.Split('+')[0];
-
-		Assert.Contains(expectedVersion!, combinedOutput);
-	}
-
-	private static string GetCliDllPath()
+	public static string GetCliDllPath()
 	{
 		var repoRoot = GetSolutionRoot();
 		var configurations = new[] { "Release", "Debug" };
