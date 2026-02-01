@@ -1,5 +1,5 @@
-﻿using Koalesce.Core.Extensions;
-using Koalesce.OpenAPI.Extensions;
+﻿using Koalesce.Extensions;
+using Koalesce.Options;
 using Microsoft.Extensions.Options;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
@@ -26,9 +26,8 @@ services.AddEndpointsApiExplorer();
 services.AddSwaggerGen();
 services.AddOcelot(builder.Configuration);
 
-// 🐨 Register Koalesce for OpenAPI
-services.AddKoalesce(builder.Configuration)
-	.ForOpenAPI();
+// 🐨 Register Koalesce
+services.AddKoalesce(builder.Configuration);
 
 // Build app
 var app = builder.Build();
@@ -55,7 +54,7 @@ app.UseKoalesce();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-	c.SwaggerEndpoint(koalesceOptions.MergedDocumentPath, koalesceOptions.Title);
+	c.SwaggerEndpoint(koalesceOptions.MergedEndpoint, koalesceOptions.Title);
 });
 
 await app.UseOcelot();

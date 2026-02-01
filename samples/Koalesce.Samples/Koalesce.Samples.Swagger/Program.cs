@@ -1,6 +1,5 @@
-﻿using Koalesce.Core.Extensions;
-using Koalesce.OpenAPI.Extensions;
-using Koalesce.OpenAPI.Options;
+﻿using Koalesce.Extensions;
+using Koalesce.Options;
 using Microsoft.Extensions.Options;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -13,18 +12,17 @@ services.AddEndpointsApiExplorer();
 // Register Swagger services before Koalesce
 services.AddSwaggerGen();
 
-// 🐨 Register Koalesce for OpenAPI
-services.AddKoalesce(builder.Configuration)
-	.ForOpenAPI();
+// 🐨 Register Koalesce
+services.AddKoalesce(builder.Configuration);
 
 // Build the app
 var app = builder.Build();
 
-KoalesceOpenApiOptions openApiOptions;
+KoalesceOptions openApiOptions;
 using (var scope = app.Services.CreateScope())
 {
 	openApiOptions = scope.ServiceProvider
-		.GetRequiredService<IOptions<KoalesceOpenApiOptions>>().Value;
+		.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 }
 
 // Add pipeline
@@ -41,7 +39,7 @@ app.UseKoalesce();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-	c.SwaggerEndpoint(openApiOptions.MergedDocumentPath, openApiOptions.Title);
+	c.SwaggerEndpoint(openApiOptions.MergedEndpoint, openApiOptions.Title);
 });
 
 app.Run();
