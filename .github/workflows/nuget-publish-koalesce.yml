@@ -48,6 +48,15 @@ jobs:
       - name: Build solution
         run: dotnet build --no-restore --configuration Release
 
+      - name: Run Core tests
+        run: dotnet test tests/Koalesce.Core.Tests --no-build --configuration Release
+
+      - name: Run Koalesce tests
+        run: dotnet test tests/Koalesce.Tests --no-build --configuration Release
+
+      - name: Run CLI tests
+        run: dotnet test tests/Koalesce.CLI.Tests --no-build --configuration Release
+
       - name: Pack Koalesce
         run: dotnet pack src/Koalesce/Koalesce.csproj --no-build --configuration Release --output ./nupkgs
 
