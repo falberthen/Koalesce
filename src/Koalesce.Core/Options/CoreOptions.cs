@@ -1,7 +1,9 @@
-﻿/// <summary>
+﻿namespace Koalesce.Core.Options;
+
+/// <summary>
 /// Main configuration settings for Koalesce.
 /// </summary>
-public class KoalesceOptions : IValidatableObject
+public class CoreOptions : IValidatableObject
 {
 	public const string ConfigurationSectionName = "Koalesce";
 	public const string TitleDefaultValue = "My Koalesced API";
@@ -9,14 +11,14 @@ public class KoalesceOptions : IValidatableObject
 	/// <summary>
 	/// Source URLs. At least one source is required.
 	/// </summary>
-	[Required]	
+	[Required]
 	public List<ApiSource> Sources { get; set; } = new();
 
 	/// <summary>
-	/// The logical path where the merged definition should be exposed.
-	/// </summary>	
-	[Required]	
-	public string MergedDocumentPath { get; set; } = default!;
+	/// The endpoint path where the merged definition should be exposed.
+	/// Required only when using Koalesce middleware.
+	/// </summary>
+	public string? MergedEndpoint { get; set; } = default!;
 
 	/// <summary>
 	/// Koalesced API title
@@ -26,7 +28,7 @@ public class KoalesceOptions : IValidatableObject
 	/// <summary>
 	/// Caching configuration settings for Koalesce.
 	/// </summary>
-	public KoalesceCacheOptions Cache { get; set; } = new();
+	public CacheOptions Cache { get; set; } = new();
 
 	/// <summary>
 	/// Determines whether Koalesce skips identical paths.
@@ -39,7 +41,7 @@ public class KoalesceOptions : IValidatableObject
 	/// <summary>
 	/// Pattern for resolving schema name conflicts.
 	/// Available placeholders: {Prefix}, {SchemaName}
-	/// Default: "{Prefix}_{SchemaName}"
+	/// Default: "{Prefix}{SchemaName}"
 	/// </summary>
 	public string SchemaConflictPattern { get; set; } = CoreConstants.DefaultSchemaConflictPattern;
 
@@ -73,19 +75,12 @@ public class KoalesceOptions : IValidatableObject
 				yield return validationResult;
 		}
 
-		// Validating MergedDocumentPath
-		if (string.IsNullOrWhiteSpace(MergedDocumentPath))
+		// Validating MergedEndpoint
+		if (!string.IsNullOrWhiteSpace(MergedEndpoint) && !MergedEndpoint.StartsWith("/"))
 		{
 			yield return new ValidationResult(
-				"MergedDocumentPath cannot be empty.",
-				[nameof(MergedDocumentPath)]);
-		}
-
-		if (!MergedDocumentPath.StartsWith("/"))
-		{
-			yield return new ValidationResult(
-				"MergedDocumentPath must start with '/'.",
-				[nameof(MergedDocumentPath)]);
+				"MergedEndpoint must start with '/'.",
+				[nameof(MergedEndpoint)]);
 		}
 
 		// Caching Validations

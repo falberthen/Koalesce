@@ -8,7 +8,7 @@ public static class CoreConstants
 	#region SchemaConflictPattern Placeholders
 	public const string PrefixPlaceholder = "{Prefix}";
 	public const string SchemaNamePlaceholder = "{SchemaName}";
-	public const string DefaultSchemaConflictPattern = $"{PrefixPlaceholder}_{SchemaNamePlaceholder}";
+	public const string DefaultSchemaConflictPattern = $"{PrefixPlaceholder}{SchemaNamePlaceholder}";
 	#endregion
 
 	#region KoalesceOptions Validation Messages

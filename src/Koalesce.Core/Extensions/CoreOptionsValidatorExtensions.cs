@@ -7,7 +7,7 @@ public static class KoalesceOptionsValidatorExtensions
 	/// </summary>
 	/// <param name="options"></param>
 	/// <exception cref="KoalesceInvalidConfigurationValuesException"></exception>
-	public static void Validate(this KoalesceOptions options)
+	public static void Validate(this CoreOptions options)
 	{
 		var validationResults = new List<ValidationResult>();
 		var context = new ValidationContext(options);

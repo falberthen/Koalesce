@@ -5,35 +5,35 @@
 /// </summary>
 public class KoalesceMiddleware
 {
-	private readonly string _mergedDocumentPath;
-	private readonly IKoalesceProvider _koalesceProvider;
+	private readonly string _mergedEndpoint;
+	private readonly IKoalesceMergeService _mergeService;
 	private readonly ILogger<KoalesceMiddleware> _logger;
 	private readonly RequestDelegate _next;
 
-	// Caching	
+	// Caching
 	private readonly IMemoryCache _cache;
-	private readonly KoalesceCacheOptions _cacheOptions;
+	private readonly CacheOptions _cacheOptions;
 
 	public KoalesceMiddleware(
-		IOptions<KoalesceOptions> options,
+		IOptions<CoreOptions> options,
 		ILogger<KoalesceMiddleware> logger,
-		IKoalesceProvider koalesceProvider,
+		IKoalesceMergeService mergeService,
 		RequestDelegate next,
 		IMemoryCache cache)
 	{
-		ArgumentNullException.ThrowIfNull(koalesceProvider);
+		ArgumentNullException.ThrowIfNull(mergeService);
 		ArgumentNullException.ThrowIfNull(logger);
 		ArgumentNullException.ThrowIfNull(next);
 		ArgumentNullException.ThrowIfNull(cache);
 
-		_koalesceProvider = koalesceProvider;
+		_mergeService = mergeService;
 		_logger = logger;
 		_next = next;
 		_cache = cache;
 
 		var opts = options.Value;
 		_cacheOptions = opts.Cache;
-		_mergedDocumentPath = opts.MergedDocumentPath;
+		_mergedEndpoint = opts.MergedEndpoint;
 	}
 
 	/// <summary>
@@ -41,15 +41,19 @@ public class KoalesceMiddleware
 	/// </summary>
 	public async Task InvokeAsync(HttpContext context)
 	{
+		// When using the middleware, MergedEndpoint must be configured
+		if (string.IsNullOrEmpty(_mergedEndpoint))	
+			throw new KoalesceInvalidConfigurationValuesException("MergedEndpoint is not configured.");		
+
 		// Only log the generic request path if Debug level is actually enabled
 		// This prevents "spamming" logs for every single API request in Production
 		if (_logger.IsEnabled(LogLevel.Debug))
 			_logger.LogDebug("Koalesce Middleware inspecting path: {RequestPath}", context.Request.Path);
 
 		// If the request path matches the expected merged merged path
-		if (context.Request.Path.Equals(_mergedDocumentPath, StringComparison.OrdinalIgnoreCase))
+		if (context.Request.Path.Equals(_mergedEndpoint, StringComparison.OrdinalIgnoreCase))
 		{
-			_logger.LogInformation("Handling Koalesced path request: {MergePath}", _mergedDocumentPath);
+			_logger.LogInformation("Handling Koalesced path request: {MergePath}", _mergedEndpoint);
 
 			// If cache is disabled, always recompute
 			if (_cacheOptions.DisableCache)
@@ -60,7 +64,7 @@ public class KoalesceMiddleware
 			}
 
 			// Try fetching from cache first
-			if (_cache.TryGetValue(_mergedDocumentPath, out string? cachedDocument) && !string.IsNullOrEmpty(cachedDocument))
+			if (_cache.TryGetValue(_mergedEndpoint, out string? cachedDocument) && !string.IsNullOrEmpty(cachedDocument))
 			{
 				_logger.LogInformation("Returning cached Koalesced document.");
 				context.Response.ContentType = "application/json";
@@ -85,8 +89,8 @@ public class KoalesceMiddleware
 	{
 		try
 		{
-			// Calling provider to merge definitions
-			string mergedDocument = await _koalesceProvider.ProvideMergedDocumentAsync();
+			// Calling merge service
+			string mergedDocument = await _mergeService.MergeDefinitionsAsync();
 
 			if (string.IsNullOrWhiteSpace(mergedDocument))
 			{
@@ -110,7 +114,7 @@ public class KoalesceMiddleware
 				);
 
 				// Setting cache entry
-				_cache.Set(_mergedDocumentPath, mergedDocument,
+				_cache.Set(_mergedEndpoint, mergedDocument,
 				new MemoryCacheEntryOptions()
 					.SetAbsoluteExpiration(TimeSpan.FromSeconds(safeAbsoluteExpiration))
 					.SetSlidingExpiration(TimeSpan.FromSeconds(safeSlidingExpiration))
@@ -122,7 +126,7 @@ public class KoalesceMiddleware
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Failed to generate Koalesce document.");
+			_logger.LogError(ex, "Failed to generate Koalesced definition.");
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 			await context.Response.WriteAsync(ex.Message);
 		}

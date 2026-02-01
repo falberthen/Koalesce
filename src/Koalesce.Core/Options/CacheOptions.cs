@@ -3,7 +3,7 @@
 /// <summary>
 /// Configuration settings for caching merged API definitions in Koalesce.
 /// </summary>
-public class KoalesceCacheOptions
+public class CacheOptions
 {
 	/// <summary>
 	/// The maximum duration (in seconds) that the merged OpenAPI document remains cached, 
