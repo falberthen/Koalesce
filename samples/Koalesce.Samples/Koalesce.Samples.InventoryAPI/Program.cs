@@ -1,4 +1,6 @@
-﻿var builder = WebApplication.CreateBuilder(args);
+﻿using Microsoft.OpenApi;
+
+var builder = WebApplication.CreateBuilder(args);
 IServiceCollection services = builder.Services;
 
 // Define CORS Policy
@@ -15,18 +17,26 @@ services.AddCors(o =>
 );
 
 services.AddEndpointsApiExplorer();
-services.AddSwaggerGen();
+services.AddSwaggerGen(options =>
+{
+	var serverUrl = builder.Configuration["ServerUrl"];
+	if (!string.IsNullOrEmpty(serverUrl))
+		options.AddServer(new OpenApiServer { Url = serverUrl });
+});
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
 
 app.UseCors(corsPolicy);
-app.UseHttpsRedirection();
+
+if (!app.Environment.IsEnvironment("Docker"))
+	app.UseHttpsRedirection();
+
 app.UseRouting();
 
 

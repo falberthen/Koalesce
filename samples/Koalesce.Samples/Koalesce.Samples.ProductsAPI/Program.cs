@@ -36,14 +36,17 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
 
 app.UseCors(corsPolicy);
-app.UseHttpsRedirection();
+
+if (!app.Environment.IsEnvironment("Docker"))
+	app.UseHttpsRedirection();
+
 app.UseRouting();
 
 // Get all products
