@@ -1,0 +1,28 @@
+{
+  "Routes": [
+    {
+      "DownstreamPathTemplate": "/api/customers",
+      "UpstreamPathTemplate": "/api/customers",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "customers-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [ "GET", "POST" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/customers/{id}",
+      "UpstreamPathTemplate": "/api/customers/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "customers-api",
+          "Port": 8080
+        }
+      ],
+      "UpstreamHttpMethod": [ "GET" ]
+    }
+  ]
+}

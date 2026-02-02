@@ -19,6 +19,18 @@
     <Content Update="appsettings.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Update="appsettings.Docker.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+	  <Content Update="..\products-api.json">
+		  <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
+	  <Content Update="..\products-api.Docker.json">
+		 <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </Content>
   </ItemGroup>
 
   <ItemGroup>
