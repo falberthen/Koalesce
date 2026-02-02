@@ -1,0 +1,88 @@
+services:
+  # ============================================
+  # Base APIs (always start)
+  # ============================================
+  customers-api:
+    build:
+      context: ./Koalesce.Samples
+      dockerfile: Koalesce.Samples.CustomersAPI/Dockerfile
+    ports:
+      - "8001:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8080
+      - ServerUrl=http://localhost:8001
+    networks:
+      - koalesce-network
+
+  products-api:
+    build:
+      context: ./Koalesce.Samples
+      dockerfile: Koalesce.Samples.ProductsAPI/Dockerfile
+    ports:
+      - "8002:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8080
+      - ServerUrl=http://localhost:8002
+    networks:
+      - koalesce-network
+
+  inventory-api:
+    build:
+      context: ./Koalesce.Samples
+      dockerfile: Koalesce.Samples.InventoryAPI/Dockerfile
+    ports:
+      - "8003:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8080
+      - ServerUrl=http://localhost:8003
+    networks:
+      - koalesce-network
+
+  # ============================================
+  # Swagger Sample (use --profile swagger)
+  # ============================================
+  swagger:
+    build:
+      context: ..
+      dockerfile: samples/Koalesce.Samples/Koalesce.Samples.Swagger/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - customers-api
+      - products-api
+      - inventory-api
+    networks:
+      - koalesce-network
+    profiles:
+      - swagger
+
+  # ============================================
+  # Ocelot Gateway Sample (use --profile ocelot)
+  # ============================================
+  ocelot:
+    build:
+      context: ..
+      dockerfile: samples/Koalesce.Samples/Koalesce.Samples.Ocelot/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - customers-api
+      - products-api
+      - inventory-api
+    networks:
+      - koalesce-network
+    profiles:
+      - ocelot
+
+networks:
+  koalesce-network:
+    driver: bridge

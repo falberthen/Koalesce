@@ -7,15 +7,14 @@ using Ocelot.Middleware;
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 IServiceCollection services = builder.Services;
 
-// Load merged ocelot.json
+// Load Ocelot configuration from environment-specific folder
+var ocelotFolder = builder.Environment.IsEnvironment("Docker") ? "Ocelot.Docker" : "Ocelot";
 builder.Configuration
 	.SetBasePath(Directory.GetCurrentDirectory())
-	.AddJsonFile("Ocelot/ocelot.json", optional: false, reloadOnChange: true)
 	.AddOcelot(
-		folder: "Ocelot",
+		folder: ocelotFolder,
 		env: builder.Environment,
-		mergeTo: MergeOcelotJson.ToFile,
-		primaryConfigFile: "Ocelot/ocelot.json",
+		mergeTo: MergeOcelotJson.ToMemory,
 		reloadOnChange: true
 	)
 	.AddEnvironmentVariables();

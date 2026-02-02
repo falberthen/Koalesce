@@ -20,6 +20,10 @@ services.AddEndpointsApiExplorer();
 
 services.AddSwaggerGen(options =>
 {
+	var serverUrl = builder.Configuration["ServerUrl"];
+	if (!string.IsNullOrEmpty(serverUrl))
+		options.AddServer(new OpenApiServer { Url = serverUrl });
+
 	options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
 		Type = SecuritySchemeType.Http,
@@ -38,7 +42,7 @@ services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+if (!app.Environment.IsProduction())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
@@ -46,7 +50,9 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(corsPolicy);
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsEnvironment("Docker"))
+	app.UseHttpsRedirection();
+
 app.UseRouting();
 
 // Customers list

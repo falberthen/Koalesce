@@ -1,0 +1,87 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "Koalesce.OpenAPI.Samples.ProductsAPI",
+    "version": "1.0"
+  },
+  "servers": [ { "url": "http://localhost:8002" } ],
+  "paths": {
+    "/api/products": {
+      "get": {
+        "tags": [
+          "Koalesce.OpenAPI.Samples.ProductsAPI"
+        ],
+        "operationId": "GetProducts",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Product"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/products": {
+      "post": {
+        "tags": [
+          "Koalesce.OpenAPI.Samples.ProductsAPI"
+        ],
+        "operationId": "CreateProduct",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Product"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "securitySchemes": {
+      "ApiKey": {
+        "type": "apiKey",
+        "description": "API Key authentication using X-API-KEY header",
+        "name": "X-API-KEY",
+        "in": "header"
+      }
+    }
+  },
+  "security": [
+    {
+      "ApiKey": []
+    }
+  ]
+}
