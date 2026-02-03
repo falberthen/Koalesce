@@ -6,6 +6,26 @@ All notable changes to **Koalesce.CLI** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.3] - 2026-02-02
+
+### Added
+
+- **SSL bypass flag**: Added `--insecure` (`-k`, `-i`) option to skip SSL certificate validation when fetching API specs from sources with self-signed certificates.
+- **Option shortcuts**: Added `-o` for `--output` and `-c` for `--config`.
+- **Banner on empty args**: Shows the Koalesce banner when running `koalesce` without arguments.
+
+### Changed
+
+- Updated `Koalesce` dependency to `1.0.0-beta.3`.
+- Output path using the same font color used for loaded sources.
+- Removed default config file name "appsettings.json" from error message when argument is missing.
+
+### Improved
+
+- **Categorized error messages**: More descriptive error messages with exit codes (1=config, 2=network, 3=file, 99=unexpected).
+
+---
+
 ## [1.0.0-beta.2] - 2026-02-01
 
 ### Changed

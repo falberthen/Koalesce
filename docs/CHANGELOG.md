@@ -15,8 +15,6 @@ All notable changes to **Koalesce** will be documented in this file.
 
 ### Changed
 
-- **Improved error responses**: Middleware now returns structured JSON error responses instead of exposing raw exception messages.
-
 #### ⚠️ Breaking Change
 
 - **Removed built-in SSL bypass**: Use configureHttpClient parameter instead.
@@ -31,6 +29,11 @@ All notable changes to **Koalesce** will be documented in this file.
             ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) => true
         }));
     ```
+
+### Improved
+
+- **Improved error responses**: Middleware now returns structured JSON error responses instead of exposing raw exception messages.
+
 
 ---
 
