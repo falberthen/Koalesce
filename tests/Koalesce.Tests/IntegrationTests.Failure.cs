@@ -20,7 +20,9 @@ public partial class IntegrationTests
 
 		// Assert
 		Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
-		Assert.Contains("Identical path", responseContent);
+		// Middleware now returns structured error without exposing internal details
+		Assert.Contains("Failed to merge API definitions", responseContent);
+		Assert.Contains("traceId", responseContent);
 
 		await koalescingApi.StopAsync();
 	}	
