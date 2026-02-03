@@ -6,10 +6,12 @@
 public class MergeCommandRunner
 {
 	private readonly bool _verbose;
+	private readonly bool _insecure;
 
-	public MergeCommandRunner(bool verbose)
+	public MergeCommandRunner(bool verbose, bool insecure = false)
 	{
 		_verbose = verbose;
+		_insecure = insecure;
 	}
 
 	/// <summary>
@@ -23,6 +25,9 @@ public class MergeCommandRunner
 		try
 		{
 			KoalesceConsoleUI.PrintBanner();
+
+			if (_insecure)			
+				KoalesceConsoleUI.PrintWarning("SSL certificate validation is disabled (--insecure)");			
 
 			if (!File.Exists(configPath))
 			{
@@ -43,7 +48,7 @@ public class MergeCommandRunner
 				builder.AddConsole();
 				builder.SetMinimumLevel(_verbose ? LogLevel.Information : LogLevel.Warning);
 
-				// Remote noisy logs unless in verbose mode
+				// Remove noisy logs unless in verbose mode
 				builder.AddFilter("Microsoft", LogLevel.Warning);
 				builder.AddFilter("System", LogLevel.Warning);
 				builder.AddFilter("Koalesce", _verbose ? LogLevel.Information : LogLevel.Warning);
@@ -51,7 +56,7 @@ public class MergeCommandRunner
 
 			services.AddSingleton<IMergedSpecificationWriter, MergedSpecificationWriter>();
 			services.AddLogging();
-			services.AddKoalesce(configuration);
+			services.AddKoalesce(configuration, configureHttpClient: _insecure ? ConfigureInsecureHttpClient : null);
 
 			using var provider = services.BuildServiceProvider();
 			var mergeService = provider.GetRequiredService<IKoalesceMergeService>();
@@ -66,10 +71,41 @@ public class MergeCommandRunner
 
 			return 0;
 		}
-		catch (Exception ex)
+		catch (KoalesceConfigurationNotFoundException)
 		{
-			Console.WriteLine(ex.Message);
+			KoalesceConsoleUI.PrintError("Configuration Error", "Koalesce section not found in configuration file.");
+			return 1;
+		}
+		catch (KoalesceInvalidConfigurationValuesException ex)
+		{
+			KoalesceConsoleUI.PrintError("Configuration Error", ex.Message);
+			return 1;
+		}
+		catch (HttpRequestException ex)
+		{
+			KoalesceConsoleUI.PrintError("Network Error", $"Failed to fetch API specification: {ex.Message}");
 			return 2;
 		}
+		catch (IOException ex)
+		{
+			KoalesceConsoleUI.PrintError("File Error", ex.Message);
+			return 3;
+		}
+		catch (Exception ex)
+		{
+			KoalesceConsoleUI.PrintError("Unexpected Error", _verbose ? ex.ToString() : ex.Message);
+			return 99;
+		}
+	}
+
+	/// <summary>
+	/// Configures the HttpClient to skip SSL certificate validation.
+	/// </summary>
+	private static void ConfigureInsecureHttpClient(IHttpClientBuilder builder)
+	{
+		builder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+		{
+			ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+		});
 	}
 }

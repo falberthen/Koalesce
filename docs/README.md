@@ -136,21 +136,25 @@ If using it as a Middleware, you must specify the merged endpoint.
 
 ### 2️⃣ Through the CLI (Command Line Interface) Tool
 
-The CLI merges OpenAPI definitions directly into a file without hosting an application.
+- The CLI merges OpenAPI definitions directly into a file on the disk without hosting an application.
 
-![Koalesce CLI Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI.png)
+  ```bash
+  koalesce -c .\settings.json -o .\Output\gateway.yaml
+  ```
 
-```bash
-koalesce --config ./appsettings.json --output ./merged.yaml --verbose
-```
+  ![Koalesce CLI Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI.png)
 
-| Argument | Required | Description |
-| --- | --- | --- |
-| `--config` | 🔺 | Path to your `appsettings.json` |
-| `--output` | 🔺 | Output path for the merged file |
-| `--verbose` | | Enable detailed logging |
+  #### Arguments
 
-> 💡 The CLI ignores `MergedEndpoint` and all `Cache` settings.
+  | Option       | Shortcut   | Required | Description                                                   |
+  | ------------ | ---------- | -------- | ------------------------------------------------------------- |
+  | `--config`   | `-c`       | 🔺Yes   | Path to your `appsettings.json` (default: `appsettings.json`) |
+  | `--output`   | `-o`       | 🔺Yes   | Path for the merged OpenAPI spec file                         |
+  | `--insecure` | `-k`, `-i` | No       | Skip SSL certificate validation (for self-signed certs)       |
+  | `--verbose`  |            | No       | Enable detailed logging                                       |
+  | `--version`  |            | No       | Display current version                                       |
+
+  > 💡 **Note:** The CLI uses the same configuration model as the Middleware, except `Cache` and `MergedEndpoint`.
 
 ---
 

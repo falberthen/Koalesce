@@ -19,16 +19,20 @@ dotnet tool install --global Koalesce.CLI --prerelease
 ### 2. Use it!
 
 ```bash
-koalesce --config ./appsettings.json --output ./gateway.yaml --verbose
+koalesce -c .\settings.json -o .\Output\gateway.yaml
 ```
 
 ![CLI](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI.png)
 
 #### Arguments
-- 🔺 `--config` - Path to your `appsettings.json`
-- 🔺 `--output` - Path for the merged OpenAPI spec file
-- `--verbose` - Enable detailed logging
-- `--version` - Display current version
+
+| Option       | Shortcut   | Required | Description                                                   |
+| ------------ | ---------- | -------- | ------------------------------------------------------------- |
+ | `--config`   | `-c`       | 🔺Yes   | Path to your `appsettings.json` (default: `appsettings.json`) |
+| `--output`   | `-o`       | 🔺Yes   | Path for the merged OpenAPI spec file                         |
+| `--insecure` | `-k`, `-i` | No       | Skip SSL certificate validation (for self-signed certs)       |
+| `--verbose`  |            | No       | Enable detailed logging                                       |
+| `--version`  |            | No       | Display current version                                       |
 
 > 💡 **Note:** The CLI uses the same configuration model as the Middleware, except `Cache` and `MergedEndpoint`.
 
