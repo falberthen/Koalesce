@@ -7,12 +7,12 @@ internal class SchemaConflictCoordinator
 {
 	private readonly ILogger<SchemaConflictCoordinator> _logger;
 	private readonly IConflictResolutionStrategy _strategy;
-	private readonly SchemaRenamer _renamer;
+	private readonly ISchemaRenamer _renamer;
 
 	public SchemaConflictCoordinator(
 		ILogger<SchemaConflictCoordinator> logger,
 		IConflictResolutionStrategy strategy,
-		SchemaRenamer renamer)
+		ISchemaRenamer renamer)
 	{
 		_logger = logger;
 		_strategy = strategy;
