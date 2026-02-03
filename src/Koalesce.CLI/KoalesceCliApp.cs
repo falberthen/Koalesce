@@ -23,8 +23,7 @@ public static class KoalesceCliApp
 
 		var configOption = new Option<string>(
 			["--config", "-c"],
-			getDefaultValue: () => "appsettings.json",
-			description: "Path to the Koalesce configuration file (default: appsettings.json)"
+			description: "Path to the Koalesce configuration file"
 		);
 
 		var verboseOption = new Option<bool>(
@@ -52,13 +51,20 @@ public static class KoalesceCliApp
 
 			if (string.IsNullOrWhiteSpace(output))
 			{
-				KoalesceConsoleUI.PrintError("Error: --output is required unless --version is specified");
+				KoalesceConsoleUI.PrintError("--output (-o) is required");
+				context.ExitCode = 1;
+				return;
+			}
+
+			if (string.IsNullOrWhiteSpace(config))
+			{
+				KoalesceConsoleUI.PrintError("--config (-c) is required");
 				context.ExitCode = 1;
 				return;
 			}
 
 			var runner = new MergeCommandRunner(verbose, insecure);
-			var exitCode = await runner.RunAsync(output, config ?? string.Empty);
+			var exitCode = await runner.RunAsync(output, config);
 			context.ExitCode = exitCode;
 		});
 

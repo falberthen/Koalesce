@@ -78,7 +78,7 @@ public static class KoalesceConsoleUI
 	/// </summary>
 	/// <param name="warningMessage"></param>
 	public static void PrintWarning(string warningMessage) =>
-		Console.WriteLine($"{Yellow}⚠️  {warningMessage}{Reset}");
+		Console.WriteLine($"\n{Yellow}⚠️  {warningMessage}{Reset}");
 
 	/// <summary>
 	/// Prints an error message indicating the configuration file was not found.
