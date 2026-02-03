@@ -89,6 +89,57 @@ Each source must have either `Url` **or** `FilePath`, but not both.
 
 ---
 
+
+## 🔀 Conflict Resolution
+
+### Path Conflicts
+
+Use `VirtualPrefix` to preserve all endpoints:
+
+```json
+{
+  "Sources": [
+    { "Url": "https://inventory-api/swagger.json", "VirtualPrefix": "/inventory" },
+    { "Url": "https://catalog-api/swagger.json", "VirtualPrefix": "/catalog" }
+  ]
+}
+```
+
+Or set `"SkipIdenticalPaths": false` to fail-fast on conflicts.
+
+### Schema Conflicts
+
+When multiple APIs define schemas with identical names, Koalesce automatically renames them using `{Prefix}{SchemaName}`.
+
+---
+
+### HttpClient Customization
+
+By default, Koalesce uses its own `HttpClient` with basic settings (timeout from `HttpTimeoutSeconds`, automatic decompression). For advanced scenarios (custom SSL/TLS, authentication handlers, retry policies), you can customize it:
+
+```csharp
+builder.Services.AddKoalesce(
+    configuration,
+    configureHttpClient: builder =>
+    {
+        // Example: Allow self-signed certificates (development only!)
+        builder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) => true
+        });
+
+        // Example: Add retry policy with Polly
+        builder.AddPolicyHandler(GetRetryPolicy());
+
+        // Example: Override timeout (ignores HttpTimeoutSeconds from config)
+        builder.ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(60));
+    });
+```
+
+> 💡 **Note:** When using `configureHttpClient`, the `HttpTimeoutSeconds` setting is still applied as the default. Use `ConfigureHttpClient` inside the callback to override it if needed.
+
+---
+
 ## 📝 Configuration Examples
 
 ### Minimal
@@ -133,27 +184,6 @@ Each source must have either `Url` **or** `FilePath`, but not both.
   }
 }
 ```
-
-## 🔀 Conflict Resolution
-
-### Path Conflicts
-
-Use `VirtualPrefix` to preserve all endpoints:
-
-```json
-{
-  "Sources": [
-    { "Url": "https://inventory-api/swagger.json", "VirtualPrefix": "/inventory" },
-    { "Url": "https://catalog-api/swagger.json", "VirtualPrefix": "/catalog" }
-  ]
-}
-```
-
-Or set `"SkipIdenticalPaths": false` to fail-fast on conflicts.
-
-### Schema Conflicts
-
-When multiple APIs define schemas with identical names, Koalesce automatically renames them using `{Prefix}{SchemaName}`.
 
 ---
 
