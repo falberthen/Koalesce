@@ -302,10 +302,10 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 	}
 
 	[Theory]
-	[InlineData("/api/*/users")]
-	[InlineData("/*/admin")]
 	[InlineData("/api/**/users")]
-	[InlineData("/api/admin*")]
+	[InlineData("/api/**")]
+	[InlineData("/**/admin")]
+	[InlineData("/api/a**b")]
 	public void Koalesce_WhenExcludePathsHasInvalidWildcard_ShouldThrowValidationException(string invalidPath)
 	{
 		// Arrange
@@ -339,13 +339,18 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		});
 
 		Assert.Contains("invalid wildcard", exception.Message);
-		Assert.Contains("Only '/*' at the end is supported", exception.Message);
 	}
 
 	[Theory]
 	[InlineData("/api/admin")]
 	[InlineData("/api/admin/*")]
 	[InlineData("/api/internal/health")]
+	[InlineData("/api/*/users")]
+	[InlineData("/*/admin")]
+	[InlineData("/api/admin*")]
+	[InlineData("/api/*/details")]
+	[InlineData("/*suffix")]
+	[InlineData("/prefix*")]
 	public void Koalesce_WhenExcludePathsIsValid_ShouldNotThrowException(string validPath)
 	{
 		// Arrange

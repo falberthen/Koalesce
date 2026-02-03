@@ -241,6 +241,32 @@ Use when you want to enforce unique routes and fail if conflicts are detected:
 
 ---
 
+### HttpClient Customization
+
+By default, Koalesce uses its own `HttpClient` with basic settings (timeout from `HttpTimeoutSeconds`, automatic decompression). For advanced scenarios (custom SSL/TLS, authentication handlers, retry policies), you can customize it:
+
+```csharp
+builder.Services.AddKoalesce(
+    configuration,
+    configureHttpClient: builder =>
+    {
+        // Example: Allow self-signed certificates (development only!)
+        builder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) => true
+        });
+
+        // Example: Add retry policy with Polly
+        builder.AddPolicyHandler(GetRetryPolicy());
+
+        // Example: Override timeout (ignores HttpTimeoutSeconds from config)
+        builder.ConfigureHttpClient(client => client.Timeout = TimeSpan.FromSeconds(60));
+    });
+```
+
+> 💡 **Note:** When using `configureHttpClient`, the `HttpTimeoutSeconds` setting is still applied as the default. Use `ConfigureHttpClient` inside the callback to override it if needed.
+
+---
 ## 📝 Configuration Examples
 
 ### Minimal configuration
@@ -327,6 +353,8 @@ Use when you want to enforce unique routes and fail if conflicts are detected:
 ## 📝 License
 
 Koalesce is licensed under the [**MIT License**](https://github.com/falberthen/Koalesce/blob/master/LICENSE).
+
+<br/>
 
 <p align="center">
   Made with ❤️ by <a href="https://github.com/falberthen">Felipe Henrique</a>

@@ -3,12 +3,10 @@ namespace Koalesce.Services.ConflictResolution;
 /// <summary>
 /// Service responsible for rewriting Schema reference Ids in OpenAPI documents.
 /// </summary>
-internal static class SchemaReferenceRewriter
+internal class SchemaReferenceRewriter : ISchemaReferenceRewriter
 {
-	/// <summary>
-	/// Rewrites all schema references in the document according to the rename map.
-	/// </summary>
-	public static void RewriteReferences(OpenApiDocument document, IReadOnlyDictionary<string, string> renames)
+	/// <inheritdoc />
+	public void RewriteReferences(OpenApiDocument document, IReadOnlyDictionary<string, string> renames)
 	{
 		if (renames.Count == 0) 
 			return;
@@ -56,46 +54,46 @@ internal static class SchemaReferenceRewriter
 	/// <summary>
 	/// Rewrites the schemas within the content of the specified OpenAPI request body according to the provided property
 	/// renaming map.
-	/// </summary>	
+	/// </summary>
 	private static void RewriteRequestBody(
-		IOpenApiRequestBody? requestBody, 
-		IReadOnlyDictionary<string, string> renames, 
+		IOpenApiRequestBody? requestBody,
+		IReadOnlyDictionary<string, string> renames,
 		OpenApiDocument document)
 	{
-		if (requestBody?.Content is null) 
+		if (requestBody?.Content is null)
 			return;
 
-		foreach (var kvp in requestBody.Content.ToList())
-		{
-			var mediaType = kvp.Value;
-			if (mediaType.Schema is null) 
-				continue;
-
-			// Use RewriteSchemaDeep to handle nested references
-			var newSchema = RewriteSchemaDeep(mediaType.Schema, renames, document);
-			if (!ReferenceEquals(newSchema, mediaType.Schema))
-				mediaType.Schema = newSchema;
-		}
+		RewriteMediaTypeContent(requestBody.Content, renames, document);
 	}
 
 	/// <summary>
 	/// Rewrites the schemas in the response content to reflect renamed components according to the provided mapping.
-	/// </summary>	
+	/// </summary>
 	private static void RewriteResponse(
-		IOpenApiResponse response, 
-		IReadOnlyDictionary<string, string> renames, 
+		IOpenApiResponse response,
+		IReadOnlyDictionary<string, string> renames,
 		OpenApiDocument document)
 	{
-		if (response.Content is null) 
+		if (response.Content is null)
 			return;
 
-		foreach (var kvp in response.Content.ToList())
+		RewriteMediaTypeContent(response.Content, renames, document);
+	}
+
+	/// <summary>
+	/// Rewrites schemas within media type content dictionary according to the provided renaming rules.
+	/// </summary>
+	private static void RewriteMediaTypeContent(
+		IDictionary<string, OpenApiMediaType> content,
+		IReadOnlyDictionary<string, string> renames,
+		OpenApiDocument document)
+	{
+		foreach (var kvp in content.ToList())
 		{
 			var mediaType = kvp.Value;
-			if (mediaType.Schema is null) 
+			if (mediaType.Schema is null)
 				continue;
 
-			// Use RewriteSchemaDeep to handle nested references
 			var newSchema = RewriteSchemaDeep(mediaType.Schema, renames, document);
 			if (!ReferenceEquals(newSchema, mediaType.Schema))
 				mediaType.Schema = newSchema;

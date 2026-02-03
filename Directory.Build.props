@@ -1,7 +1,7 @@
 <Project>
 	<PropertyGroup>
 		<!-- Koalesce -->
-		<KoalesceVersion>1.0.0-beta.2</KoalesceVersion>
+		<KoalesceVersion>1.0.0-beta.3</KoalesceVersion>
 		<!-- Koalesce.CLI -->
 		<KoalesceCLIVersion>1.0.0-beta.2</KoalesceCLIVersion>
 	</PropertyGroup>

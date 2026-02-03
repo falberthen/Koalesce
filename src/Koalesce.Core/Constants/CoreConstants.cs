@@ -22,7 +22,7 @@ public static class CoreConstants
 		"ExcludePaths[{0}] at Source index {1} ('{2}') must start with '/'.";
 
 	public const string ExcludePathInvalidWildcard =
-		"ExcludePaths[{0}] at Source index {1} ('{2}') has invalid wildcard. Only '/*' at the end is supported (e.g., '/api/admin/*').";
+		"ExcludePaths[{0}] at Source index {1} ('{2}') has invalid wildcard. Use single '*' per segment (e.g., '/api/*', '/*/health', '/api/*/details').";
 
 	public const string SchemaConflictPatternValidationError =
 		$"SchemaConflictPattern must contain both {PrefixPlaceholder} and {SchemaNamePlaceholder} placeholders.";

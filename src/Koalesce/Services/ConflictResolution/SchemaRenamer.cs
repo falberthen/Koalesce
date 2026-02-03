@@ -3,13 +3,15 @@
 /// <summary>
 /// Service responsible for renaming schemas in OpenAPI documents to resolve naming conflicts.
 /// </summary>
-internal class SchemaRenamer
+internal class SchemaRenamer : ISchemaRenamer
 {
 	private readonly ILogger<SchemaRenamer> _logger;
+	private readonly ISchemaReferenceRewriter _referenceRewriter;
 
-	public SchemaRenamer(ILogger<SchemaRenamer> logger)
+	public SchemaRenamer(ILogger<SchemaRenamer> logger, ISchemaReferenceRewriter referenceRewriter)
 	{
 		_logger = logger;
+		_referenceRewriter = referenceRewriter;
 	}
 
 	/// <summary>
@@ -45,7 +47,7 @@ internal class SchemaRenamer
 		}
 
 		// Rewrite internal references within the target document
-		SchemaReferenceRewriter.RewriteReferences(targetDocument, targetRenames);
+		_referenceRewriter.RewriteReferences(targetDocument, targetRenames);
 	}
 
 	/// <summary>
@@ -72,6 +74,6 @@ internal class SchemaRenamer
 		}
 
 		// Rewrite internal references within the source document
-		SchemaReferenceRewriter.RewriteReferences(sourceDocument, sourceRenames);
+		_referenceRewriter.RewriteReferences(sourceDocument, sourceRenames);
 	}
 }

@@ -59,10 +59,27 @@ public class CoreOptions : IValidatableObject
 
 	/// <summary>
 	/// Custom validation logic for required fields.
-	/// </summary>	
+	/// </summary>
 	public virtual IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
 	{
-		// Validating Sources
+		foreach (var result in ValidateSourcesRequired())
+			yield return result;
+
+		foreach (var result in ValidateMergedEndpoint())
+			yield return result;
+
+		foreach (var result in ValidateCacheSettings())
+			yield return result;
+
+		foreach (var result in ValidateSchemaConflictPattern())
+			yield return result;
+
+		foreach (var result in ValidateHttpTimeout())
+			yield return result;
+	}
+
+	private IEnumerable<ValidationResult> ValidateSourcesRequired()
+	{
 		if (Sources == null || !Sources.Any())
 		{
 			yield return new ValidationResult(
@@ -74,16 +91,20 @@ public class CoreOptions : IValidatableObject
 			foreach (var validationResult in ValidateSources())
 				yield return validationResult;
 		}
+	}
 
-		// Validating MergedEndpoint
+	private IEnumerable<ValidationResult> ValidateMergedEndpoint()
+	{
 		if (!string.IsNullOrWhiteSpace(MergedEndpoint) && !MergedEndpoint.StartsWith("/"))
 		{
 			yield return new ValidationResult(
 				"MergedEndpoint must start with '/'.",
 				[nameof(MergedEndpoint)]);
 		}
+	}
 
-		// Caching Validations
+	private IEnumerable<ValidationResult> ValidateCacheSettings()
+	{
 		if (Cache.MinExpirationSeconds < 0)
 		{
 			yield return new ValidationResult(
@@ -111,22 +132,26 @@ public class CoreOptions : IValidatableObject
 				$"SlidingExpirationSeconds ({Cache.SlidingExpirationSeconds}) cannot be greater than AbsoluteExpirationSeconds ({Cache.AbsoluteExpirationSeconds}).",
 				[nameof(Cache.SlidingExpirationSeconds)]);
 		}
+	}
 
-		// Validate SchemaConflictPattern contains required placeholders
-		if (!string.IsNullOrWhiteSpace(SchemaConflictPattern))
+	private IEnumerable<ValidationResult> ValidateSchemaConflictPattern()
+	{
+		if (string.IsNullOrWhiteSpace(SchemaConflictPattern))
+			yield break;
+
+		bool hasPrefix = SchemaConflictPattern.Contains(CoreConstants.PrefixPlaceholder);
+		bool hasSchemaName = SchemaConflictPattern.Contains(CoreConstants.SchemaNamePlaceholder);
+
+		if (!hasPrefix || !hasSchemaName)
 		{
-			bool hasPrefix = SchemaConflictPattern.Contains(CoreConstants.PrefixPlaceholder);
-			bool hasSchemaName = SchemaConflictPattern.Contains(CoreConstants.SchemaNamePlaceholder);
-
-			if (!hasPrefix || !hasSchemaName)
-			{
-				yield return new ValidationResult(
-					CoreConstants.SchemaConflictPatternValidationError,
-					[nameof(SchemaConflictPattern)]);
-			}
+			yield return new ValidationResult(
+				CoreConstants.SchemaConflictPatternValidationError,
+				[nameof(SchemaConflictPattern)]);
 		}
+	}
 
-		// Validate HttpTimeoutSeconds
+	private IEnumerable<ValidationResult> ValidateHttpTimeout()
+	{
 		if (HttpTimeoutSeconds <= 0)
 		{
 			yield return new ValidationResult(
@@ -177,7 +202,7 @@ public class CoreOptions : IValidatableObject
 			{
 				yield return new ValidationResult(
 					string.Format(CoreConstants.SourceMustHaveUrlOrFilePath, i),
-					[$"{nameof(Sources)}[{i}]"]);
+					[ValidationPath.Source(i)]);
 				continue;
 			}
 
@@ -191,7 +216,7 @@ public class CoreOptions : IValidatableObject
 				{
 					yield return new ValidationResult(
 						$"The Source URL at index {i} ('{source.Url}') must be a valid absolute URL (starting with http:// or https://).",
-						[$"{nameof(Sources)}[{i}].Url"]);
+						[ValidationPath.SourceUrl(i)]);
 				}
 			}
 
@@ -207,7 +232,7 @@ public class CoreOptions : IValidatableObject
 				{
 					yield return new ValidationResult(
 						string.Format(CoreConstants.SourceFilePathNotFound, i, source.FilePath),
-						[$"{nameof(Sources)}[{i}].FilePath"]);
+						[ValidationPath.SourceFilePath(i)]);
 				}
 			}
 
@@ -230,7 +255,7 @@ public class CoreOptions : IValidatableObject
 			{
 				yield return new ValidationResult(
 					string.Format(CoreConstants.ExcludePathCannotBeEmpty, j, sourceIndex),
-					[$"{nameof(Sources)}[{sourceIndex}].ExcludePaths[{j}]"]);
+					[ValidationPath.ExcludePath(sourceIndex, j)]);
 				continue;
 			}
 
@@ -238,21 +263,52 @@ public class CoreOptions : IValidatableObject
 			{
 				yield return new ValidationResult(
 					string.Format(CoreConstants.ExcludePathMustStartWithSlash, j, sourceIndex, path),
-					[$"{nameof(Sources)}[{sourceIndex}].ExcludePaths[{j}]"]);
+					[ValidationPath.ExcludePath(sourceIndex, j)]);
 			}
 
-			// Validate wildcard usage: only "/*" at the end is supported
-			int wildcardIndex = path.IndexOf('*');
-			if (wildcardIndex != -1)
+			// Validate wildcard usage: * can appear anywhere but must match a single segment
+			if (!IsValidWildcardPattern(path))
 			{
-				bool isValidWildcard = path.EndsWith("/*") && path.IndexOf('*') == path.Length - 1;
-				if (!isValidWildcard)
-				{
-					yield return new ValidationResult(
-						string.Format(CoreConstants.ExcludePathInvalidWildcard, j, sourceIndex, path),
-						[$"{nameof(Sources)}[{sourceIndex}].ExcludePaths[{j}]"]);
-				}
+				yield return new ValidationResult(
+					string.Format(CoreConstants.ExcludePathInvalidWildcard, j, sourceIndex, path),
+					[ValidationPath.ExcludePath(sourceIndex, j)]);
 			}
 		}
+	}
+
+	/// <summary>
+	/// Validates that a wildcard pattern is well-formed.
+	/// Wildcards (*) can appear anywhere but cannot be adjacent to other wildcards.
+	/// </summary>
+	private static bool IsValidWildcardPattern(string pattern)
+	{
+		int wildcardIndex = pattern.IndexOf('*');
+		if (wildcardIndex == -1)
+			return true;
+
+		// Check for consecutive wildcards (e.g., "/**/foo" or "/foo**")
+		if (pattern.Contains("**"))
+			return false;
+
+		// Check that wildcards are properly positioned (at segment boundaries or as full segments)
+		var segments = pattern.Split('/');
+		foreach (var segment in segments)
+		{
+			if (string.IsNullOrEmpty(segment))
+				continue;
+
+			// A segment can be:
+			// - A literal (no wildcards): "users"
+			// - A single wildcard: "*"
+			// - A prefix wildcard: "*suffix"
+			// - A suffix wildcard: "prefix*"
+			// - A middle wildcard: "pre*fix"
+			// All are valid as long as there's only one * per segment
+			int wildcardCount = segment.Count(c => c == '*');
+			if (wildcardCount > 1)
+				return false;
+		}
+
+		return true;
 	}
 }

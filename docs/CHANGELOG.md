@@ -6,6 +6,34 @@ All notable changes to **Koalesce** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.3] - 2026-02-02
+
+### Added
+
+- **HttpClient customization**: Added `configureHttpClient` parameter to `AddKoalesce()` allowing consumers to customize the HttpClient used for fetching API specs (SSL/TLS, authentication handlers, retry policies, etc.).
+- **Flexible wildcard patterns**: `ExcludePaths` now supports wildcards (`*`) anywhere in the pattern (e.g., `/api/*`, `/*/health`, `/api/*/details`).
+
+### Changed
+
+- **Improved error responses**: Middleware now returns structured JSON error responses instead of exposing raw exception messages.
+
+#### ⚠️ Breaking Change
+
+- **Removed built-in SSL bypass**: Use configureHttpClient parameter instead.
+-  Koalesce no longer bypasses SSL certificate validation by default. Consumers who need this behavior can configure it via the new `configureHttpClient` parameter.
+
+  - **Migration:** If you were relying on the implicit SSL bypass for self-signed certificates:
+
+    ```csharp
+    services.AddKoalesce(configuration, configureHttpClient: builder =>
+        builder.ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+        {
+            ServerCertificateCustomValidationCallback = (msg, cert, chain, errors) => true
+        }));
+    ```
+
+---
+
 ## [1.0.0-beta.2] - 2026-02-01
 
 ### Fixed
@@ -45,8 +73,8 @@ If upgrading from `Koalesce.OpenAPI (now Deprecated)` alpha versions:
 - Package renamed from `Koalesce.OpenAPI` to `Koalesce`.
 - `Koalesce.Core` is now bundled internally (no separate package needed).
 - Configuration structure unchanged - `appsettings.json` files remain compatible.
-  - #### ⚠️ Breaking Changes
-    - `SchemaConflictPattern` default value is now `{Prefix}{SchemaName}`.
-    - `MergedDocumentPath` is now `MergedEndpoint`.
 
+#### ⚠️ Breaking Changes
 
+- `SchemaConflictPattern` default value is now `{Prefix}{SchemaName}`.
+- `MergedDocumentPath` is now `MergedEndpoint`.

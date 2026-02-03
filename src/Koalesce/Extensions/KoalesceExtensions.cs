@@ -11,10 +11,13 @@ public static class KoalesceExtensions
 	/// <param name="services">The service collection.</param>
 	/// <param name="configuration">The configuration containing the Koalesce section.</param>
 	/// <param name="configureOptions">Optional delegate to configure options programmatically.</param>
+	/// <param name="configureHttpClient">Optional delegate to configure the HttpClient used for fetching API specs.
+	/// Use this to customize SSL/TLS settings, add handlers, or configure other HTTP behaviors.</param>
 	public static IServiceCollection AddKoalesce(
 		this IServiceCollection services,
 		IConfiguration configuration,
-		Action<KoalesceOptions>? configureOptions = null)
+		Action<KoalesceOptions>? configureOptions = null,
+		Action<IHttpClientBuilder>? configureHttpClient = null)
 	{
 		ArgumentNullException.ThrowIfNull(services);
 		ArgumentNullException.ThrowIfNull(configuration);
@@ -56,27 +59,23 @@ public static class KoalesceExtensions
 
 		// Conflict resolution services
 		services.TryAddSingleton<IConflictResolutionStrategy, DefaultConflictResolutionStrategy>();
-		services.TryAddSingleton<SchemaRenamer>();
+		services.TryAddSingleton<ISchemaReferenceRewriter, SchemaReferenceRewriter>();
+		services.TryAddSingleton<ISchemaRenamer, SchemaRenamer>();
 		services.TryAddSingleton<SchemaConflictCoordinator>();
 
 		// Configure HttpClient for fetching API specs
 		var httpTimeout = koalesceSection.GetValue<int?>(nameof(CoreOptions.HttpTimeoutSeconds))
 			?? CoreConstants.DefaultHttpTimeoutSeconds;
 
-		services.AddHttpClient(CoreConstants.KoalesceClient, client =>
+		var httpClientBuilder = services.AddHttpClient(CoreConstants.KoalesceClient, client =>
 		{
 			client.DefaultRequestVersion = HttpVersion.Version11;
 			client.DefaultVersionPolicy = HttpVersionPolicy.RequestVersionOrLower;
 			client.Timeout = TimeSpan.FromSeconds(httpTimeout);
-		})
-		.ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler
-		{
-			SslOptions = new System.Net.Security.SslClientAuthenticationOptions
-			{
-				RemoteCertificateValidationCallback = delegate { return true; }
-			},
-			AutomaticDecompression = DecompressionMethods.All
 		});
+
+		// Allow consumer to customize HttpClient (e.g., SSL/TLS, handlers, etc.)
+		configureHttpClient?.Invoke(httpClientBuilder);
 
 		return services;
 	}
