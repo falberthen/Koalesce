@@ -128,7 +128,17 @@ public class KoalesceMiddleware
 		{
 			_logger.LogError(ex, "Failed to generate Koalesced definition.");
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-			await context.Response.WriteAsync(ex.Message);
+			context.Response.ContentType = "application/json";
+
+			// Return structured error response without exposing internal details
+			var errorResponse = System.Text.Json.JsonSerializer.Serialize(new
+			{
+				error = "Failed to merge API definitions",
+				message = "An error occurred while generating the merged OpenAPI specification. Check server logs for details.",
+				traceId = context.TraceIdentifier
+			});
+
+			await context.Response.WriteAsync(errorResponse);
 		}
 	}
 }

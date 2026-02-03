@@ -1,6 +1,6 @@
 ﻿namespace Koalesce.Core.Extensions;
 
-public static class KoalesceOptionsValidatorExtensions
+public static class CoreOptionsExtensions
 {
 	/// <summary>
 	/// Validation method for required configuration fields

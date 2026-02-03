@@ -8,6 +8,10 @@ internal class OpenApiDocumentSerializer
 	private readonly ILogger<OpenApiDocumentSerializer> _logger;
 	private readonly KoalesceOptions _options;
 
+	// Compiled regex patterns for better performance
+	private static readonly Regex YamlVersionPattern = new(@"^openapi:\s*.+$", RegexOptions.Compiled | RegexOptions.Multiline);
+	private static readonly Regex JsonVersionPattern = new(@"""openapi""\s*:\s*""[^""]+""", RegexOptions.Compiled);
+
 	public OpenApiDocumentSerializer(
 		ILogger<OpenApiDocumentSerializer> logger,
 		IOptions<KoalesceOptions> options)
@@ -36,20 +40,24 @@ internal class OpenApiDocumentSerializer
 			: document.SerializeAsJsonAsync(version).GetAwaiter().GetResult();
 
 		// Ensure the correct OpenAPI version is enforced in the output
-		string pattern = isYaml
-			? "openapi:\\s*[^\n]+"
-			: "\"openapi\":\\s*\"[^\"]+\"";
-
-		string replacement = isYaml
-			? $"openapi: {_options.OpenApiVersion}"
-			: $"\"openapi\": \"{_options.OpenApiVersion}\"";
-
-		serialized = Regex.Replace(serialized, pattern, replacement);
+		serialized = ReplaceOpenApiVersion(serialized, isYaml);
 
 		_logger.LogInformation("Serialized Koalesced document using version {Version} as {Format}",
 			_options.OpenApiVersion, isYaml ? "YAML" : "JSON");
 
 		return serialized;
+	}
+
+	/// <summary>
+	/// Replaces the OpenAPI version in the serialized document with the configured version.
+	/// Uses compiled regex patterns for better performance and only replaces the first occurrence.
+	/// </summary>
+	private string ReplaceOpenApiVersion(string serialized, bool isYaml)
+	{
+		if (isYaml)
+			return YamlVersionPattern.Replace(serialized, $"openapi: {_options.OpenApiVersion}", count: 1);
+
+		return JsonVersionPattern.Replace(serialized, $"\"openapi\": \"{_options.OpenApiVersion}\"", count: 1);
 	}
 
 	/// <summary>
