@@ -25,7 +25,7 @@ public static class KoalesceConsoleUI
 		Console.WriteLine($"{Cyan}│               🐨 Koalesce CLI                │{Reset}");
 		Console.WriteLine($"{Cyan}├──────────────────────────────────────────────┤{Reset}");
 		Console.WriteLine($"{Cyan}│  Merging APIs with eucalyptus-fueled power!  │{Reset}");
-		Console.WriteLine($"{Cyan}╰──────────────────────────────────────────────╯{Reset}\n");
+		Console.WriteLine($"{Cyan}╰──────────────────────────────────────────────╯{Reset}");
 	}
 
 	/// <summary>
@@ -43,6 +43,17 @@ public static class KoalesceConsoleUI
 		Console.WriteLine($"\n{Red}❌ {errorMessage}{Reset}\n");
 
 	/// <summary>
+	/// Prints a categorized error message with a title and details.
+	/// </summary>
+	/// <param name="category">The error category (e.g., "Configuration Error", "Network Error").</param>
+	/// <param name="message">The detailed error message.</param>
+	public static void PrintError(string category, string message)
+	{
+		Console.WriteLine($"\n{Red}❌ [{category}]{Reset}");
+		Console.WriteLine($"{Red}   {message}{Reset}\n");
+	}
+
+	/// <summary>
 	/// Prints a success message
 	/// </summary>
 	/// <param name="successMessage"></param>
@@ -50,11 +61,24 @@ public static class KoalesceConsoleUI
 		Console.WriteLine($"\n{Green}✅ {successMessage}{Reset}\n");
 
 	/// <summary>
+	/// Prints a success message with a highlighted path
+	/// </summary>
+	public static void PrintSuccess(string message, string path) =>
+		Console.WriteLine($"\n{Green}✅ {message}{Reset} {path}\n");
+
+	/// <summary>
 	/// Prints an informational message
 	/// </summary>
 	/// <param name="infoMessage"></param>
 	public static void PrintInfo(string infoMessage) =>
 		Console.WriteLine($"\n{Yellow}ℹ️ {infoMessage}{Reset}\n");
+
+	/// <summary>
+	/// Prints a warning message
+	/// </summary>
+	/// <param name="warningMessage"></param>
+	public static void PrintWarning(string warningMessage) =>
+		Console.WriteLine($"\n{Yellow}⚠️  {warningMessage}{Reset}");
 
 	/// <summary>
 	/// Prints an error message indicating the configuration file was not found.
@@ -71,7 +95,7 @@ public static class KoalesceConsoleUI
 	/// <param name="sources">The list of OpenAPI URLs.</param>
 	public static void PrintSourceList(IEnumerable<ApiSource> sources)
 	{
-		Console.WriteLine($"{Cyan}🔍 Loaded {sources.Count()} OpenAPI definitions from config:{Reset}\n");
+		Console.WriteLine($"\n{Cyan}🔍 Loaded {sources.Count()} OpenAPI definitions:{Reset}\n");
 		foreach (var source in sources)
 		{
 			string displayPrefix = "";
