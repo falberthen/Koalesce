@@ -10,6 +10,12 @@ internal class OpenApiDefinitionLoader
 	private readonly bool _failOnLoadError;
 	private readonly OpenApiReaderSettings _readerSettings;
 
+	// Regex patterns for extracting OpenAPI/Swagger version from document content
+	private static readonly Regex JsonOpenApiVersionRegex = new(@"""openapi""\s*:\s*""([^""]+)""", RegexOptions.Compiled);
+	private static readonly Regex YamlOpenApiVersionRegex = new(@"^openapi:\s*['""]?(\d+\.\d+\.\d+)['""]?", RegexOptions.Multiline | RegexOptions.Compiled);
+	private static readonly Regex JsonSwaggerVersionRegex = new(@"""swagger""\s*:\s*""([^""]+)""", RegexOptions.Compiled);
+	private static readonly Regex YamlSwaggerVersionRegex = new(@"^swagger:\s*['""]?(\d+\.\d+)['""]?", RegexOptions.Multiline | RegexOptions.Compiled);
+
 	public OpenApiDefinitionLoader(
 		IHttpClientFactory httpClientFactory,
 		ILogger<OpenApiDefinitionLoader> logger,
@@ -92,15 +98,24 @@ internal class OpenApiDefinitionLoader
 
 	/// <summary>
 	/// Asynchronously parses an OpenAPI document from the specified stream and source location.
-	/// </summary>	
+	/// </summary>
 	private async Task<OpenApiDocument?> ParseOpenApiStreamAsync(Stream stream, string sourceLocation)
 	{
 		try
 		{
-			// Determine format from file extension or default to JSON
+			// Read stream content to validate version before parsing
+			using var reader = new StreamReader(stream, leaveOpen: true);
+			string content = await reader.ReadToEndAsync();
+
+			// Validate OpenAPI version
+			string? version = ExtractOpenApiVersion(content);
+			if (!ValidateSourceVersion(version, sourceLocation))
+				return null;
+
+			// Reset stream position and parse
+			using var contentStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
 			string? format = sourceLocation.GetFormatFromLocation();
-			
-			var readResult = await OpenApiDocument.LoadAsync(stream, format, _readerSettings);
+			var readResult = await OpenApiDocument.LoadAsync(contentStream, format, _readerSettings);
 
 			if (readResult.Document?.Paths?.Count == 0)
 			{
@@ -116,8 +131,8 @@ internal class OpenApiDefinitionLoader
 			// Log any diagnostics
 			if (readResult.Diagnostic?.Errors?.Count > 0)
 			{
-				foreach (var error in readResult.Diagnostic.Errors)				
-					_logger.LogWarning("OpenAPI parsing warning at {Location}: {Message}", sourceLocation, error.Message);				
+				foreach (var error in readResult.Diagnostic.Errors)
+					_logger.LogWarning("OpenAPI parsing warning at {Location}: {Message}", sourceLocation, error.Message);
 			}
 
 			return readResult.Document;
@@ -126,6 +141,66 @@ internal class OpenApiDefinitionLoader
 		{
 			return HandleLoadException(ex, sourceLocation);
 		}
+	}
+
+	/// <summary>
+	/// Extracts the OpenAPI or Swagger version from document content.
+	/// </summary>
+	private static string? ExtractOpenApiVersion(string content)
+	{
+		// Try OpenAPI 3.x (JSON)
+		var match = JsonOpenApiVersionRegex.Match(content);
+		if (match.Success)
+			return match.Groups[1].Value;
+
+		// Try OpenAPI 3.x (YAML)
+		match = YamlOpenApiVersionRegex.Match(content);
+		if (match.Success)
+			return match.Groups[1].Value;
+
+		// Try Swagger 2.0 (JSON)
+		match = JsonSwaggerVersionRegex.Match(content);
+		if (match.Success)
+			return match.Groups[1].Value;
+
+		// Try Swagger 2.0 (YAML)
+		match = YamlSwaggerVersionRegex.Match(content);
+		if (match.Success)
+			return match.Groups[1].Value;
+
+		return null;
+	}
+
+	/// <summary>
+	/// Validates that the source document version is supported.
+	/// </summary>
+	private bool ValidateSourceVersion(string? version, string sourceLocation)
+	{
+		if (string.IsNullOrWhiteSpace(version))
+		{
+			string msg = $"Could not determine OpenAPI version from document at {sourceLocation}.";
+
+			if (_failOnLoadError)
+				throw new KoalescePathCouldNotBeLoadedException(sourceLocation, msg);
+
+			_logger.LogWarning("{Message} Skipping.", msg);
+			return false;
+		}
+
+		if (!KoalesceConstants.SupportedOpenApiVersions.Contains(version))
+		{
+			var supported = string.Join(", ", KoalesceConstants.SupportedOpenApiVersions);
+			string msg = string.Format(KoalesceConstants.UnsupportedOpenApiVersionError, version, supported);
+
+			if (_failOnLoadError)
+				throw new KoalescePathCouldNotBeLoadedException(sourceLocation, msg);
+
+			_logger.LogWarning("Source at {Location}: {Message} Skipping.", sourceLocation, msg);
+			return false;
+		}
+
+		_logger.LogDebug("Source at {Location} has OpenAPI version {Version}.", sourceLocation, version);
+		return true;
 	}
 
 	/// <summary>
