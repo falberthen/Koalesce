@@ -6,6 +6,21 @@ All notable changes to **Koalesce** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.4] - 2026-02-05
+
+### Added
+
+- **Input version validation**: Validates OpenAPI versions from source documents before parsing. Unsupported versions are rejected with clear error messages.
+- **Extended version support**: Added support for `3.0.2`, `3.0.3`, `3.1.1`, and `3.2.0`.
+
+### Changed
+
+- **Microsoft.OpenApi upgrade**: Updated from `2.0.0` to `3.3.1`, enabling support for OpenAPI 3.1.x and 3.2.x specifications.
+- **Centralized version constants**: `SupportedOpenApiVersions` moved to `KoalesceConstants` for consistency between input and output validation.
+- **Central package management**: Migrated to `Directory.Packages.props` for centralized NuGet package versions.
+
+---
+
 ## [1.0.0-beta.3] - 2026-02-02
 
 ### Added

@@ -99,15 +99,11 @@ internal class OpenApiDocumentSerializer
 	private void ValidateOpenApiVersion()
 	{
 		if (string.IsNullOrWhiteSpace(_options.OpenApiVersion) ||
-			!AllowedOpenApiVersions.Contains(_options.OpenApiVersion))
-			throw new NotSupportedException($"Unsupported OpenAPI version: {_options.OpenApiVersion}");
+			!KoalesceConstants.SupportedOpenApiVersions.Contains(_options.OpenApiVersion))
+		{
+			var supported = string.Join(", ", KoalesceConstants.SupportedOpenApiVersions);
+			throw new NotSupportedException(
+				string.Format(KoalesceConstants.UnsupportedOpenApiVersionError, _options.OpenApiVersion, supported));
+		}
 	}
-
-	/// <summary>
-	/// Allowed OpenAPI versions.
-	/// </summary>
-	private static readonly HashSet<string> AllowedOpenApiVersions =
-	[
-		"2.0", "3.0.0", "3.0.1", "3.0.4", "3.1.0"
-	];
 }

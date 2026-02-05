@@ -220,21 +220,8 @@ public class CoreOptions : IValidatableObject
 				}
 			}
 
-			// Validate FilePath exists
-			if (hasFilePath)
-			{
-				// Resolve relative paths against the application base directory
-				string resolvedPath = Path.IsPathRooted(source.FilePath!)
-					? source.FilePath!
-					: Path.Combine(AppContext.BaseDirectory, source.FilePath!);
-
-				if (!File.Exists(resolvedPath))
-				{
-					yield return new ValidationResult(
-						string.Format(CoreConstants.SourceFilePathNotFound, i, source.FilePath),
-						[ValidationPath.SourceFilePath(i)]);
-				}
-			}
+			// Note: FilePath existence is validated at load time, not at startup.
+			// This allows FailOnServiceLoadError to control the behavior.
 
 			// Validate ExcludePaths
 			foreach (var validationResult in ValidateExcludePaths(source, i))

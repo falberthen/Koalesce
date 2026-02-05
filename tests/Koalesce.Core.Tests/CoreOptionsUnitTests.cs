@@ -868,37 +868,5 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		Assert.Contains("either Url or FilePath", exception.Message);
 	}
 
-	[Fact]
-	public void Koalesce_WithNonExistentFilePath_ShouldThrowValidationException()
-	{
-		// Arrange
-		var appSettingsStub = new
-		{
-			Koalesce = new
-			{
-				MergedEndpoint = "/v1/mergedapidefinition.json",
-				Sources = new[]
-				{
-					new { FilePath = "C:/non/existent/path/api.json" }
-				}
-			}
-		};
-
-		var configuration = ConfigurationHelper
-			.BuildConfigurationFromObject(appSettingsStub);
-
-		Services.AddKoalesce(configuration);
-
-		var provider = Services.BuildServiceProvider();
-
-		// Act & Assert
-		var exception = Assert.Throws<OptionsValidationException>(() =>
-		{
-			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
-		});
-
-		Assert.Contains("does not exist", exception.Message);
-	}
-
 	#endregion
 }

@@ -1,7 +1,7 @@
 global using Koalesce.Core.Constants;
 global using Koalesce.Core.Exceptions;
 global using Koalesce.Core.Options;
-global using Koalesce.Core.Services;
+global using Koalesce.Services.MergeResults;
 global using Microsoft.AspNetCore.Http;
 global using Microsoft.Extensions.Caching.Memory;
 global using Microsoft.Extensions.Logging;
@@ -12,3 +12,4 @@ global using System.ComponentModel.DataAnnotations;
 global using System.IO;
 global using System.Linq;
 global using System.Threading.Tasks;
+global using Koalesce.Core.Services;

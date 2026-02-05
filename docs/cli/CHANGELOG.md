@@ -6,6 +6,22 @@ All notable changes to **Koalesce.CLI** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.4] - 2026-02-05
+
+### Changed
+
+- Updated `Koalesce` dependency to `1.0.0-beta.4`.
+- **Microsoft.OpenApi upgrade**: Updated from `2.0.0` to `3.3.1`.
+- **Central package management**: Migrated to `Directory.Packages.props` for centralized NuGet package versions.
+
+### Improved
+
+- **UX Improvements**:
+   - When not able to load sources, in a non-strict configuration mode (FailOnServiceLoadError = false), UI will display `[Not loaded]` after the Url or FilePath.
+   - **Internal errors and Exceptions** are only displayed if parameter `--verbose` is used. Otherwise, they're wrapped with friendly messages.
+
+---
+
 ## [1.0.0-beta.3] - 2026-02-02
 
 ### Added

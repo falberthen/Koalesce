@@ -1,3 +1,8 @@
+global using Koalesce.Core.Constants;
+global using Koalesce.Core.Exceptions;
+global using Koalesce.Core.Extensions;
+global using Koalesce.Core.Options;
+global using Koalesce.Core.Services;
 global using Koalesce.Core.Tests.Base;
 global using Koalesce.Core.Tests.Helpers;
 global using Koalesce.Extensions;
@@ -11,8 +16,4 @@ global using Microsoft.Extensions.Logging;
 global using Microsoft.Extensions.Options;
 global using System.Text;
 global using System.Text.Json;
-global using Koalesce.Core.Constants;
-global using Koalesce.Core.Options;
-global using Koalesce.Core.Services;
-global using Koalesce.Core.Exceptions;
-global using Koalesce.Core.Extensions;
+global using Koalesce.Services.MergeResults;

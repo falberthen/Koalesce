@@ -90,7 +90,8 @@ public class KoalesceMiddleware
 		try
 		{
 			// Calling merge service
-			string mergedDocument = await _mergeService.MergeDefinitionsAsync();
+			var result = await _mergeService.MergeDefinitionsAsync();
+			string mergedDocument = result.SerializedDocument;
 
 			if (string.IsNullOrWhiteSpace(mergedDocument))
 			{

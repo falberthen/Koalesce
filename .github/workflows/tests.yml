@@ -1,4 +1,4 @@
-name: Run Koalesce Tests
+name: Koalesce Tests
 
 on:
   push:

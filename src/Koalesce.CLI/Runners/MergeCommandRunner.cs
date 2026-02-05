@@ -45,13 +45,16 @@ public class MergeCommandRunner
 
 			services.AddLogging(builder =>
 			{
-				builder.AddConsole();
-				builder.SetMinimumLevel(_verbose ? LogLevel.Information : LogLevel.Warning);
-
-				// Remove noisy logs unless in verbose mode
-				builder.AddFilter("Microsoft", LogLevel.Warning);
-				builder.AddFilter("System", LogLevel.Warning);
-				builder.AddFilter("Koalesce", _verbose ? LogLevel.Information : LogLevel.Warning);
+				if (_verbose)
+				{
+					builder.AddConsole();
+					builder.SetMinimumLevel(LogLevel.Information);
+				}
+				else
+				{
+					// Suppress ALL logs in non-verbose mode - errors shown via CLI output only
+					builder.SetMinimumLevel(LogLevel.None);
+				}
 			});
 
 			services.AddSingleton<IMergedSpecificationWriter, MergedSpecificationWriter>();
@@ -60,14 +63,15 @@ public class MergeCommandRunner
 
 			using var provider = services.BuildServiceProvider();
 			var mergeService = provider.GetRequiredService<IKoalesceMergeService>();
-			var koalesceOptions = provider.GetRequiredService<IOptions<CoreOptions>>().Value;
 			var writer = provider.GetRequiredService<IMergedSpecificationWriter>();
-		
-			KoalesceConsoleUI.PrintSourceList(koalesceOptions.Sources ?? Enumerable.Empty<ApiSource>());
 
-			var mergedDefinition = await mergeService.MergeDefinitionsAsync();
+			// Merge definitions and get results with load status
+			var result = await mergeService.MergeDefinitionsAsync(outputPath);
 
-			await writer.WriteAsync(outputPath, mergedDefinition);
+			// Print source list with load status indicators
+			KoalesceConsoleUI.PrintSourceResults(result.SourceResults);
+
+			await writer.WriteAsync(outputPath, result.SerializedDocument);
 
 			return 0;
 		}
@@ -93,7 +97,8 @@ public class MergeCommandRunner
 		}
 		catch (Exception ex)
 		{
-			KoalesceConsoleUI.PrintError("Unexpected Error", _verbose ? ex.ToString() : ex.Message);
+			// Never show stack traces in CLI - only the error message
+			KoalesceConsoleUI.PrintError("Unexpected Error", ex.Message);
 			return 99;
 		}
 	}

@@ -31,7 +31,8 @@ internal class OpenApiDocumentMerger
 	/// <summary>
 	/// Builds a single API definition document from multiple API specifications.
 	/// </summary>
-	public async Task<OpenApiDocument> MergeIntoSingleDefinitionAsync()
+	/// <returns>A tuple containing the merged document and the load results for each source.</returns>
+	public async Task<(OpenApiDocument Document, IReadOnlyList<SourceLoadResult> SourceResults)> MergeIntoSingleDefinitionAsync()
 	{
 		if (_options.Sources?.Any() != true)
 			throw new ArgumentException("API source list cannot be empty.");
@@ -40,6 +41,7 @@ internal class OpenApiDocumentMerger
 
 		// Schema origins tracked per merge operation (not shared across requests)
 		var schemaOrigins = new Dictionary<string, SchemaOrigin>();
+		var sourceResults = new List<SourceLoadResult>();
 
 		try
 		{
@@ -49,24 +51,27 @@ internal class OpenApiDocumentMerger
 			// Fetch concurrently using the Loader
 			var fetchDocumentTasks = _options.Sources.Select(async source =>
 			{
-				var doc = await _loader.LoadAsync(source);
-				return (ApiSource: source, Document: doc);
+				var (doc, errorMessage) = await _loader.LoadAsync(source);
+				return (ApiSource: source, Document: doc, ErrorMessage: errorMessage);
 			});
 
 			var loadResults = await Task.WhenAll(fetchDocumentTasks);
 
-			// Merge results sequentially
-			foreach (var (apiSource, downstreamDoc) in loadResults)
+			// Track load results and merge successfully loaded documents
+			foreach (var (apiSource, downstreamDoc, errorMessage) in loadResults)
 			{
-				if (downstreamDoc is not null)
-					MergeApiDefinition(downstreamDoc, mergedDocument, apiSource, schemaOrigins);
+				bool isLoaded = downstreamDoc is not null;
+				sourceResults.Add(new SourceLoadResult(apiSource, isLoaded, errorMessage));
+
+				if (isLoaded)
+					MergeApiDefinition(downstreamDoc!, mergedDocument, apiSource, schemaOrigins);
 			}
 
 			// Finalize
 			ConsolidateServerDefinitions(mergedDocument);
 
 			_logger.LogInformation("API Koalescing completed.");
-			return mergedDocument;
+			return (mergedDocument, sourceResults);
 		}
 		catch (Exception ex)
 		{

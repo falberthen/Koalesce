@@ -205,10 +205,13 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 	{
 		public int CallCount { get; private set; }
 
-		public Task<string> MergeDefinitionsAsync(string? outputPath = null)
+		public Task<MergeResult> MergeDefinitionsAsync(string? outputPath = null)
 		{
 			CallCount++;
-			return Task.FromResult("{\"openapi\":\"3.0.1\",\"info\":{\"title\":\"Merged API\",\"version\":\"1.0\"}}");
+			return Task.FromResult(new MergeResult(
+				"{\"openapi\":\"3.0.1\",\"info\":{\"title\":\"Merged API\",\"version\":\"1.0\"}}",
+				[])
+			);
 		}
 	}
 }
