@@ -28,15 +28,17 @@ internal class OpenApiMergeService : IKoalesceMergeService
 	}
 
 	/// <inheritdoc/>
-	public async Task<string> MergeDefinitionsAsync(string? outputPath = null)
+	public async Task<MergeResult> MergeDefinitionsAsync(string? outputPath = null)
 	{
 		_logger.LogInformation("Starting Koalesce merge process");
 
-		var mergedDocument = await _documentMerger.MergeIntoSingleDefinitionAsync();
+		var (mergedDocument, sourceResults) = await _documentMerger.MergeIntoSingleDefinitionAsync();
 
-		_logger.LogInformation("Koalescing complete for merging {SourcesCount} definitions.",
-			_options.Sources.Count);
+		_logger.LogInformation("Koalescing complete. Loaded {LoadedCount}/{TotalCount} sources.",
+			sourceResults.Count(r => r.IsLoaded), sourceResults.Count);
 
-		return _documentSerializer.Serialize(mergedDocument, outputPath);
+		var serializedDocument = _documentSerializer.Serialize(mergedDocument, outputPath);
+
+		return new MergeResult(serializedDocument, sourceResults);
 	}
 }

@@ -2,26 +2,30 @@
 
 ![Koalesce](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/koalesce_small.png)
 
-**Koalesce** is an open-source, lightweight library that merges multiple `OpenAPI` definitions into a single unified definition.
+**Koalesce** is an open-source, lightweight .NET library that merges multiple `OpenAPI` definitions into a single unified definition.
 
-![.NET](https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet) ![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet)
-![CI Status](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg) ![GitHub Issues](https://img.shields.io/github/issues/falberthen/Koalesce) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/donate?business=CFZAMDPCTKZY6&item_name=Koalesce&currency_code=CAD)
+![.NET](https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet) ![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+![Tests](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg) ![GitHub Issues](https://img.shields.io/github/issues/falberthen/Koalesce) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/donate?business=CFZAMDPCTKZY6&item_name=Koalesce&currency_code=CAD)
 
 ⭐ **If you find Koalesce useful, please consider giving it a star!** It helps others discover the project.
+[![GitHub stars](https://img.shields.io/github/stars/falberthen/Koalesce?style=social)](https://github.com/falberthen/Koalesce/stargazers)
+
+⚠️ **Migration:** The packages [Koalesce.OpenAPI alpha.*](https://www.nuget.org/packages/Koalesce.OpenAPI/1.0.0-alpha.12) and [Koalesce.OpenAPI.CLI alpha.*](https://www.nuget.org/packages/Koalesce.OpenAPI.CLI/1.0.0-alpha.12.3) are now deprecated.
+Please migrate to `Koalesce` and `Koalesce.CLI`.
 
 ---
 
 ## How It Works
 
-- Koalesce fetches `OpenAPI` definitions from the specified **Sources**.
-- It merges them into a single definition exposed at **MergedEndpoint**.
-- The final *Koalesced* API definition is serialized and available in `JSON` or `YAML` format.
+- You configure **Koalesce** with a list of API **Sources** (URLs or file paths).
+- Koalesce fetches OpenAPI definitions from each source, regardless of their format or version.
+- It merges them into a single unified definition in the format (JSON/YAML) and OpenAPI version of your choice.
 
 ### ⚡ Key Features
 
 - ✅ **Merge Multiple APIs**: Coalesce multiple OpenAPI definitions into a unified one.
 - ✅ **Conflict Resolution**: Automatic schema renaming and path collision detection.
-- ✅ **Flexible Configuration**: Configure via `appsettings.json` or Fluent API (Middleware).
+- ✅ **Flexible Configuration**: Configure via `.json` or Fluent API (Middleware).
 - ✅ **Fail-Fast Validation**: Validates URLs and paths at startup to prevent runtime errors.
 - ✅ **Gateway Integration**: Works seamlessly with **Ocelot**, **YARP**, and other API Gateways.
 - ✅ **Configurable Caching**: Fine-grained cache control with absolute/sliding expiration settings.
@@ -32,18 +36,20 @@
 
 **Koalesce** balances **Developer Experience** with architectural governance:
 
-- **Resilient by Default:** If a microservice is down, Koalesce skips it without breaking your Gateway.
-- **Strict by Choice:** Can be configured to fail on unreachable services or route collisions - useful for CI/CD pipelines.
+- **Resilient by Default:** Skips unreachable services and duplicate paths with warnings.
+- **Strict by Choice:** Can be configured to fail on unreachable services or route collisions - useful for CI/CD pipelines or while developing.
 - **Purposefully Opinionated:** Ensures merged definitions have clean, deterministic, and conflict-free naming.
+- **DX First:** Designed to be easy to set up and use, with sensible defaults and clear error messages.
 
 ### 🌞 Where Koalesce Shines
 
-**Koalesce** is ideal for **Backend-for-Frontend (BFF)** patterns where external consumers need a unified API view.
+**Koalesce** is ideal for scenarios where **external consumers** need a unified view of your APIs:
 
-- **Frontend applications** consuming an API Gateway.
-- **SDK generation** with tools like `NSwag`/`Kiota` from a single unified schema.
-- **Third-party developer portals** exposing your APIs.
-- **External API consumers** needing consolidated documentation.
+- **Backend-for-Frontend (BFF)**: Provide frontend teams with one API definition instead of juggling multiple service contracts.
+- **Developer Portals**: Publish unified API documentation for partners and third-party integrations without exposing internal service boundaries.
+- **Client SDK Generation**: Generate a single client library (via NSwag, Kiota, AutoRest) from the unified API definition.
+- **CI/CD Validation**: Validate API contracts across services in a single step using a strict configuration.
+- **Mixed OpenAPI Versions**: Seamlessly merge specs from different OpenAPI versions (2.0, 3.0.x, 3.1.0) into a single normalized output.
 
 > 💡 **Tip:** For internal service-to-service communication, prefer direct service calls with dedicated clients per service to avoid tight coupling and unnecessary Gateway overhead.
 
@@ -53,14 +59,14 @@
 
 ### Koalesce (ASP.NET Core Middleware)
 
-[![NuGet](https://img.shields.io/nuget/vpre/Koalesce.svg)](https://www.nuget.org/packages/Koalesce)
+[![NuGet](https://img.shields.io/nuget/vpre/Koalesce.svg?style=flat&label=NuGet%20Pre)](https://www.nuget.org/packages/Koalesce)
 
 ```sh
 dotnet add package Koalesce --prerelease
 ```
 
 ### Koalesce.CLI (Global Tool)
-[![NuGet](https://img.shields.io/nuget/vpre/Koalesce.CLI.svg)](https://www.nuget.org/packages/Koalesce.CLI)
+[![NuGet](https://img.shields.io/nuget/vpre/Koalesce.CLI.svg?style=flat&label=NuGet%20Pre)](https://www.nuget.org/packages/Koalesce.CLI)
 
 ```bash
 dotnet tool install --global Koalesce.CLI --prerelease
@@ -68,53 +74,12 @@ dotnet tool install --global Koalesce.CLI --prerelease
 
 <br/>
 
-⚠️ **Migration:** The packages `Koalesce.OpenAPI v1.0.0-alpha.*` and `Koalesce.OpenAPI.CLI v1.0.0-alpha.*` are now deprecated.
- Please migrate to `Koalesce` and `Koalesce.CLI`.
+### 📋 Requirements
 
-
----
-
-## ⚙️ Configuration
-
-💡 Parameters marked with 🔺 are required.
-
-| Setting | Type | Default | Description |
-| --- | --- | --- | --- |
-| `Sources` | `array` | 🔺 | List of API sources to merge. |
-| `Title` | `string` | `"Koalesced API"` | Title for the merged API definition. |
-| `OpenApiVersion` | `string` | `"3.0.1"` | Target OpenAPI version for the output. |
-| `ApiGatewayBaseUrl` | `string` | `null` | Public URL of your Gateway. Enables **Gateway Mode**. |
-| `SkipIdenticalPaths` | `boolean` | `true` | If `false`, throws on duplicate paths. If `true`, logs warning and skips. |
-| `SchemaConflictPattern` | `string` | `"{Prefix}{SchemaName}"` | Pattern for resolving schema name conflicts. |
-| `FailOnServiceLoadError` | `boolean` | `false` | If `true`, aborts startup when any source is unreachable. |
-| `HttpTimeoutSeconds` | `integer` | `15` | Timeout in seconds for fetching API specifications. |
-
-Each source must have either `Url` **or** `FilePath`, but not both.
-
-| Setting | Type | Default | Description |
-| --- | --- | --- | --- |
-| `Url` | `string` | — | URL of the API definition. Mutually exclusive with `FilePath`. |
-| `FilePath` | `string` | — | Local file path to the API definition. Mutually exclusive with `Url`. |
-| `VirtualPrefix` | `string` | `null` | Prefix to apply to all routes (e.g., `/inventory`). |
-| `ExcludePaths` | `array` | `null` | Paths to exclude. Supports wildcards (e.g., `"/api/admin/*"`). |
-
-### Middleware only
-
-If using it as a Middleware, you must specify the merged endpoint.
-
-| Setting | Type | Default | Description |
-| --- | --- | --- | --- |
-| `MergedEndpoint` | `string` | 🔺 | HTTP endpoint where the merged definition is exposed. |
-
-> 💡 **Tip:** Point your OpenAPI UI tool (Swagger UI, Scalar, Redoc, etc.) to this endpoint.
-
-#### Cache
-
-| Setting | Type | Default | Description |
-| --- | --- | --- | --- |
-| `DisableCache` | `boolean` | `false` | Recomputes merged document on every request. |
-| `AbsoluteExpirationSeconds` | `integer` | `86400` | Max cache duration (24h). |
-| `SlidingExpirationSeconds` | `integer` | `300` | Resets expiration on access (5 min). |
+| Dependency        | Version | Notes                                        |
+| ----------------- | ------- | -------------------------------------------- |
+| .NET              | 8.0+    | Also supports .NET 10                        |
+| Microsoft.OpenApi | 3.0.0+  | Used internally for OpenAPI parsing/merging  |
 
 ---
 
@@ -146,15 +111,59 @@ If using it as a Middleware, you must specify the merged endpoint.
 
   #### Arguments
 
-  | Option       | Shortcut   | Required | Description                                                   |
-  | ------------ | ---------- | -------- | ------------------------------------------------------------- |
-  | `--config`   | `-c`       | 🔺Yes   | Path to your `appsettings.json` (default: `appsettings.json`) |
-  | `--output`   | `-o`       | 🔺Yes   | Path for the merged OpenAPI spec file                         |
-  | `--insecure` | `-k`, `-i` | No       | Skip SSL certificate validation (for self-signed certs)       |
-  | `--verbose`  |            | No       | Enable detailed logging                                       |
-  | `--version`  |            | No       | Display current version                                       |
+  | Option       | Shortcut   | Required | Description                                                 |
+  | ------------ | ---------- | -------- | ----------------------------------------------------------- |
+  | `--config`   | `-c`       | 🔺Yes   | Path to your configuration `.json` file.                    |
+  | `--output`   | `-o`       | 🔺Yes   | Path for the merged OpenAPI spec file.                      |
+  | `--insecure` | `-k`, `-i` | No       | Skip SSL certificate validation (for self-signed certs).    |
+  | `--verbose`  |            | No       | Enable detailed logging.                                    |
+  | `--version`  |            | No       | Display current version.                                    |
 
-  > 💡 **Note:** The CLI uses the same configuration model as the Middleware, except `Cache` and `MergedEndpoint`.
+---
+
+## ⚙️ Configuration
+
+💡 Parameters marked with 🔺 are required.
+
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `Sources` | `array` | 🔺 | List of API sources to merge. |
+| `Title` | `string` | `"Koalesced API"` | Title for the merged API definition. |
+| `OpenApiVersion` | `string` | `"3.0.1"` | Target OpenAPI version for the output. See [supported versions](#supported-openapi-versions). |
+| `ApiGatewayBaseUrl` | `string` | `null` | Public URL of your Gateway. Enables **Gateway Mode**. |
+| `SkipIdenticalPaths` | `boolean` | `true` | If `false`, throws on duplicate paths. If `true`, logs warning and skips. |
+| `SchemaConflictPattern` | `string` | `"{Prefix}{SchemaName}"` | Pattern for resolving schema name conflicts. |
+| `FailOnServiceLoadError` | `boolean` | `false` | If `true`, aborts startup when any source is unreachable. |
+| `HttpTimeoutSeconds` | `integer` | `15` | Timeout in seconds for fetching API specifications. |
+| **Source** |  |  | Each source must have either `Url` **or** `FilePath`, but not both. |
+| `Url` | `string` | — | URL of the API definition. Mutually exclusive with `FilePath`. |
+| `FilePath` | `string` | — | Local file path to the API definition. Mutually exclusive with `Url`. |
+| `VirtualPrefix` | `string` | `null` | Prefix to apply to all routes (e.g., `/inventory`). |
+| `ExcludePaths` | `array` | `null` | Paths to exclude. Supports wildcards (e.g., `"/api/admin/*"`). |
+
+### Middleware-only options (not used by CLI)
+
+| Setting | Type | Default | Description |
+| --- | --- | --- | --- |
+| `MergedEndpoint` | `string` | 🔺 | HTTP endpoint where the merged definition is exposed. 💡Point your OpenAPI UI tool (Swagger UI, Scalar, etc.) to this endpoint.
+| **Cache** |  |  |  |
+| `DisableCache` | `boolean` | `false` | Recomputes merged document on every request. |
+| `AbsoluteExpirationSeconds` | `integer` | `86400` | Max cache duration (24h). |
+| `SlidingExpirationSeconds` | `integer` | `300` | Resets expiration on access (5 min). |
+
+---
+
+### Supported OpenAPI Versions
+
+| Version | Notes |
+| --- | --- |
+| `2.0` | Swagger 2.0. |
+| `3.0.0`, `3.0.1`, `3.0.2`, `3.0.3`, `3.0.4` | OpenAPI 3.0.x. |
+| `3.1.0`, `3.1.1` | OpenAPI 3.1.x (recommended). |
+| `3.2.0` | OpenAPI 3.2.x (latest). |
+
+> 💡 **Version Compatibility:** Sources can have different OpenAPI versions (e.g., one API in 2.0, another in 3.1.0). 
+Koalesce normalizes all inputs internally and outputs a unified spec in the configured `OpenApiVersion`.
 
 ---
 
@@ -341,6 +350,7 @@ builder.Services.AddKoalesce(
 
 ## 📜 Changelog
 
+- [Full Documentation](https://github.com/falberthen/Koalesce#readme)
 - [Koalesce.Changelog](https://github.com/falberthen/Koalesce/blob/master/docs/CHANGELOG.md)
 - [Koalesce.CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/docs/cli/CHANGELOG.md)
 
