@@ -1,0 +1,50 @@
+{
+  "ReverseProxy": {
+    "Routes": {
+      "customers-route": {
+        "ClusterId": "customers-cluster",
+        "Match": {
+          "Path": "/api/customers/{**catch-all}"
+        }
+      },
+      "products-route": {
+        "ClusterId": "products-cluster",
+        "Match": {
+          "Path": "/api/products/{**catch-all}"
+        }
+      },
+      "inventory-route": {
+        "ClusterId": "inventory-cluster",
+        "Match": {
+          "Path": "/inventory/{**catch-all}"
+        },
+        "Transforms": [
+          { "PathRemovePrefix": "/inventory" }
+        ]
+      }
+    },
+    "Clusters": {
+      "customers-cluster": {
+        "Destinations": {
+          "destination1": {
+            "Address": "http://customers-api:8080"
+          }
+        }
+      },
+      "products-cluster": {
+        "Destinations": {
+          "destination1": {
+            "Address": "http://products-api:8080"
+          }
+        }
+      },
+      "inventory-cluster": {
+        "Destinations": {
+          "destination1": {
+            "Address": "http://inventory-api:8080"
+          }
+        }
+      }
+    }
+  }
+}

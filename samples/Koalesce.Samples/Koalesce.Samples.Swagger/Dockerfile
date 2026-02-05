@@ -6,6 +6,9 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# Copy Directory.*.props for central package management
+COPY Directory.Build.props Directory.Packages.props ./
+
 # Copy project files
 COPY src/Koalesce.Core/Koalesce.Core.csproj src/Koalesce.Core/
 COPY src/Koalesce/Koalesce.csproj src/Koalesce/

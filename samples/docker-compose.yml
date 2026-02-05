@@ -4,8 +4,8 @@ services:
   # ============================================
   customers-api:
     build:
-      context: ./Koalesce.Samples
-      dockerfile: Koalesce.Samples.CustomersAPI/Dockerfile
+      context: ..
+      dockerfile: samples/Koalesce.Samples/Koalesce.Samples.CustomersAPI/Dockerfile
     ports:
       - "8001:8080"
     environment:
@@ -17,8 +17,8 @@ services:
 
   products-api:
     build:
-      context: ./Koalesce.Samples
-      dockerfile: Koalesce.Samples.ProductsAPI/Dockerfile
+      context: ..
+      dockerfile: samples/Koalesce.Samples/Koalesce.Samples.ProductsAPI/Dockerfile
     ports:
       - "8002:8080"
     environment:
@@ -30,8 +30,8 @@ services:
 
   inventory-api:
     build:
-      context: ./Koalesce.Samples
-      dockerfile: Koalesce.Samples.InventoryAPI/Dockerfile
+      context: ..
+      dockerfile: samples/Koalesce.Samples/Koalesce.Samples.InventoryAPI/Dockerfile
     ports:
       - "8003:8080"
     environment:
@@ -82,6 +82,27 @@ services:
       - koalesce-network
     profiles:
       - ocelot
+
+  # ============================================
+  # YARP Gateway Sample (use --profile yarp)
+  # ============================================
+  yarp:
+    build:
+      context: ..
+      dockerfile: samples/Koalesce.Samples/Koalesce.Samples.YARP/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - ASPNETCORE_URLS=http://+:8080
+    depends_on:
+      - customers-api
+      - products-api
+      - inventory-api
+    networks:
+      - koalesce-network
+    profiles:
+      - yarp
 
 networks:
   koalesce-network:
