@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.Samples.Ocelot", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.Samples.Swagger", "Koalesce.Samples\Koalesce.Samples.Swagger\Koalesce.Samples.Swagger.csproj", "{CAB7DB58-40D4-E2C9-F164-82D2D5C2C268}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Koalesce.Samples.YARP", "Koalesce.Samples\Koalesce.Samples.YARP\Koalesce.Samples.YARP.csproj", "{B05A09EA-1472-4405-BA00-CF7E9D8BDCDE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{CAB7DB58-40D4-E2C9-F164-82D2D5C2C268}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CAB7DB58-40D4-E2C9-F164-82D2D5C2C268}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CAB7DB58-40D4-E2C9-F164-82D2D5C2C268}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B05A09EA-1472-4405-BA00-CF7E9D8BDCDE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B05A09EA-1472-4405-BA00-CF7E9D8BDCDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B05A09EA-1472-4405-BA00-CF7E9D8BDCDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B05A09EA-1472-4405-BA00-CF7E9D8BDCDE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -69,6 +75,7 @@ Global
 		{2972A6A4-45BF-D6BB-0CB7-8B4F1CE5C42F} = {C62290A1-D555-44BC-9399-789F9799E526}
 		{925257E5-D3E7-EF0E-DD8D-E7D98324066A} = {6EFC4701-9ADF-458B-BB9E-3E2B496C91A5}
 		{CAB7DB58-40D4-E2C9-F164-82D2D5C2C268} = {6EFC4701-9ADF-458B-BB9E-3E2B496C91A5}
+		{B05A09EA-1472-4405-BA00-CF7E9D8BDCDE} = {6EFC4701-9ADF-458B-BB9E-3E2B496C91A5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AB1241EC-E4BC-4518-A486-776F861DCFA5}

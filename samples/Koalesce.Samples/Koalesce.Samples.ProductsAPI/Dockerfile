@@ -5,12 +5,24 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
-COPY . .
-RUN dotnet restore "Koalesce.Samples.ProductsAPI/Koalesce.Samples.ProductsAPI.csproj"
-RUN dotnet build "Koalesce.Samples.ProductsAPI/Koalesce.Samples.ProductsAPI.csproj" -c Release -o /app/build
+
+# Copy Directory.*.props for central package management
+COPY Directory.Build.props Directory.Packages.props ./
+
+# Copy project files
+COPY samples/Koalesce.Samples/Koalesce.Samples.ProductsAPI/Koalesce.Samples.ProductsAPI.csproj samples/Koalesce.Samples/Koalesce.Samples.ProductsAPI/
+
+# Restore
+RUN dotnet restore "samples/Koalesce.Samples/Koalesce.Samples.ProductsAPI/Koalesce.Samples.ProductsAPI.csproj"
+
+# Copy source
+COPY samples/Koalesce.Samples/Koalesce.Samples.ProductsAPI/ samples/Koalesce.Samples/Koalesce.Samples.ProductsAPI/
+
+# Build
+RUN dotnet build "samples/Koalesce.Samples/Koalesce.Samples.ProductsAPI/Koalesce.Samples.ProductsAPI.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "Koalesce.Samples.ProductsAPI/Koalesce.Samples.ProductsAPI.csproj" -c Release -o /app/publish
+RUN dotnet publish "samples/Koalesce.Samples/Koalesce.Samples.ProductsAPI/Koalesce.Samples.ProductsAPI.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
