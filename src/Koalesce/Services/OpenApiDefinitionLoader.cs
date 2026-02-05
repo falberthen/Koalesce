@@ -33,7 +33,8 @@ internal class OpenApiDefinitionLoader
 	/// <summary>
 	/// Asynchronously loads an OpenAPI document from the specified source (URL or file).
 	/// </summary>
-	public async Task<OpenApiDocument?> LoadAsync(ApiSource source)
+	/// <returns>A tuple containing the document (or null if failed) and an optional error message.</returns>
+	public async Task<(OpenApiDocument? Document, string? ErrorMessage)> LoadAsync(ApiSource source)
 	{
 		bool isFileBased = !string.IsNullOrWhiteSpace(source.FilePath);
 		string sourceLocation = isFileBased ? source.FilePath! : source.Url!;
@@ -45,8 +46,8 @@ internal class OpenApiDefinitionLoader
 
 	/// <summary>
 	/// Asynchronously loads an OpenAPI document from the specified HTTP URL.
-	/// </summary>	
-	private async Task<OpenApiDocument?> LoadFromHttpAsync(string url)
+	/// </summary>
+	private async Task<(OpenApiDocument? Document, string? ErrorMessage)> LoadFromHttpAsync(string url)
 	{
 		try
 		{
@@ -61,8 +62,9 @@ internal class OpenApiDefinitionLoader
 			}
 			else if (!response.IsSuccessStatusCode)
 			{
+				string errorMsg = $"HTTP {(int)response.StatusCode} {response.StatusCode}";
 				_logger.LogWarning("Failed to fetch OpenAPI from {Url}. Status Code: {StatusCode}. Skipping.", url, response.StatusCode);
-				return null;
+				return (null, errorMsg);
 			}
 
 			using var responseStream = await response.Content.ReadAsStreamAsync();
@@ -76,8 +78,8 @@ internal class OpenApiDefinitionLoader
 
 	/// <summary>
 	/// Asynchronously loads an OpenAPI document from the specified file path.
-	/// </summary>	
-	private async Task<OpenApiDocument?> LoadFromFileAsync(string filePath)
+	/// </summary>
+	private async Task<(OpenApiDocument? Document, string? ErrorMessage)> LoadFromFileAsync(string filePath)
 	{
 		try
 		{
@@ -99,7 +101,7 @@ internal class OpenApiDefinitionLoader
 	/// <summary>
 	/// Asynchronously parses an OpenAPI document from the specified stream and source location.
 	/// </summary>
-	private async Task<OpenApiDocument?> ParseOpenApiStreamAsync(Stream stream, string sourceLocation)
+	private async Task<(OpenApiDocument? Document, string? ErrorMessage)> ParseOpenApiStreamAsync(Stream stream, string sourceLocation)
 	{
 		try
 		{
@@ -109,8 +111,9 @@ internal class OpenApiDefinitionLoader
 
 			// Validate OpenAPI version
 			string? version = ExtractOpenApiVersion(content);
-			if (!ValidateSourceVersion(version, sourceLocation))
-				return null;
+			var (isValid, versionError) = ValidateSourceVersion(version, sourceLocation);
+			if (!isValid)
+				return (null, versionError);
 
 			// Reset stream position and parse
 			using var contentStream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content));
@@ -119,13 +122,13 @@ internal class OpenApiDefinitionLoader
 
 			if (readResult.Document?.Paths?.Count == 0)
 			{
-				string msg = $"OpenAPI document at {sourceLocation} contains no paths or could not be parsed.";
+				string msg = "No paths found";
 
 				if (_failOnLoadError)
-					throw new KoalescePathCouldNotBeLoadedException(sourceLocation, msg);
+					throw new KoalescePathCouldNotBeLoadedException(sourceLocation, $"OpenAPI document at {sourceLocation} contains no paths or could not be parsed.");
 
-				_logger.LogWarning("{Message}", msg);
-				return null;
+				_logger.LogWarning("OpenAPI document at {Location} contains no paths or could not be parsed.", sourceLocation);
+				return (null, msg);
 			}
 
 			// Log any diagnostics
@@ -135,10 +138,11 @@ internal class OpenApiDefinitionLoader
 					_logger.LogWarning("OpenAPI parsing warning at {Location}: {Message}", sourceLocation, error.Message);
 			}
 
-			return readResult.Document;
+			return (readResult.Document, null);
 		}
-		catch (OpenApiReaderException ex)
+		catch (Exception ex)
 		{
+			// Catch any parsing exception (OpenApiReaderException, SharpYaml exceptions, etc.)
 			return HandleLoadException(ex, sourceLocation);
 		}
 	}
@@ -174,40 +178,43 @@ internal class OpenApiDefinitionLoader
 	/// <summary>
 	/// Validates that the source document version is supported.
 	/// </summary>
-	private bool ValidateSourceVersion(string? version, string sourceLocation)
+	/// <returns>A tuple with validation result and optional error message for display.</returns>
+	private (bool IsValid, string? ErrorMessage) ValidateSourceVersion(string? version, string sourceLocation)
 	{
 		if (string.IsNullOrWhiteSpace(version))
 		{
 			string msg = $"Could not determine OpenAPI version from document at {sourceLocation}.";
+			string displayError = "Unknown version";
 
 			if (_failOnLoadError)
 				throw new KoalescePathCouldNotBeLoadedException(sourceLocation, msg);
 
 			_logger.LogWarning("{Message} Skipping.", msg);
-			return false;
+			return (false, displayError);
 		}
 
 		if (!KoalesceConstants.SupportedOpenApiVersions.Contains(version))
 		{
 			var supported = string.Join(", ", KoalesceConstants.SupportedOpenApiVersions);
 			string msg = string.Format(KoalesceConstants.UnsupportedOpenApiVersionError, version, supported);
+			string displayError = $"Unsupported version: {version}";
 
 			if (_failOnLoadError)
 				throw new KoalescePathCouldNotBeLoadedException(sourceLocation, msg);
 
 			_logger.LogWarning("Source at {Location}: {Message} Skipping.", sourceLocation, msg);
-			return false;
+			return (false, displayError);
 		}
 
 		_logger.LogDebug("Source at {Location} has OpenAPI version {Version}.", sourceLocation, version);
-		return true;
+		return (true, null);
 	}
 
 	/// <summary>
 	/// Handles exceptions that occur during the loading or parsing of an OpenAPI document from a specified source
 	/// location.
-	/// </summary>	
-	private OpenApiDocument? HandleLoadException(Exception ex, string sourceLocation)
+	/// </summary>
+	private (OpenApiDocument? Document, string? ErrorMessage) HandleLoadException(Exception ex, string sourceLocation)
 	{
 		if (_failOnLoadError)
 		{
@@ -215,7 +222,8 @@ internal class OpenApiDefinitionLoader
 			throw new KoalescePathCouldNotBeLoadedException(sourceLocation, "Failed to load or parse OpenAPI document.", ex);
 		}
 
-		_logger.LogError(ex, "Failed to load or parse OpenAPI from {Source}. Skipping source.", sourceLocation);
-		return null;
+		// Use Warning level so it's suppressed in non-verbose CLI mode
+		_logger.LogWarning(ex, "Failed to load or parse OpenAPI from {Source}. Skipping source.", sourceLocation);
+		return (null, "Parse error");
 	}
 }
