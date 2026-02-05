@@ -1,4 +1,4 @@
-﻿/// <summary>
+/// <summary>
 /// Entry point and command handler setup for the Koalesce OpenAPI CLI tool.
 /// </summary>
 public static class KoalesceCliApp
@@ -16,64 +16,61 @@ public static class KoalesceCliApp
 		RootCommand rootCommand = BuildRootCommand();
 
 		// Options
-		var outputOption = new Option<string>(
-			["--output", "-o"],
-			description: "Path to write the merged OpenAPI spec (e.g. apigateway.yaml)"
-		);
+		var outputOption = new Option<string>("--output", "-o")
+		{
+			Description = "Path to write the merged OpenAPI spec (e.g. apigateway.yaml)"
+		};
 
-		var configOption = new Option<string>(
-			["--config", "-c"],
-			description: "Path to the Koalesce configuration file"
-		);
+		var configOption = new Option<string>("--config", "-c")
+		{
+			Description = "Path to the Koalesce configuration file"
+		};
 
-		var verboseOption = new Option<bool>(
-			"--verbose",
-			description: "Enable verbose logging (show Information level logs)"
-		);
+		var verboseOption = new Option<bool>("--verbose")
+		{
+			Description = "Enable verbose logging (show Information level logs)"
+		};
 
-		var insecureOption = new Option<bool>(
-			["--insecure", "-k", "-i"],
-			description: "Skip SSL certificate validation (use for self-signed certificates)"
-		);
+		var insecureOption = new Option<bool>("--insecure", "-k", "-i")
+		{
+			Description = "Skip SSL certificate validation (use for self-signed certificates)"
+		};
 
-		rootCommand.AddOption(outputOption);
-		rootCommand.AddOption(configOption);
-		rootCommand.AddOption(verboseOption);
-		rootCommand.AddOption(insecureOption);
+		rootCommand.Options.Add(outputOption);
+		rootCommand.Options.Add(configOption);
+		rootCommand.Options.Add(verboseOption);
+		rootCommand.Options.Add(insecureOption);
 
 		// Setting handler
-		rootCommand.SetHandler(async (InvocationContext context) =>
+		rootCommand.SetAction(async (parseResult, cancellationToken) =>
 		{
-			string? output = context.ParseResult.GetValueForOption(outputOption);
-			string? config = context.ParseResult.GetValueForOption(configOption);
-			bool verbose = context.ParseResult.GetValueForOption(verboseOption);
-			bool insecure = context.ParseResult.GetValueForOption(insecureOption);
+			string? output = parseResult.GetValue(outputOption);
+			string? config = parseResult.GetValue(configOption);
+			bool verbose = parseResult.GetValue(verboseOption);
+			bool insecure = parseResult.GetValue(insecureOption);
 
 			if (string.IsNullOrWhiteSpace(output))
 			{
 				KoalesceConsoleUI.PrintError("--output (-o) is required");
-				context.ExitCode = 1;
-				return;
+				return 1;
 			}
 
 			if (string.IsNullOrWhiteSpace(config))
 			{
 				KoalesceConsoleUI.PrintError("--config (-c) is required");
-				context.ExitCode = 1;
-				return;
+				return 1;
 			}
 
 			var runner = new MergeCommandRunner(verbose, insecure);
-			var exitCode = await runner.RunAsync(output, config);
-			context.ExitCode = exitCode;
+			return await runner.RunAsync(output, config);
 		});
 
-		return await rootCommand.InvokeAsync(args);
+		return await rootCommand.Parse(args).InvokeAsync();
 	}
 
 	/// <summary>
 	/// Builds and returns the root command for the Koalesce CLI, including help text and usage examples.
 	/// </summary>
 	private static RootCommand BuildRootCommand() =>
-		new RootCommand(KoalesceConsoleUI.GetRootCommandDescription());
+		new(KoalesceConsoleUI.GetRootCommandDescription());
 }
