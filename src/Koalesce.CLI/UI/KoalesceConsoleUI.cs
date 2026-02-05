@@ -90,24 +90,28 @@ public static class KoalesceConsoleUI
 	}
 
 	/// <summary>
-	/// Prints the list of OpenAPI source document URLs loaded from configuration.
+	/// Prints the list of source load results with status indicators.
 	/// </summary>
-	/// <param name="sources">The list of OpenAPI URLs.</param>
-	public static void PrintSourceList(IEnumerable<ApiSource> sources)
+	/// <param name="sourceResults">The load results for each source.</param>
+	public static void PrintSourceResults(IReadOnlyList<SourceLoadResult> sourceResults)
 	{
-		Console.WriteLine($"\n{Cyan}🔍 Loaded {sources.Count()} OpenAPI definitions:{Reset}\n");
-		foreach (var source in sources)
+		int loadedCount = sourceResults.Count(r => r.IsLoaded);
+		Console.WriteLine($"\n{Cyan}🔍 Loaded {loadedCount} OpenAPI definitions:{Reset}\n");
+
+		foreach (var result in sourceResults)
 		{
 			string displayPrefix = "";
 
-			if (!string.IsNullOrEmpty(source.VirtualPrefix))
+			if (!string.IsNullOrEmpty(result.Source.VirtualPrefix))
 			{
-				var cleanPrefix = source.VirtualPrefix.Trim('/');
+				var cleanPrefix = result.Source.VirtualPrefix.Trim('/');
 				displayPrefix = $"{Magenta}[/{cleanPrefix}]{Reset} ";
 			}
 
-			string apiPath = source.Url ?? source.FilePath!;
-			Console.WriteLine($" {Green}•{Reset} {displayPrefix}{apiPath}");
+			string apiPath = result.DisplayPath;
+			string statusIndicator = result.IsLoaded ? "" : $" {Red}[Not loaded]{Reset}";
+
+			Console.WriteLine($" {Green}•{Reset} {displayPrefix}{apiPath}{statusIndicator}");
 		}
 
 		Console.WriteLine();
