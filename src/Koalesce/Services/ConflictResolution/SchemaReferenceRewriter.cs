@@ -84,14 +84,13 @@ internal class SchemaReferenceRewriter : ISchemaReferenceRewriter
 	/// Rewrites schemas within media type content dictionary according to the provided renaming rules.
 	/// </summary>
 	private static void RewriteMediaTypeContent(
-		IDictionary<string, OpenApiMediaType> content,
+		IDictionary<string, IOpenApiMediaType> content,
 		IReadOnlyDictionary<string, string> renames,
 		OpenApiDocument document)
 	{
 		foreach (var kvp in content.ToList())
 		{
-			var mediaType = kvp.Value;
-			if (mediaType.Schema is null)
+			if (kvp.Value is not OpenApiMediaType mediaType || mediaType.Schema is null)
 				continue;
 
 			var newSchema = RewriteSchemaDeep(mediaType.Schema, renames, document);
