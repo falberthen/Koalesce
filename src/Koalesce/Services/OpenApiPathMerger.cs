@@ -144,8 +144,10 @@ internal class OpenApiPathMerger
 	}
 
 	/// <summary>
-	/// Matches a path against a wildcard pattern.
-	/// * matches any single path segment (e.g., "users", "123", etc.)
+	/// Matches a path against a wildcard pattern using regex.
+	/// - /admin/* matches /admin/users, /admin/products, etc.
+	/// - */admin/* matches /api/admin/users, /v1/admin/products, etc.
+	/// - /api/*/details matches /api/users/details, /api/orders/details, etc.
 	/// </summary>
 	private static bool MatchesWildcardPattern(string path, string pattern)
 	{
@@ -154,75 +156,29 @@ internal class OpenApiPathMerger
 
 		// Fast path: no wildcards, do exact match
 		if (!normalizedPattern.Contains('*'))
-		{
 			return normalizedPath.Equals(normalizedPattern, StringComparison.OrdinalIgnoreCase);
-		}
 
-		var pathSegments = normalizedPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-		var patternSegments = normalizedPattern.Split('/', StringSplitOptions.RemoveEmptyEntries);
+		// Convert pattern to regex:
+		// - Leading * means "anything before" (.*/)?
+		// - Trailing * means "anything after" (/.*)?
+		// - Middle * means "one segment" [^/]+
+		string regexPattern = Regex.Escape(normalizedPattern);
 
-		// Special case: pattern ends with /* (match prefix and any sub-paths)
-		if (patternSegments.Length > 0 && patternSegments[^1] == "*")
-		{
-			// Check if all segments before the trailing * match
-			var prefixSegments = patternSegments[..^1];
+		// Handle leading wildcard: */admin -> (.*\/)?admin		
+		if (regexPattern.StartsWith(@"\*/"))
+			regexPattern = @"(.*/)?" + regexPattern[3..];
+		else if (regexPattern.StartsWith(@"\*"))
+			regexPattern = @"(.*/)?" + regexPattern[2..];
 
-			if (pathSegments.Length < prefixSegments.Length)
-				return false;
+		// Handle trailing wildcard: admin/* -> admin(/.*)?
+		if (regexPattern.EndsWith(@"/\*"))
+			regexPattern = regexPattern[..^3] + @"(/.*)?";
+		else if (regexPattern.EndsWith(@"\*"))
+			regexPattern = regexPattern[..^2] + @"(/.*)?";
 
-			for (int i = 0; i < prefixSegments.Length; i++)
-			{
-				if (!SegmentMatches(pathSegments[i], prefixSegments[i]))
-					return false;
-			}
+		// Handle middle wildcards: /api/*/details -> /api/[^/]+/details
+		regexPattern = regexPattern.Replace(@"\*", @"[^/]+");
 
-			return true;
-		}
-
-		// Standard case: segment count must match exactly
-		if (pathSegments.Length != patternSegments.Length)
-			return false;
-
-		for (int i = 0; i < patternSegments.Length; i++)
-		{
-			if (!SegmentMatches(pathSegments[i], patternSegments[i]))
-				return false;
-		}
-
-		return true;
-	}
-
-	/// <summary>
-	/// Matches a single path segment against a pattern segment.
-	/// Supports: *, prefix*, *suffix, pre*fix
-	/// </summary>
-	private static bool SegmentMatches(string segment, string pattern)
-	{
-		// Exact wildcard matches any segment
-		if (pattern == "*")
-			return true;
-
-		// No wildcard, exact match required
-		if (!pattern.Contains('*'))
-			return segment.Equals(pattern, StringComparison.OrdinalIgnoreCase);
-
-		// Wildcard in pattern: convert to simple matching
-		int wildcardIndex = pattern.IndexOf('*');
-		string prefix = pattern[..wildcardIndex];
-		string suffix = pattern[(wildcardIndex + 1)..];
-
-		bool prefixMatches = string.IsNullOrEmpty(prefix) ||
-			segment.StartsWith(prefix, StringComparison.OrdinalIgnoreCase);
-
-		bool suffixMatches = string.IsNullOrEmpty(suffix) ||
-			segment.EndsWith(suffix, StringComparison.OrdinalIgnoreCase);
-
-		// Ensure prefix and suffix don't overlap
-		if (prefixMatches && suffixMatches)
-		{
-			return segment.Length >= prefix.Length + suffix.Length;
-		}
-
-		return false;
+		return Regex.IsMatch(normalizedPath, $"^{regexPattern}$", RegexOptions.IgnoreCase);
 	}
 }

@@ -345,6 +345,40 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 		await koalescingApi.StopAsync();
 	}
 
+	[Fact]
+	public async Task Koalesce_WhenExcludePathsWithLeadingWildcard_ShouldExcludeMatchingPathsAnywhere()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_appSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration, options =>
+				{
+					// This should match paths containing "customers" anywhere in the path
+					if (options.Sources != null)
+					{
+						foreach (var source in options.Sources.Where(s => s.Url.Contains("8001")))
+						{
+							source.ExcludePaths = new List<string> { "*/customers/*" };
+						}
+					}
+				}));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// The "/api/customers" (exact match) should be excluded by leading wildcard
+		Assert.DoesNotContain("\"/api/customers\":", mergedResult);
+
+		// The "/api/customers/{id}" should also be excluded by leading wildcard
+		Assert.DoesNotContain("/api/customers/{id}", mergedResult);
+
+		// Products path should be present (not excluded)
+		Assert.Contains("/api/products", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
 	#endregion
 
 	#region TESTS USING FailOnServiceLoadError
