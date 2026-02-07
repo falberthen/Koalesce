@@ -18,11 +18,11 @@ public static class CoreConstants
 	public const string ExcludePathCannotBeEmpty =
 		"ExcludePaths[{0}] at Source index {1} cannot be empty.";
 
-	public const string ExcludePathMustStartWithSlash =
-		"ExcludePaths[{0}] at Source index {1} ('{2}') must start with '/'.";
+	public const string ExcludePathMustStartWithSlashOrWildcard =
+		"ExcludePaths[{0}] at Source index {1} ('{2}') must start with '/' or '*'.";
 
 	public const string ExcludePathInvalidWildcard =
-		"ExcludePaths[{0}] at Source index {1} ('{2}') has invalid wildcard. Use single '*' per segment (e.g., '/api/*', '/*/health', '/api/*/details').";
+		"ExcludePaths[{0}] at Source index {1} ('{2}') has invalid wildcard. Use single '*' per segment (e.g., '/api/*', '*/admin/*', '/*/health').";
 
 	public const string SchemaConflictPatternValidationError =
 		$"SchemaConflictPattern must contain both {PrefixPlaceholder} and {SchemaNamePlaceholder} placeholders.";

@@ -6,6 +6,15 @@ All notable changes to **Koalesce.CLI** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.5] - 2026-02-07
+
+### Changed
+- Updated `Koalesce` dependency to `1.0.0-beta.5`:
+  - #### Fixed
+    - **Leading wildcard patterns in ExcludePaths**: Fixed `*/segment/*` patterns not matching paths correctly. Patterns like `*/admin/*` now properly match paths containing `/admin/` anywhere (e.g., `/api/admin/users`, `/v1/admin/settings`).
+
+---
+
 ## [1.0.0-beta.4] - 2026-02-05
 
 ### Changed

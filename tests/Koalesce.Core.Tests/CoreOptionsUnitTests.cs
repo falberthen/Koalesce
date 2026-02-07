@@ -298,7 +298,7 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 			var options = provider.GetRequiredService<IOptions<KoalesceOptions>>().Value;
 		});
 
-		Assert.Contains("must start with '/'", exception.Message);
+		Assert.Contains("must start with '/' or '*'", exception.Message);
 	}
 
 	[Theory]

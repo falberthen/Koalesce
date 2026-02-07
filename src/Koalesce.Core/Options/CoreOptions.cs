@@ -246,10 +246,11 @@ public class CoreOptions : IValidatableObject
 				continue;
 			}
 
-			if (!path.StartsWith('/'))
+			// Path must start with '/' or '*' (for leading wildcard patterns like */admin/*)
+			if (!path.StartsWith('/') && !path.StartsWith('*'))
 			{
 				yield return new ValidationResult(
-					string.Format(CoreConstants.ExcludePathMustStartWithSlash, j, sourceIndex, path),
+					string.Format(CoreConstants.ExcludePathMustStartWithSlashOrWildcard, j, sourceIndex, path),
 					[ValidationPath.ExcludePath(sourceIndex, j)]);
 			}
 

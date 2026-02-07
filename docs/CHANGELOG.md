@@ -1,8 +1,15 @@
-# Changelog
+# Changelog [Koalesce]
 
 All notable changes to **Koalesce** will be documented in this file.
 
 > This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic Versioning](https://semver.org/).
+
+---
+## [1.0.0-beta.5] - 2026-02-07
+
+### Fixed
+
+- **Leading wildcard patterns in ExcludePaths**: Fixed `*/segment/*` patterns not matching paths correctly. Patterns like `*/admin/*` now properly match paths containing `/admin/` anywhere (e.g., `/api/admin/users`, `/v1/admin/settings`).
 
 ---
 
@@ -48,7 +55,6 @@ All notable changes to **Koalesce** will be documented in this file.
 ### Improved
 
 - **Improved error responses**: Middleware now returns structured JSON error responses instead of exposing raw exception messages.
-
 
 ---
 
