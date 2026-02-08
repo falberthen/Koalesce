@@ -7,77 +7,42 @@
 <br/>
 
 ![.NET](https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet) ![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Donate](https://img.shields.io/badge/Donate-PayPal-blue.svg)](https://www.paypal.com/donate?business=CFZAMDPCTKZY6&item_name=Koalesce&currency_code=CAD)
+
 ![Tests](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg) ![GitHub Issues](https://img.shields.io/github/issues/falberthen/Koalesce)
 
 ⭐ **If you find Koalesce useful, please consider giving it a star!** It helps others discover the project.  [![GitHub stars](https://img.shields.io/github/stars/falberthen/Koalesce?style=social)](https://github.com/falberthen/Koalesce/stargazers)
 
 ---
 
-## The Problem
+## 🧩 The Problem
 
 Building microservices or modular APIs? You're probably dealing with:
 
 - 🔀 Frontend teams juggling **multiple Swagger UIs** across services.
 - 📚 Scattered API documentation with no **unified view for consumers**.
-- 🛠️ Client SDK generation hitting **10+ different endpoints**.
+- 🔍 No single place to explore, test, or share your full API surface.
+- 🛠️ Client SDK generation from **scattered, disconnected specs**.
 
 ---
 
-## The Solution
+## 💡The Solution
 
-```
-  ┌──────────────────┐
-  │  Service A       │──┐
-  │  /swagger.json   │  │
-  └──────────────────┘  │
-                        │             🐨
-  ┌──────────────────┐  │      ┌──────────────┐      ┌─────────────────────┐
-  │  Service B       │──┼─────>│   Koalesce   │─────>│  Unified OpenAPI    │
-  │  /openapi.yaml   │  │      └──────────────┘      │  • One Swagger UI   │
-  └──────────────────┘  │                            │  • One SDK client   │
-                        │                            │  • One docs portal  │
-  ┌──────────────────┐  │                            └─────────────────────┘
-  │  Service C       │──┘
-  │  local/spec.json │
-  └──────────────────┘
-```
-
-**Koalesce** fetches OpenAPI definitions from multiple sources (URLs or files), resolves conflicts, and outputs a single unified definition.
+![Koalesce](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/koalesce_diagram.png)
 
 ---
 
-## How It Works
+## 📐 How It Works
 
-```
-  ┌────────────────────────────────────────────────────────────────┐
-  │ 1. FETCH APIS                                                  │
-  │    • Read from URLs (https://api.com/swagger.json)             │
-  │    • Read from files (./specs/local.yaml)                      │
-  │    • Support OpenAPI 2.0, 3.0.x, 3.1.x, 3.2.x                  │
-  │    • Support JSON and YAML formats                             │
-  └────────────────────────────────────────────────────────────────┘
-                                ↓
-  ┌────────────────────────────────────────────────────────────────┐
-  │ 2. RESOLVE CONFLICTS                                           │
-  │                                                                │
-  │    Path Conflicts (You Choose):                                │
-  │    A) VirtualPrefix → /inventory/health + /catalog/health      │
-  │    B) First Wins    → /health (from first source only)         │
-  │    C) Fail-Fast     → Throw exception on collision             │
-  │                                                                │
-  │    Schema Conflicts (Auto-rename):                             │
-  │    • Inventory.Product → InventoryProduct                      │
-  │    • Catalog.Product   → CatalogProduct                        │
-  │                                                                │
-  └────────────────────────────────────────────────────────────────┘
-                                ↓
-  ┌────────────────────────────────────────────────────────────────┐
-  │ 3. OUTPUT                                                      │
-  │    • Single OpenAPI spec (JSON or YAML)                        │
-  │    • Target version: 2.0, 3.0.x, 3.1.x, or 3.2.x               │
-  │    • Ready for Swagger UI, Scalar, Kiota, NSwag                │
-  └────────────────────────────────────────────────────────────────┘
-```
+**1. Fetch APIs** 
+- Read from URLs (`https://api.com/swagger.json`) or local files (`./path/localspec.yaml`). 
+- Supports OpenAPI 2.0, 3.0.x, 3.1.x, 3.2.x in JSON and YAML formats.
+
+**2. Resolve Conflicts** 
+- Path conflicts are handled by your choice: *VirtualPrefix*, *First Wins*, or *Fail-Fast*. 
+- Schema name collisions are auto-renamed based on configuration (e.g., `Inventory.Product` → `InventoryProduct`).
+
+**3. Output**  
+- A single unified OpenAPI spec (JSON or YAML), targeting any version, ready for Swagger UI, Scalar, Kiota, or NSwag.
 
 ---
 
@@ -461,5 +426,6 @@ Please migrate to `Koalesce` and `Koalesce.CLI`.
 
 <p align="center">
   Made with ❤️ by <a href="https://github.com/falberthen">Felipe Henrique</a>
+
 
 </p>
