@@ -89,7 +89,7 @@ app.UseKoalesce();
 
 app.UseSwaggerUI(c =>
 {
-  c.SwaggerEndpoint(koalesceOptions.MergedEndpoint, koalesceOptions.Title);
+  c.SwaggerEndpoint(koalesceOptions.MergedEndpoint, koalesceOptions.Info.Title);
 });
 ```
 
