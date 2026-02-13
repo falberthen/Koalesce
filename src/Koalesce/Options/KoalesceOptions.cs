@@ -5,12 +5,15 @@
 /// </summary>
 public class KoalesceOptions : CoreOptions
 {
-	public const string OpenApiVersionDefaultValue = "3.0.1";
-
 	/// <summary>
 	/// The OpenAPI specification version
 	/// </summary>
-	public string OpenApiVersion { get; set; } = OpenApiVersionDefaultValue;
+	public string OpenApiVersion { get; set; } = KoalesceConstants.DefaultOpenApiVersion;
+
+	/// <summary>
+	/// Additional metadata for the merged OpenAPI document's info section.
+	/// </summary>
+	public OpenApiInfo Info { get; set; } = new() { Title = KoalesceConstants.DefaultTitle };
 
 	/// <summary>
 	/// The public URL of the API Gateway

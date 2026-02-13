@@ -6,6 +6,25 @@ All notable changes to **Koalesce.CLI** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.6] - 2026-02-13
+
+### Changed
+
+- Updated `Koalesce` dependency to `1.0.0-beta.6`:
+  #### ⚠️ Breaking Change
+  - Moved **Title** into a new **Info** settings section, of type [OpenApiInfo](https://learn.microsoft.com/en-us/dotnet/api/microsoft.openapi.openapiinfo). This object fully complies with Microsoft.OpenApi.
+    ```json
+    {
+      "Koalesce": {    
+        "Info": {
+          "Title": "My Koalesced API",
+          "Description": "Unified API aggregating multiple services"
+          ...
+        },
+    ```
+
+---
+
 ## [1.0.0-beta.5] - 2026-02-07
 
 ### Changed

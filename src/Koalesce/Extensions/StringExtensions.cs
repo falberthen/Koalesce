@@ -11,12 +11,12 @@ public static class StringExtensions
 	public static string ExtractVersionFromPath(this string path)
 	{
 		if (string.IsNullOrEmpty(path))
-			return KoalesceConstants.V1;
+			return KoalesceConstants.DefaultVersion;
 
 		var match = VersionRegex.Match(path);
 		return match.Success
 			? match.Groups["version"].Value
-			: KoalesceConstants.V1;
+			: KoalesceConstants.DefaultVersion;
 	}
 
 

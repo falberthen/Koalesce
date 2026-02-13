@@ -10,13 +10,15 @@ internal class OpenApiDocumentMerger
 	private readonly OpenApiDefinitionLoader _loader;
 	private readonly OpenApiPathMerger _pathMerger;
 	private readonly SchemaConflictCoordinator _schemaConflictCoordinator;
+	private readonly ISchemaReferenceWalker _schemaReferenceWalker;
 
 	public OpenApiDocumentMerger(
 		IOptions<KoalesceOptions> options,
 		ILogger<OpenApiDocumentMerger> logger,
 		OpenApiDefinitionLoader loader,
 		OpenApiPathMerger pathMerger,
-		SchemaConflictCoordinator schemaConflictCoordinator)
+		SchemaConflictCoordinator schemaConflictCoordinator,
+		ISchemaReferenceWalker schemaReferenceWalker)
 	{
 		ArgumentNullException.ThrowIfNull(options);
 		ArgumentNullException.ThrowIfNull(logger);
@@ -26,6 +28,7 @@ internal class OpenApiDocumentMerger
 		_loader = loader;
 		_pathMerger = pathMerger;
 		_schemaConflictCoordinator = schemaConflictCoordinator;
+		_schemaReferenceWalker = schemaReferenceWalker;
 	}
 
 	/// <summary>
@@ -68,6 +71,7 @@ internal class OpenApiDocumentMerger
 			}
 
 			// Finalize
+			RemoveOrphanedSchemas(mergedDocument);
 			ConsolidateServerDefinitions(mergedDocument);
 
 			_logger.LogInformation("API Koalescing completed.");
@@ -85,14 +89,15 @@ internal class OpenApiDocumentMerger
 	/// </summary>
 	private OpenApiDocument InitializeMergedDocument()
 	{
-		var version = _options.MergedEndpoint?.ExtractVersionFromPath();
+		var info = _options.Info;
+
+		// Only override version if user didn't explicitly set one (still has default value)
+		if (info.Version is null)
+			info.Version = _options.MergedEndpoint?.ExtractVersionFromPath();
+
 		return new OpenApiDocument
 		{
-			Info = new OpenApiInfo
-			{
-				Title = _options.Title,
-				Version = version ?? KoalesceConstants.V1
-			},
+			Info = info,
 			Paths = new OpenApiPaths(),
 			Components = new OpenApiComponents
 			{
@@ -114,7 +119,7 @@ internal class OpenApiDocumentMerger
 		Dictionary<string, SchemaOrigin> schemaOrigins)
 	{
 		string apiName = sourceDoc.Info?.Title ?? KoalesceConstants.UnknownApi;
-		string apiVersion = sourceDoc.Info?.Version ?? KoalesceConstants.V1;
+		string apiVersion = sourceDoc.Info?.Version ?? KoalesceConstants.DefaultVersion;
 
 		// Resolve Conflicts
 		_schemaConflictCoordinator.ResolveConflicts(
@@ -219,21 +224,28 @@ internal class OpenApiDocumentMerger
 	}
 
 	/// <summary>
-	/// Merges tags prioritizing: Operation Tags > Document Global Tags > Source Fallback
+	/// Merges tags prioritizing: Operation Tags > Document Global Tags > Source Fallback.
+	/// When PrefixTagsWith is configured, all tags from the source are prefixed before merging.
 	/// </summary>
 	private static void MergeTags(
 		OpenApiDocument sourceDoc,
 		OpenApiDocument targetDoc,
 		ApiSource apiSource)
 	{
+		var prefix = apiSource.PrefixTagsWith;
+
 		// Use HashSet for O(1) lookup
 		var existingTagNames = new HashSet<string>(
 			targetDoc.Tags?.Select(t => t.Name).Where(n => n != null).Cast<string>() ?? []);
 
+		// Apply prefix to source document-level tags
 		if (sourceDoc.Tags != null)
 		{
 			foreach (var tag in sourceDoc.Tags)
 			{
+				if (tag.Name != null)
+					tag.Name = ApplyTagPrefix(tag.Name, prefix);
+
 				if (tag.Name != null && existingTagNames.Add(tag.Name))
 					targetDoc.Tags?.Add(tag);
 			}
@@ -243,7 +255,7 @@ internal class OpenApiDocumentMerger
 			return;
 
 		// Derive default tag name from URL host or file name
-		var defaultTagName = GetDefaultTagName(apiSource);
+		var defaultTagName = ApplyTagPrefix(GetDefaultTagName(apiSource), prefix);
 
 		foreach (var path in sourceDoc.Paths.Values)
 		{
@@ -253,6 +265,18 @@ internal class OpenApiDocumentMerger
 			foreach (var operation in path.Operations.Values)
 			{
 				operation.Tags ??= new HashSet<OpenApiTagReference>();
+
+				// Apply prefix to existing operation tags
+				if (prefix != null && operation.Tags.Count > 0)
+				{
+					var prefixedTags = operation.Tags
+						.Select(t => new OpenApiTagReference(ApplyTagPrefix(t.Name!, prefix)))
+						.ToList();
+					operation.Tags.Clear();
+					foreach (var tag in prefixedTags)
+						operation.Tags.Add(tag);
+				}
+
 				if (operation.Tags.Count == 0)
 				{
 					if (sourceDoc.Tags?.Count > 0)
@@ -280,6 +304,12 @@ internal class OpenApiDocumentMerger
 	}
 
 	/// <summary>
+	/// Applies a prefix to a tag name if the prefix is configured.
+	/// </summary>
+	private static string ApplyTagPrefix(string tagName, string? prefix)
+		=> prefix is null ? tagName : $"{prefix} - {tagName}";
+
+	/// <summary>
 	/// Gets the default tag name based on the API source (URL host or file name).
 	/// </summary>
 	private static string GetDefaultTagName(ApiSource apiSource)
@@ -291,6 +321,26 @@ internal class OpenApiDocumentMerger
 			return Path.GetFileNameWithoutExtension(apiSource.FilePath).CleanName(); // Use file name without extension as default tag
 
 		return KoalesceConstants.UnknownTagName;
+	}
+
+	/// <summary>
+	/// Removes schemas from the merged document that are not referenced by any path/operation.
+	/// </summary>
+	private void RemoveOrphanedSchemas(OpenApiDocument document)
+	{
+		if (document.Components?.Schemas is null || document.Components.Schemas.Count == 0)
+			return;
+
+		var referencedSchemas = _schemaReferenceWalker.CollectReferencedSchemas(document);
+		var orphanedKeys = document.Components.Schemas.Keys
+			.Where(key => !referencedSchemas.Contains(key))
+			.ToList();
+
+		foreach (var key in orphanedKeys)
+		{
+			document.Components.Schemas.Remove(key);
+			_logger.LogInformation("Removed orphaned schema '{SchemaName}' (not referenced by any path)", key);
+		}
 	}
 
 	/// <summary>

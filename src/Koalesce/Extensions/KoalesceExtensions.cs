@@ -59,7 +59,7 @@ public static class KoalesceExtensions
 
 		// Conflict resolution services
 		services.TryAddSingleton<IConflictResolutionStrategy, DefaultConflictResolutionStrategy>();
-		services.TryAddSingleton<ISchemaReferenceRewriter, SchemaReferenceRewriter>();
+		services.TryAddSingleton<ISchemaReferenceWalker, SchemaReferenceWalker>();
 		services.TryAddSingleton<ISchemaRenamer, SchemaRenamer>();
 		services.TryAddSingleton<SchemaConflictCoordinator>();
 

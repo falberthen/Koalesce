@@ -4,37 +4,6 @@
 public class CoreOptionsUnitTests : KoalesceUnitTestBase
 {
 	[Fact]
-	public void Koalesce_WhenNonRequiredConfigValuesAreMissing_ShouldUseDefaultValues()
-	{
-		// Arrange
-		var appSettingsStub = new
-		{
-			Koalesce = new CoreOptions
-			{
-				MergedEndpoint = "/v1/mergedapidefinition.json",
-				Sources = new List<ApiSource>
-				{
-					new ApiSource { Url = "https://localhost:5001/v1/apidefinition.json" }
-				}
-			}
-		};
-
-		var configuration = ConfigurationHelper
-			.BuildConfigurationFromObject(appSettingsStub);
-
-		Services.AddKoalesce(configuration);
-
-		var provider = Services.BuildServiceProvider();
-
-		// Act
-		var options = provider.GetService<IOptions<KoalesceOptions>>()?.Value;
-
-		// Assert
-		Assert.NotNull(options);
-		Assert.Equal(CoreOptions.TitleDefaultValue, options.Title); // Default title should be set
-	}
-
-	[Fact]
 	public void Koalesce_WhenValidConfiguration_ShouldBindKoalesceOptions()
 	{
 		// Arrange
@@ -42,7 +11,6 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 		{
 			Koalesce = new CoreOptions
 			{
-				Title = "My Koalesced API",
 				MergedEndpoint = "/v1/mergedapidefinition.yaml",
 				Sources = new List<ApiSource>
 				{
@@ -70,7 +38,6 @@ public class CoreOptionsUnitTests : KoalesceUnitTestBase
 
 		// Assert
 		Assert.NotNull(options);
-		Assert.Equal("My Koalesced API", options.Title);
 		Assert.Equal("/v1/mergedapidefinition.yaml", options.MergedEndpoint);
 
 		Assert.Equal(expectedRoutes.Count, options.Sources.Count);
