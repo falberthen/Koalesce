@@ -1,22 +1,22 @@
 namespace Koalesce.Services.ConflictResolution;
 
 /// <summary>
-/// Service responsible for rewriting Schema reference Ids in OpenAPI documents.
+/// Service responsible for walking and manipulating schema references in OpenAPI documents.
 /// </summary>
-internal class SchemaReferenceRewriter : ISchemaReferenceRewriter
+internal class SchemaReferenceWalker : ISchemaReferenceWalker
 {
 	/// <inheritdoc />
 	public void RewriteReferences(OpenApiDocument document, IReadOnlyDictionary<string, string> renames)
 	{
-		if (renames.Count == 0) 
+		if (renames.Count == 0)
 			return;
 
-		if (document.Paths is null) 
+		if (document.Paths is null)
 			return;
 
 		foreach (var pathItem in document.Paths.Values)
 		{
-			if (pathItem.Operations is null) 
+			if (pathItem.Operations is null)
 				continue;
 
 			foreach (var operation in pathItem.Operations.Values)
@@ -48,6 +48,139 @@ internal class SchemaReferenceRewriter : ISchemaReferenceRewriter
 				if (!ReferenceEquals(rewrittenSchema, kvp.Value))
 					document.Components.Schemas[kvp.Key] = rewrittenSchema;
 			}
+		}
+	}
+
+	/// <inheritdoc />
+	public HashSet<string> CollectReferencedSchemas(OpenApiDocument document)
+	{
+		var referenced = new HashSet<string>();
+
+		if (document.Paths is null)
+			return referenced;
+
+		// Collect schema references from all paths/operations
+		foreach (var pathItem in document.Paths.Values)
+		{
+			if (pathItem.Operations is null)
+				continue;
+
+			foreach (var operation in pathItem.Operations.Values)
+			{
+				// Request body
+				if (operation.RequestBody?.Content is not null)
+				{
+					foreach (var mediaType in operation.RequestBody.Content.Values)
+					{
+						if (mediaType is OpenApiMediaType concreteMedia && concreteMedia.Schema is not null)
+							CollectSchemaRefsDeep(concreteMedia.Schema, referenced);
+					}
+				}
+
+				// Responses
+				if (operation.Responses is not null)
+				{
+					foreach (var response in operation.Responses.Values)
+					{
+						if (response.Content is null)
+							continue;
+
+						foreach (var mediaType in response.Content.Values)
+						{
+							if (mediaType is OpenApiMediaType concreteMedia && concreteMedia.Schema is not null)
+								CollectSchemaRefsDeep(concreteMedia.Schema, referenced);
+						}
+					}
+				}
+
+				// Parameters
+				CollectParameterSchemaRefs(operation.Parameters, referenced);
+			}
+
+			// Path-level parameters
+			CollectParameterSchemaRefs(pathItem.Parameters, referenced);
+		}
+
+		// Resolve transitive references from component schemas
+		if (document.Components?.Schemas is not null)
+		{
+			var queue = new Queue<string>(referenced);
+			while (queue.Count > 0)
+			{
+				var schemaName = queue.Dequeue();
+				if (!document.Components.Schemas.TryGetValue(schemaName, out var schema))
+					continue;
+
+				var nested = new HashSet<string>();
+				CollectSchemaRefsDeep(schema, nested);
+
+				foreach (var nestedName in nested)
+				{
+					if (referenced.Add(nestedName))
+						queue.Enqueue(nestedName);
+				}
+			}
+		}
+
+		return referenced;
+	}
+
+	/// <summary>
+	/// Recursively collects schema reference names from a schema.
+	/// </summary>
+	private static void CollectSchemaRefsDeep(IOpenApiSchema schema, HashSet<string> referenced)
+	{
+		if (schema is OpenApiSchemaReference schemaRef)
+		{
+			if (schemaRef.Reference?.Id is not null)
+				referenced.Add(schemaRef.Reference.Id);
+			return;
+		}
+
+		if (schema is not OpenApiSchema concreteSchema)
+			return;
+
+		if (concreteSchema.Items is not null)
+			CollectSchemaRefsDeep(concreteSchema.Items, referenced);
+
+		if (concreteSchema.Properties is not null)
+		{
+			foreach (var prop in concreteSchema.Properties.Values)
+				CollectSchemaRefsDeep(prop, referenced);
+		}
+
+		CollectSchemaListRefs(concreteSchema.AllOf, referenced);
+		CollectSchemaListRefs(concreteSchema.OneOf, referenced);
+		CollectSchemaListRefs(concreteSchema.AnyOf, referenced);
+
+		if (concreteSchema.AdditionalProperties is IOpenApiSchema additionalSchema)
+			CollectSchemaRefsDeep(additionalSchema, referenced);
+	}
+
+	/// <summary>
+	/// Collects schema reference names from a list of schemas.
+	/// </summary>
+	private static void CollectSchemaListRefs(IList<IOpenApiSchema>? schemas, HashSet<string> referenced)
+	{
+		if (schemas is null)
+			return;
+
+		foreach (var schema in schemas)
+			CollectSchemaRefsDeep(schema, referenced);
+	}
+
+	/// <summary>
+	/// Collects schema reference names from parameter schemas.
+	/// </summary>
+	private static void CollectParameterSchemaRefs(IList<IOpenApiParameter>? parameters, HashSet<string> referenced)
+	{
+		if (parameters is null)
+			return;
+
+		foreach (var param in parameters)
+		{
+			if (param is OpenApiParameter concreteParam && concreteParam.Schema is not null)
+				CollectSchemaRefsDeep(concreteParam.Schema, referenced);
 		}
 	}
 
@@ -101,13 +234,13 @@ internal class SchemaReferenceRewriter : ISchemaReferenceRewriter
 
 	/// <summary>
 	/// Rewrites the schemas of the specified OpenAPI parameters by applying the provided renaming rules.
-	/// </summary>	
+	/// </summary>
 	private static void RewriteParameters(
-		IList<IOpenApiParameter>? parameters, 
-		IReadOnlyDictionary<string, string> renames, 
+		IList<IOpenApiParameter>? parameters,
+		IReadOnlyDictionary<string, string> renames,
 		OpenApiDocument document)
 	{
-		if (parameters is null) 
+		if (parameters is null)
 			return;
 
 		foreach (var param in parameters)
@@ -183,13 +316,13 @@ internal class SchemaReferenceRewriter : ISchemaReferenceRewriter
 	/// <summary>
 	/// Rewrites each schema in the specified list by applying the provided renaming rules to schema references within the
 	/// context of the given OpenAPI document.
-	/// </summary>	
+	/// </summary>
 	private static void RewriteSchemaList(
 		IList<IOpenApiSchema>? schemas,
 		IReadOnlyDictionary<string, string> renames,
 		OpenApiDocument document)
 	{
-		if (schemas is null) 
+		if (schemas is null)
 			return;
 
 		for (int i = 0; i < schemas.Count; i++)

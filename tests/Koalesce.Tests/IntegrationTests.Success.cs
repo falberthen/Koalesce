@@ -308,6 +308,13 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 		// Products path should be present (not excluded)
 		Assert.Contains("/api/products", mergedResult);
 
+		// Orphaned schema (only referenced by excluded path) should be removed
+		Assert.DoesNotContain("CustomerDetails", mergedResult);
+
+		// Referenced schemas should still be present
+		Assert.Contains("Customer", mergedResult);
+		Assert.Contains("Product", mergedResult);
+
 		await koalescingApi.StopAsync();
 	}
 
@@ -375,6 +382,43 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 
 		// Products path should be present (not excluded)
 		Assert.Contains("/api/products", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	#endregion
+
+	#region TESTS USING PrefixTagsWith
+
+	[Fact]
+	public async Task Koalesce_WhenPrefixTagsWithConfigured_ShouldPrefixSourceTags()
+	{
+		// Arrange & Act
+		var koalescingApi = await StartWebApplicationAsync(_appSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration, options =>
+				{
+					if (options.Sources != null)
+					{
+						foreach (var source in options.Sources.Where(s => s.Url != null && s.Url.Contains("8001")))
+						{
+							source.PrefixTagsWith = "CustomerService";
+						}
+					}
+				}));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Customers source tags should be prefixed
+		Assert.Contains("CustomerService - Customers", mergedResult);
+
+		// Original unprefixed tag should not exist
+		Assert.DoesNotContain("\"Customers\"", mergedResult);
+
+		// Products source tags should remain unchanged (no prefix configured)
+		Assert.Contains("Products", mergedResult);
 
 		await koalescingApi.StopAsync();
 	}
