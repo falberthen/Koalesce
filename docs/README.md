@@ -31,6 +31,81 @@ Building microservices or modular APIs? You're probably dealing with:
 
 ---
 
+## 📦 Quick Start
+
+### 1️⃣ Install
+
+Install it based on how you want to use Koalesce.
+
+[![NuGet](https://img.shields.io/nuget/vpre/Koalesce.svg?style=flat&label=Koalesce)](https://www.nuget.org/packages/Koalesce)
+
+```sh
+# Koalesce as an ASP.NET Core Middleware (for applications)
+dotnet add package Koalesce --prerelease
+```
+
+[![NuGet](https://img.shields.io/nuget/vpre/Koalesce.CLI.svg?style=flat&label=Koalesce.CLI)](https://www.nuget.org/packages/Koalesce.CLI)
+
+```bash
+# Koalesce as a CLI standalone tool
+dotnet tool install --global Koalesce.CLI --prerelease
+```
+
+### 2️⃣ Configure
+
+```json
+// appsettings.json
+{
+  "Koalesce": {
+    "OpenApiVersion": "3.0.1",
+    "Info": {
+      "Title": "My 🐨Koalesced API",
+      "Description": "Unified API aggregating multiple services"
+    },
+    "Sources": [
+      {
+        "Url": "https://localhost:8002/swagger/v1/swagger.json",
+        "VirtualPrefix": "/catalog",
+        "PrefixTagsWith": "Products",
+        "ExcludePaths": ["/internal/*", "*/admin/*"]
+      },
+      {
+        "Url": "https://localhost:8003/swagger/v1/swagger.json",
+        "VirtualPrefix": "/inventory",
+        "PrefixTagsWith": "Inventory",
+      }
+    ],    
+    "MergedEndpoint": "/swagger/v1/apigateway.yaml" // ignored when using CLI
+  }
+}
+```
+### 3️⃣ Run it!
+
+#### Option A: Middleware (ASP.NET Core)
+```csharp
+// Program.cs
+builder.Services.AddKoalesce();
+app.UseKoalesce();
+
+app.UseSwaggerUI(c =>
+{
+  c.SwaggerEndpoint(koalesceOptions.MergedEndpoint, koalesceOptions.Title);
+});
+```
+
+![Koalesce CLI Screenshot](../img/Screenshot_Swagger.png)
+
+#### Option B: Using the CLI Tool
+```bash
+  koalesce -c .\appsettings.json -o .\Output\apigateway.yaml
+```
+
+![Koalesce CLI Screenshot](../img/Screenshot_CLI_Sample.png)
+
+💡 The CLI merges OpenAPI definitions directly into a file on disk without requiring a host application.
+
+---
+
 ## 📐 How It Works
 
 **1. Fetch APIs** 
@@ -69,340 +144,16 @@ Building microservices or modular APIs? You're probably dealing with:
 
 ---
 
-## 📦 Quick Start
-
-### 1️⃣ Install
-
-Install it based on how you want to use Koalesce.
-
-[![NuGet](https://img.shields.io/nuget/vpre/Koalesce.svg?style=flat&label=Koalesce)](https://www.nuget.org/packages/Koalesce)
-
-```sh
-# Koalesce as an ASP.NET Core Middleware (for applications)
-dotnet add package Koalesce --prerelease
-```
-
-[![NuGet](https://img.shields.io/nuget/vpre/Koalesce.CLI.svg?style=flat&label=Koalesce.CLI)](https://www.nuget.org/packages/Koalesce.CLI)
-
-```bash
-# Koalesce as a CLI standalone tool
-dotnet tool install --global Koalesce.CLI --prerelease
-```
-
-### 2️⃣ Configure
-
-```json
-// appsettings.json
-{
-  "Koalesce": {
-    "OpenApiVersion": "3.0.1",
-    "Title": "My Koalesced API",
-    "Sources": [      
-      {
-        "Url": "https://localhost:8002/swagger/v1/swagger.json",
-        "VirtualPrefix": "/catalog",
-        "ExcludePaths": ["/internal/*", "*/admin/*"]
-      },
-      {
-        "Url": "https://localhost:8003/swagger/v1/swagger.json",
-        "VirtualPrefix": "/inventory"
-      }
-    ],    
-    "MergedEndpoint": "/swagger/v1/apigateway.yaml" // ignored when using CLI
-  }
-}
-```
-
-### 3️⃣ Run it
-
-#### Option A: Middleware (ASP.NET Core)
-```csharp
-// Program.cs
-builder.Services.AddKoalesce();
-app.UseKoalesce();
-
-app.UseSwaggerUI(c =>
-{
-  c.SwaggerEndpoint(koalesceOptions.MergedEndpoint, koalesceOptions.Title);
-});
-```
-
-![Koalesce CLI Screenshot](../img/Screenshot_Swagger.png)
-
-#### Option B: Using the CLI Tool
-```bash
-  koalesce -c .\appsettings.json -o .\Output\apigateway.yaml
-```
-
-##### CLI arguments
-
-| Option       | Shortcut   | Required |                                                  |
-| ------------ | ---------- | -------- | ----------------------------------------------------------- |
-| `--config`   | `-c`       | 🔺Yes   | Path to your configuration `.json` file.                    |
-| `--output`   | `-o`       | 🔺Yes   | Path for the merged OpenAPI spec file.                      |
-| `--insecure` | `-k`, `-i` | No       | Skip SSL certificate validation (for self-signed certs).    |
-| `--verbose`  |            | No       | Enable detailed logging.                                    |
-| `--version`  |            | No       | Display current version.                                    |
-
-![Koalesce CLI Screenshot](../img/Screenshot_CLI_Sample.png)
-
-💡 The CLI merges OpenAPI definitions directly into a file on disk without requiring a host application.
-
----
-
-## ⚙️ Configuration Reference
-
-#### Required Settings
-
-| Setting | Type | Required |   |
-|---------|---------|-------------|---|
-| `Sources` | `array` | 🔺(*Middleware / CLI*) | List of API sources (see below) |
-| `MergedEndpoint` | `string` | 🔺(*Middleware*) | HTTP endpoint for merged spec |
-
-#### Source Configuration
-
-Each source must have **either** `Url` **or** `FilePath`:
-```json
-{
-  "Sources": [
-    { "Url": "https://api.com/swagger.json" },
-    { "FilePath": "./specs/local.yaml" },
-    { "Url": "https://api.com/swagger.json" }
-  ]
-}
-```
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `Url` | 🔺 Either this or `FilePath` | Remote OpenAPI spec URL |
-| `FilePath` | 🔺 Either this or `Url` | Local file path |
-| `VirtualPrefix` | No | Prefix all paths *(enables better conflict resolution)* |
-| `ExcludePaths` | No | Paths to skip *(supports wildcards!)* |
-
-#### Optional Settings
-
-| Setting | Default |  |
-|---------|---------|-------------|
-| `Title` | `"My Koalesced API"` | Title for merged spec |
-| `OpenApiVersion` | `"3.0.1"` | Target version *(2.0, 3.0.x, 3.1.x, 3.2.x)* |
-| `ApiGatewayBaseUrl` | `null` | Gateway URL *(⚠️ rewrites server URLs in spec)* |
-| `SkipIdenticalPaths` | `true` | If `false`, throws on duplicate paths |
-| `SchemaConflictPattern` | `"{Prefix}{SchemaName}"` | Schema rename pattern |
-| `FailOnServiceLoadError` | `false` | If `true`, fails startup on unreachable source |
-| `HttpTimeoutSeconds` | `15` | Timeout for fetching remote specs |
-
-#### Cache Settings *(Middleware Only)*
-
-| Setting | Default |  |
-|---------|---------|-------------|
-| `DisableCache` | `false` | Recomputes spec on every request |
-| `AbsoluteExpirationSeconds` | `86400` *(24h)* | Max cache duration |
-| `SlidingExpirationSeconds` | `300` *(5min)* | Reset expiration on access |
-| `MinExpirationSeconds` | `30` *(30sec)* | The minimum allowed expiration time for caching |
-
----
-
-## 📝 Configuration Examples
-
-#### Advanced configuration
-
-```json
-{
-  "Koalesce": {
-    "Title": "API Gateway",
-    "OpenApiVersion": "3.1.0",
-    "Sources": [
-      {
-        "Url": "https://localhost:8001/swagger/v1/swagger.json",
-        "VirtualPrefix": "/customers"
-      },
-      {
-        "Url": "https://localhost:8002/swagger/v1/swagger.json",
-        "VirtualPrefix": "/inventory"
-      },
-      { "FilePath": "./specs/external-api.json" }
-    ],
-    "MergedEndpoint": "/swagger/v1/apigateway.json",
-    "ApiGatewayBaseUrl": "https://localhost:5000",
-    "HttpTimeoutSeconds": 30,
-    "SchemaConflictPattern": "{Prefix}_{SchemaName}", // custom pattern 
-    "Cache": {
-      "AbsoluteExpirationSeconds": 86400,
-      "SlidingExpirationSeconds": 300
-    }
-  }
-}
-```
-
-#### Strict configuration
-
-```json
-{
-  "Koalesce": {
-    ... 
-    "FailOnServiceLoadError": true, // <-----
-    "SkipIdenticalPaths": false     // <-----
-  }
-}
-```
-
-#### HttpClient Customization *(Middleware only)*
-
-For custom SSL/TLS, authentication, or retry policies:
-```csharp
-builder.Services.AddKoalesce(
-    configuration,
-    configureHttpClient: builder =>
-    {
-        // Self-signed certificates (dev only!)
-        builder.ConfigurePrimaryHttpMessageHandler(() => 
-            new HttpClientHandler
-            {
-                ServerCertificateCustomValidationCallback = 
-                    (msg, cert, chain, errors) => true
-            });
-
-        // Retry policy with Polly
-        builder.AddPolicyHandler(GetRetryPolicy());
-    });
-```
-
----
-
-## 🔀 Conflict Resolution
-
-### 🟰 Identical Paths
-
-When two services define the same path (e.g., `/api/health`), there's no perfect solution. Koalesce gives you three strategies — each with clear trade-offs:
-
-#### Strategy 1️⃣: VirtualPrefix (Preserve All Paths) ⭐ Recommended
-```json
-{
-  "Sources": [
-    { "Url": "https://inventory-api/swagger.json", "VirtualPrefix": "/inventory" },
-    { "Url": "https://catalog-api/swagger.json", "VirtualPrefix": "/catalog" }
-  ]
-}
-```
-
-**Result:**
-```
-Original paths:          Merged spec:
-/api/health       →      /inventory/api/health
-/api/health       →      /catalog/api/health
-```
-
-**✅ Pros:**
-- All endpoints preserved.
-- No data loss.
-- Explicit service boundaries in merged spec.
-
-**⚠️ Cons:**
-- **Requires Gateway URL rewrite** (Ocelot, YARP, Kong, etc.).
-- Gateway must strip prefix before routing to actual service.
-- More configuration needed.
-
-**Use when:** You have a Gateway and want complete API coverage.
-
-
-#### Strategy 2️⃣: First Source Wins (Default)
-
-```json
-{
-  "Sources": [
-    { "Url": "https://inventory-api/swagger.json" },
-    { "Url": "https://catalog-api/swagger.json" }
-  ]
-}
-```
-
-**Result:**
-```
-Source            Path          Merged spec
-Inventory API  →  /api/health → ✅ Included
-Catalog API    →  /api/health → ⚠️ Skipped (warning logged)
-```
-
-**✅ Pros:**
-- Zero Gateway configuration.
-- Predictable behavior.
-- Works out-of-the-box.
-
-**⚠️ Cons:**
-- **Later sources lose conflicting paths**.
-- Not suitable if you need all endpoints.
-- Health checks, status endpoints often duplicated.
-
-**Use when:** You're okay with losing duplicate paths, or paths are naturally unique
-
-
-### Strategy 3️⃣: Fail-Fast (Strict Mode)
-```json
-{
-  "Sources": [
-    { "Url": "https://inventory-api/swagger.json" },
-    { "Url": "https://catalog-api/swagger.json" }
-  ],
-  "SkipIdenticalPaths": false
-}
-```
-
-**Result:**
-```
-❌ KoalesceIdenticalPathFoundException
-   Duplicate path detected: /api/health
-   Sources: inventory-api, catalog-api
-```
-
-**✅ Pros:**
-- Forces you to resolve conflicts explicitly.
-- Perfect for CI/CD validation.
-- No silent data loss.
-
-**⚠️ Cons:**
-- Requires upfront path design coordination
-- Fails on common paths like `/health`, `/ready`
-
-**Use when:** You want strict contract enforcement or are validating service designs
-
-### 🟰 Identical Schemas
-
-**Automatic Resolution:** When multiple APIs define schemas with identical names (e.g., `Product`), Koalesce automatically renames them using the (customizable) pattern `{Prefix}{SchemaName}`.
-
-**Conflict Behavior:**
-
-| Scenario | Result |
-|---|---|
-| Both sources have `VirtualPrefix` | **Both** schemas are renamed (e.g., `InventoryProduct`, `CatalogProduct`.) |
-| Only one source has `VirtualPrefix` | Only the prefixed source's schema is renamed |
-| Neither source has `VirtualPrefix` | First schema keeps original name. Second uses **Sanitized API Title** as prefix. |
-
-> 💡 **Note:** When falling back to the API Title, Koalesce sanitizes the string (PascalCase, alphanumeric only) to ensure valid C# identifiers. For example, `"Sales API v2"` becomes `SalesApiV2`.
-
-**Prefix Priority:**
-
-1. **VirtualPrefix** (if configured): `/inventory` → `InventoryProduct`
-2. **API Name** (sanitized): `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPIProduct`
-
-<br/>
-
-### 🤔 Which strategy is the best for you?
-
-Conflicts are an **architectural decision**, not a technical problem. Koalesce makes the trade-offs explicit and lets you choose the strategy that fits your architecture.
-
-**Recommendation:** 
-  - Use `VirtualPrefix` with a Gateway for production. 
-  - Use `First Wins` for simple scenarios or development. 
-  - Use `Fail-Fast` in CI/CD to enforce path uniqueness.
-
----
-
-## 📜 Links
-
-- [Full CLI Documentation](https://github.com/falberthen/Koalesce/blob/master/docs/cli/README.nuget.md)
-- [Koalesce Changelog](https://github.com/falberthen/Koalesce/blob/master/docs/CHANGELOG.md)
-- [Koalesce.CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/docs/cli/CHANGELOG.md)
-
+## 📜 Important Links
+
+- 📖Configuration and advanced usage
+  - [Koalesce Configuration Reference](https://github.com/falberthen/Koalesce/blob/master/docs/CONFIGURATION.md)
+  - [Koalesce CLI Arguments Reference](https://github.com/falberthen/Koalesce/blob/master/docs/cli/CLI-ARGUMENTS.md)
+  - [Conflict Resolution Strategies](https://github.com/falberthen/Koalesce/blob/master/docs/CONFLICT-RESOLUTION.md)
+- 📖 Changelogs
+  - [Koalesce Changelog](https://github.com/falberthen/Koalesce/blob/master/docs/CHANGELOG.md)
+  - [Koalesce.CLI Changelog](https://github.com/falberthen/Koalesce/tree/master/docs/cli/CHANGELOG.md)
+  
 ---
 
 ## 📧 Support & Contributing
