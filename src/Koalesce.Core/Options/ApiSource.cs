@@ -28,4 +28,10 @@ public record class ApiSource
 	/// Supports exact matches (e.g., "/api/internal") and wildcard patterns (e.g., "/api/admin/*").
 	/// </summary>
 	public List<string>? ExcludePaths { get; set; }
+
+	/// <summary>
+	/// Optional prefix to prepend to all tags from this source.
+	/// Example: "Payments" will transform tag "Users" into "Payments - Users".
+	/// </summary>
+	public string? PrefixTagsWith { get; set; }
 }

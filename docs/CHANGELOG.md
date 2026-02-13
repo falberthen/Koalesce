@@ -5,6 +5,33 @@ All notable changes to **Koalesce** will be documented in this file.
 > This changelog follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/) and [Semantic Versioning](https://semver.org/).
 
 ---
+
+## [1.0.0-beta.6] - 2026-02-13
+
+### Added
+- **PrefixTagsWith** option for per-source tag prefixing: Allows prefixing all tags from a source with a custom label (e.g., "Payments" → "Payments - Users"), improving Swagger UI
+grouping when merging multiple APIs.
+
+### Fixed
+
+- **Schemas were left orpham in the merged definition when paths were excluded by ExcludePaths**: Added CollectReferencedSchemas to walk all path references transitively and remove unreferenced schemas after the merge.
+
+### Changed
+
+#### ⚠️ Breaking Change
+- Moved **Title** into a new **Info** settings section, of type [OpenApiInfo](https://learn.microsoft.com/en-us/dotnet/api/microsoft.openapi.openapiinfo). This object fully complies with Microsoft.OpenApi.
+  ```json
+  {
+    "Koalesce": {    
+      "Info": {
+        "Title": "My Koalesced API",
+        "Description": "Unified API aggregating multiple services"
+        ...
+      },
+  ```
+
+---
+
 ## [1.0.0-beta.5] - 2026-02-07
 
 ### Fixed

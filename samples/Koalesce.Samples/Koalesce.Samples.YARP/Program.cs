@@ -46,7 +46,7 @@ app.UseKoalesce();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint(koalesceOptions.MergedEndpoint, koalesceOptions.Title);
+    c.SwaggerEndpoint(koalesceOptions.MergedEndpoint, koalesceOptions.Info.Title);
 });
 
 // Map YARP reverse proxy

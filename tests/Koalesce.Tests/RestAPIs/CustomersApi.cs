@@ -21,11 +21,60 @@ public class CustomersApi
                 "paths": {
                     "/api/customers": {
                         "get": {
-                            "summary": "Get Customers"                            
+                            "summary": "Get Customers",
+                            "responses": {
+                                "200": {
+                                    "description": "OK",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": {
+                                                "type": "array",
+                                                "items": { "$ref": "#/components/schemas/Customer" }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "/api/customers/{id}": {
+                        "get": {
+                            "summary": "Get Customer by Id",
+                            "parameters": [
+                                { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+                            ],
+                            "responses": {
+                                "200": {
+                                    "description": "OK",
+                                    "content": {
+                                        "application/json": {
+                                            "schema": { "$ref": "#/components/schemas/CustomerDetails" }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 },
                 "components": {
+                    "schemas": {
+                        "Customer": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "format": "uuid" },
+                                "name": { "type": "string" }
+                            }
+                        },
+                        "CustomerDetails": {
+                            "type": "object",
+                            "properties": {
+                                "id": { "type": "string", "format": "uuid" },
+                                "name": { "type": "string" },
+                                "email": { "type": "string" },
+                                "address": { "type": "string" }
+                            }
+                        }
+                    },
                     "securitySchemes": {
                         "bearerAuth": {
                             "type": "http",
@@ -34,8 +83,8 @@ public class CustomersApi
                         }
                     }
                 },
-                "security": [ 
-                    { "bearerAuth": [] } 
+                "security": [
+                    { "bearerAuth": [] }
                 ],
                 "tags": [
                    {

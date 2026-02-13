@@ -8,12 +8,14 @@ public static class KoalesceConstants
 	#endregion
 
 	#region OpenApiDocumentMerger
-	public const string V1 = "v1";
+	public const string DefaultOpenApiVersion = "3.0.1";
+	public const string DefaultTitle = "My Koalesced API";
+	public const string DefaultVersion = "v1";
 	public const string UnknownApi = "Unknown API";
 	public const string UnknownTagName = "Unknown";
 	#endregion
 
-	#region OpenAPI Versions
+	#region OpenAPI Supported Versions
 	/// <summary>
 	/// Supported OpenAPI specification versions for input and output.
 	/// </summary>

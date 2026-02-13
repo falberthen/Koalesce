@@ -56,7 +56,7 @@ app.UseKoalesce();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-	c.SwaggerEndpoint(openApiOptions.MergedEndpoint, openApiOptions.Title);
+	c.SwaggerEndpoint(openApiOptions.MergedEndpoint, openApiOptions.Info.Title);
 });
 
 app.Run();

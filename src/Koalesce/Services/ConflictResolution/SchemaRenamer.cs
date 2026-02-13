@@ -6,9 +6,9 @@
 internal class SchemaRenamer : ISchemaRenamer
 {
 	private readonly ILogger<SchemaRenamer> _logger;
-	private readonly ISchemaReferenceRewriter _referenceRewriter;
+	private readonly ISchemaReferenceWalker _referenceRewriter;
 
-	public SchemaRenamer(ILogger<SchemaRenamer> logger, ISchemaReferenceRewriter referenceRewriter)
+	public SchemaRenamer(ILogger<SchemaRenamer> logger, ISchemaReferenceWalker referenceRewriter)
 	{
 		_logger = logger;
 		_referenceRewriter = referenceRewriter;
