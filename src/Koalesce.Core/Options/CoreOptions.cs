@@ -6,7 +6,6 @@
 public class CoreOptions : IValidatableObject
 {
 	public const string ConfigurationSectionName = "Koalesce";
-	public const string TitleDefaultValue = "My Koalesced API";
 
 	/// <summary>
 	/// Source URLs. At least one source is required.
@@ -19,11 +18,6 @@ public class CoreOptions : IValidatableObject
 	/// Required only when using Koalesce middleware.
 	/// </summary>
 	public string? MergedEndpoint { get; set; } = default!;
-
-	/// <summary>
-	/// Koalesced API title
-	/// </summary>
-	public string Title { get; set; } = TitleDefaultValue;
 
 	/// <summary>
 	/// Caching configuration settings for Koalesce.
@@ -226,6 +220,14 @@ public class CoreOptions : IValidatableObject
 			// Validate ExcludePaths
 			foreach (var validationResult in ValidateExcludePaths(source, i))
 				yield return validationResult;
+
+			// Validate PrefixTagsWith
+			if (source.PrefixTagsWith is not null && string.IsNullOrWhiteSpace(source.PrefixTagsWith))
+			{
+				yield return new ValidationResult(
+					$"PrefixTagsWith at source index {i} cannot be empty or whitespace. Use null to disable tag prefixing.",
+					[ValidationPath.Source(i)]);
+			}
 		}
 	}
 
