@@ -6,6 +6,15 @@ All notable changes to **Koalesce** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.7] - 2026-02-13
+
+### Fixed
+
+- Refactored internal serialization to prevent potential thread pool starvation and deadlocks when writing OpenAPI specifications.
+- Improved performance of frequently accessed fields using thread-safe caching.
+
+---
+
 ## [1.0.0-beta.6] - 2026-02-13
 
 ### Added
