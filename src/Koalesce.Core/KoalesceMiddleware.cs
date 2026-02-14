@@ -90,13 +90,13 @@ public class KoalesceMiddleware
 		try
 		{
 			// Calling merge service
-			var result = await _mergeService.MergeDefinitionsAsync();
+			var result = await _mergeService.MergeSpecificationsAsync();
 			string mergedDocument = result.SerializedDocument;
 
 			if (string.IsNullOrWhiteSpace(mergedDocument))
 			{
 				context.Response.StatusCode = StatusCodes.Status404NotFound;
-				await context.Response.WriteAsync("No APIs available to Koalesce.");
+				await context.Response.WriteAsync("No APIs available for Koalescing.");
 				return;
 			}
 
@@ -127,14 +127,14 @@ public class KoalesceMiddleware
 		}
 		catch (Exception ex)
 		{
-			_logger.LogError(ex, "Failed to generate Koalesced definition.");
+			_logger.LogError(ex, "Failed to generate Koalesced specification.");
 			context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 			context.Response.ContentType = "application/json";
 
 			// Return structured error response without exposing internal details
 			var errorResponse = System.Text.Json.JsonSerializer.Serialize(new
 			{
-				error = "Failed to merge API definitions",
+				error = "Failed to Koalesce API specifications.",
 				message = "An error occurred while generating the merged OpenAPI specification. Check server logs for details.",
 				traceId = context.TraceIdentifier
 			});

@@ -34,6 +34,50 @@ public class IntegrationTests : KoalesceIntegrationTestBase
 		Assert.Contains("/api/customers", content);
 		Assert.Contains("/api/products", content);
 	}
+
+	[Fact]
+	public async Task KoalesceForOpenAPICLI_WhenRunWithRelativePaths_ShouldMergeOpenAPIRoutes()
+	{
+		var configFullPath = Path.Combine(AppContext.BaseDirectory, _appSettings);
+
+		// Create a temp directory to serve as the working directory
+		var tempDir = Path.Combine(Path.GetTempPath(), $"koalesce-cli-test-{Guid.NewGuid()}");
+		Directory.CreateDirectory(tempDir);
+
+		try
+		{
+			// Copy the config file into the temp working directory
+			var relativeConfigName = "config.json";
+			File.Copy(configFullPath, Path.Combine(tempDir, relativeConfigName));
+
+			var relativeOutputName = "output.json";
+
+			var koalescingApi = await StartWebApplicationAsync(_appSettings,
+				builder => builder.Services
+					.AddKoalesce(builder.Configuration));
+
+			// Run CLI with relative paths and a specific working directory
+			var result = await CliTestHelpers.RunKoalesceCliAsync(
+				relativeConfigName, relativeOutputName, workingDirectory: tempDir);
+
+			await koalescingApi.StopAsync();
+
+			Assert.True(result.ExitCode == 0, $"CLI failed with exit code {result.ExitCode}.\nOutput:\n{result.Output}");
+
+			var absoluteOutputPath = Path.Combine(tempDir, relativeOutputName);
+			Assert.True(File.Exists(absoluteOutputPath), "Output file was not created at the expected location!");
+
+			var content = await File.ReadAllTextAsync(absoluteOutputPath);
+			Assert.Contains("openapi", content);
+			Assert.Contains("/api/customers", content);
+			Assert.Contains("/api/products", content);
+		}
+		finally
+		{
+			if (Directory.Exists(tempDir))
+				Directory.Delete(tempDir, recursive: true);
+		}
+	}
 }
 
 /// <summary>
@@ -91,7 +135,8 @@ public class CliStandaloneTests
 /// </summary>
 internal static class CliTestHelpers
 {
-	public static async Task<(int ExitCode, string Output)> RunKoalesceCliAsync(string configPath, string outputPath)
+	public static async Task<(int ExitCode, string Output)> RunKoalesceCliAsync(
+		string configPath, string outputPath, string? workingDirectory = null)
 	{
 		var cliDllPath = GetCliDllPath();
 		var psi = new ProcessStartInfo
@@ -108,6 +153,9 @@ internal static class CliTestHelpers
 			UseShellExecute = false,
 			CreateNoWindow = true,
 		};
+
+		if (workingDirectory != null)
+			psi.WorkingDirectory = workingDirectory;
 
 		psi.EnvironmentVariables["NO_COLOR"] = "true";
 		psi.EnvironmentVariables["DOTNET_NOLOGO"] = "true";

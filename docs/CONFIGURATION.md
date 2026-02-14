@@ -107,6 +107,35 @@ Each source must have **either** `Url` **or** `FilePath`:
 }
 ```
 
+---
+
+### Using Koalesce with a Single Source
+
+Koalesce doesn't require multiple sources. When a single source is provided, the same processing pipeline runs — `ExcludePaths`, `PrefixTagsWith`, `OpenApiVersion`, `Info`, and all other options work exactly the same way. The only difference is that no merge or conflict resolution takes place.
+
+This makes Koalesce a practical choice for sanitizing an API spec before publishing it externally, converting it to a different OpenAPI version, or simply cleaning up endpoints and tags — without needing any additional tooling.
+
+```json
+{
+  "Koalesce": {
+    "OpenApiVersion": "3.1.0",
+    "Info": {
+      "Title": "My Public API",
+      "Description": "Clean, public-facing specification"
+    },
+    "Sources": [
+      {
+        "Url": "https://localhost:8002/swagger/v1/swagger.json",
+        "ExcludePaths": ["/internal/*", "*/admin/*", "/debug/*"],
+        "PrefixTagsWith": "v2"
+      }
+    ],
+    "MergedEndpoint": "/swagger/v1/public-api.yaml"
+  }
+}
+```
+---
+
 ### HttpClient Customization *(Middleware only)*
 
 For custom SSL/TLS, authentication, or retry policies:

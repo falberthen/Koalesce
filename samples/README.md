@@ -1,6 +1,6 @@
 # Koalesce Samples
 
-Sample projects demonstrating Koalesce merging capabilities.
+Sample projects demonstrating Koalesce processing capabilities (merge and sanitize).
 
 ## Quick Start (Docker)
 

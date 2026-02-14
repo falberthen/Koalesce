@@ -96,7 +96,7 @@ public static class KoalesceConsoleUI
 	public static void PrintSourceResults(IReadOnlyList<SourceLoadResult> sourceResults)
 	{
 		int loadedCount = sourceResults.Count(r => r.IsLoaded);
-		Console.WriteLine($"\n{Cyan}🔍 Loaded {loadedCount} OpenAPI definitions:{Reset}\n");
+		Console.WriteLine($"\n{Cyan}🔍 Loaded {loadedCount} OpenAPI specifications:{Reset}\n");
 
 		foreach (var result in sourceResults)
 		{
@@ -118,7 +118,7 @@ public static class KoalesceConsoleUI
 	}
 
 	/// <summary>
-	/// Prints an error message indicating problems when writting merged file.
+	/// Prints an error message indicating problems when writting merged specification file.
 	/// </summary>
 	/// <param name="message">A short description of the error that occurred.</param>
 	/// <param name="path">The file or resource path related to the error.</param>

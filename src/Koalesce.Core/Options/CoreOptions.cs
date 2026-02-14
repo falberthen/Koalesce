@@ -11,7 +11,7 @@ public class CoreOptions : IValidatableObject
 	/// Source URLs. At least one source is required.
 	/// </summary>
 	[Required]
-	public List<ApiSource> Sources { get; set; } = new();
+	public List<ApiSource> Sources { get; set; } = [];
 
 	/// <summary>
 	/// The endpoint path where the merged definition should be exposed.
@@ -74,7 +74,7 @@ public class CoreOptions : IValidatableObject
 
 	private IEnumerable<ValidationResult> ValidateSourcesRequired()
 	{
-		if (Sources == null || !Sources.Any())
+		if (Sources == null || Sources.Count == 0)
 		{
 			yield return new ValidationResult(
 				"At least one source must be defined in Sources.",

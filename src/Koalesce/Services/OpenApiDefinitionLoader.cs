@@ -1,7 +1,7 @@
 namespace Koalesce.Services;
 
 /// <summary>
-/// Service responsible for loading OpenAPI definitions from URLs or local files.
+/// Service responsible for loading OpenAPI specifications from URLs or local files.
 /// </summary>
 internal class OpenApiDefinitionLoader
 {

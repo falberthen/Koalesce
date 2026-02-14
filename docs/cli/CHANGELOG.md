@@ -6,6 +6,20 @@ All notable changes to **Koalesce.CLI** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.7] - 2026-02-13
+
+### Fixed
+
+- Fixed issue that prevented using --config or --output with relative paths.
+- Fixed duplicated logging registry that could reset the custom verbose/non-verbose logging setup.
+
+### Changed
+
+- UI now uses the term `specifications` instead of `definitions` when referring to the loaded OpenAPI specs.
+- Updated `Koalesce` dependency to `1.0.0-beta.7`
+
+---
+
 ## [1.0.0-beta.6] - 2026-02-13
 
 ### Changed

@@ -24,7 +24,7 @@ public class MergedSpecificationWriter : IMergedSpecificationWriter
 			);			
 
 			KoalesceConsoleUI
-				.PrintSuccess("Koalesced OpenAPI definitions to:", Path.GetFullPath(outputPath));
+				.PrintSuccess("Koalesced OpenAPI specifications to:", Path.GetFullPath(outputPath));
 		}
 		catch (UnauthorizedAccessException ex)
 		{

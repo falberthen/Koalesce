@@ -21,7 +21,7 @@ public partial class IntegrationTests
 		// Assert
 		Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
 		// Middleware now returns structured error without exposing internal details
-		Assert.Contains("Failed to merge API definitions", responseContent);
+		Assert.Contains("Failed to Koalesce API specifications", responseContent);
 		Assert.Contains("traceId", responseContent);
 
 		await koalescingApi.StopAsync();

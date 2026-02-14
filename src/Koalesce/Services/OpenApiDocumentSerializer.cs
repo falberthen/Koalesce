@@ -29,15 +29,14 @@ internal class OpenApiDocumentSerializer
 	/// </summary>
 	/// <param name="document">The OpenAPI document to serialize.</param>
 	/// <param name="outputPath">Optional output path to determine format. Falls back to MergedEndpoint if not provided.</param>
-	public string Serialize(OpenApiDocument document, string? outputPath = null)
+	public async Task<string> SerializeAsync(OpenApiDocument document, string? outputPath = null)
 	{
 		OpenApiSpecVersion version = GetOpenApiSpecVersion();
 		bool isYaml = IsYamlFormat(outputPath);
 
-		// Serialize the document using async API (run synchronously for interface compatibility)
 		string serialized = isYaml
-			? document.SerializeAsYamlAsync(version).GetAwaiter().GetResult()
-			: document.SerializeAsJsonAsync(version).GetAwaiter().GetResult();
+			? await document.SerializeAsYamlAsync(version)
+			: await document.SerializeAsJsonAsync(version);
 
 		// Ensure the correct OpenAPI version is enforced in the output
 		serialized = ReplaceOpenApiVersion(serialized, isYaml);

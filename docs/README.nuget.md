@@ -2,7 +2,7 @@
 
 ![Koalesce](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/koalesce_small.png)
 
-**Koalesce** is an open-source .NET library that merges multiple OpenAPI specifications into a single unified definition.
+**Koalesce** is an open-source .NET library for merging and sanitizing OpenAPI specifications.
 
 ![.NET](https://img.shields.io/badge/.NET-8-512BD4?logo=dotnet) ![.NET](https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -12,16 +12,23 @@
 
 ## 🧩 The Problem
 
-Building microservices or modular APIs? You're probably dealing with:
+Working with OpenAPI specifications? You're probably dealing with:
 
+**Multiple APIs (Microservices)**
 - 🔀 Frontend teams juggling **multiple Swagger UIs** across services.
 - 📚 Scattered API documentation with no **unified view for consumers**.
-- 🔍 No single place to explore, test, or share your full API surface.
 - 🛠️ Client SDK generation from **scattered, disconnected specs**.
+
+**Even a single API**
+- 🧹 Specs exposing **internal or admin endpoints** that shouldn't be public.
+- 🔄 Legacy specs stuck on **older OpenAPI versions** needing conversion.
+- 🏷️ Tags and paths that need **reorganization** before publishing.
 
 ---
 
-## 💡The Solution
+## 💡 The Solution
+
+**Koalesce adapts to what you need:**
 
 ![Koalesce](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/koalesce_diagram.png)
 
@@ -45,6 +52,7 @@ dotnet tool install --global Koalesce.CLI --prerelease
 
 ### 2️⃣ Configure
 
+#### Multiple APIs
 ```json
 // appsettings.json
 {
@@ -72,6 +80,27 @@ dotnet tool install --global Koalesce.CLI --prerelease
 }
 ```
 
+#### Single API *(same pipeline, no merge needed)*
+```json
+{
+  "Koalesce": {
+    "OpenApiVersion": "3.1.0",
+    "Info": {
+      "Title": "My Public API",
+      "Description": "Clean, public-facing API specification"
+    },
+    "Sources": [
+      {
+        "Url": "https://localhost:8002/swagger/v1/swagger.json",
+        "ExcludePaths": ["/internal/*", "*/admin/*", "/debug/*"],
+        "PrefixTagsWith": "v2"
+      }
+    ],
+    "MergedEndpoint": "/swagger/v1/public-api.yaml"
+  }
+}
+```
+
 ### 3️⃣ Run it!
 
 #### Option A: Middleware (ASP.NET Core)
@@ -95,32 +124,46 @@ app.UseSwaggerUI(c =>
 
 ![Koalesce CLI Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI_Sample.png)
 
-💡 The CLI merges OpenAPI definitions directly into a file on disk without requiring a host application.
+💡 The CLI processes OpenAPI specifications directly into a file on disk without requiring a host application.
 
 ---
 
 ## 📐 How It Works
 
-**1. Fetch APIs** 
+**1. Load Sources** 
 - Read from URLs (`https://api.com/swagger.json`) or local files (`./path/localspec.yaml`). 
 - Supports OpenAPI 2.0, 3.0.x, 3.1.x, 3.2.x in JSON and YAML formats.
 
-**2. Resolve Conflicts** 
+**2. Transform**  
+- Exclude endpoints with wildcard patterns (`ExcludePaths`).
+- Prefix tags for better grouping (`PrefixTagsWith`).
+- Convert between OpenAPI versions and output formats.
+
+**3. Merge** *(when 2+ sources are provided)*
 - Path conflicts are handled by your choice: *VirtualPrefix*, *First Wins*, or *Fail-Fast*. 
 - Schema name collisions are auto-renamed based on configuration (e.g., `Inventory.Product` → `InventoryProduct`).
 
-**3. Output**  
-- A single unified OpenAPI spec (JSON or YAML), targeting any version, ready for Swagger UI, Scalar, Kiota, or NSwag.
+**4. Output**  
+- A single, clean OpenAPI spec (JSON or YAML), targeting any version, ready for Swagger UI, Scalar, Kiota, or NSwag.
 
 ---
 
 ### 🌞 Where Koalesce Shines
 
+#### Multiple APIs → Unified Spec
 - ✅ **Backend-for-Frontend (BFF)**: Unify multiple microservices into one API contract for your frontend team.
 - ✅ **Developer Portals**: Publish a single API reference for partners without exposing internal service boundaries.
 - ✅ **Client SDK Generation**: Generate one SDK from the unified spec (Kiota, NSwag, AutoRest) instead of managing multiple clients.
-- ✅ **CI/CD Validation**: Validate API contracts across all services in one step using strict mode.
 - ✅ **Mixed OpenAPI Versions**: Merge specs from different OpenAPI versions (2.0, 3.0.x, 3.1.x) into one normalized output.
+
+#### Single API → Same Pipeline, No Merge
+- ✅ **Public API Publishing**: Strip internal, admin, or debug endpoints before sharing specs externally.
+- ✅ **Version Conversion**: Convert a legacy Swagger 2.0 spec to OpenAPI 3.1 with a single configuration.
+- ✅ **Spec Cleanup**: Remove unused schemas, reorganize tags, and filter paths — all through the same pipeline.
+
+#### Both
+- ✅ **CI/CD Validation**: Validate and process API contracts in your pipeline using strict mode.
+- ✅ **Format Conversion**: Output as JSON or YAML, targeting any supported OpenAPI version.
 
 > 💡 **Tip:** For internal service-to-service communication, prefer direct service calls with dedicated clients per service to avoid tight coupling and unnecessary Gateway overhead.
 
@@ -131,9 +174,18 @@ app.UseSwaggerUI(c =>
 **Koalesce** balances **Developer Experience** with architectural governance:
 
 - **Resilient by Default:** Skips unreachable services and duplicate paths with warnings.
-- **Strict by Choice:** Can be configured to fail on unreachable services or route collisions - useful for CI/CD pipelines or while developing.
-- **Purposefully Opinionated:** Ensures merged definitions have clean, deterministic, and conflict-free naming.
+- **Strict by Choice:** Can be configured to fail on unreachable services or route collisions — useful for CI/CD pipelines or while developing.
+- **Purposefully Opinionated:** Ensures processed specifications have clean, deterministic, and conflict-free naming.
 - **DX First:** Designed to be easy to set up and use, with sensible defaults and clear error messages.
+
+**Koalesce** respects **your APIs as the *source of truth***, mutating only when necessary or convenient:
+
+- **Preserve First:** Original paths, descriptions, operations, and responses remain unchanged.
+- **Mutate When Required:** Automatically resolves conflicts (e.g., schema name collisions: Product → CustomersProduct vs InventoryProduct).
+- **Mutate When Convenient:** Optional features like `PrefixTagsWith`, `VirtualPrefix`, `ExcludePaths` enhance organization and visibility.
+- **Predictable:** Same inputs always produce the same output.
+
+> 💡 *In practice:* Your source APIs define the contract. Koalesce merges them intelligently, changing only what's needed for conflict-free results or what you explicitly configure.
 
 ---
 
