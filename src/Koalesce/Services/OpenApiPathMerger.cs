@@ -111,7 +111,7 @@ internal class OpenApiPathMerger
 		}
 
 		// Materialize Security
-		if ((operation.Security == null || !operation.Security.Any()) && globalSecurity?.Any() == true)
+		if ((operation.Security == null || operation.Security.Count == 0) && globalSecurity?.Count > 0)
 		{
 			operation.Security = [.. globalSecurity];
 		}
@@ -143,6 +143,8 @@ internal class OpenApiPathMerger
 		return false;
 	}
 
+	private static readonly ConcurrentDictionary<string, Regex> _wildcardRegexCache = new();
+
 	/// <summary>
 	/// Matches a path against a wildcard pattern using regex.
 	/// - /admin/* matches /admin/users, /admin/products, etc.
@@ -158,27 +160,32 @@ internal class OpenApiPathMerger
 		if (!normalizedPattern.Contains('*'))
 			return normalizedPath.Equals(normalizedPattern, StringComparison.OrdinalIgnoreCase);
 
-		// Convert pattern to regex:
-		// - Leading * means "anything before" (.*/)?
-		// - Trailing * means "anything after" (/.*)?
-		// - Middle * means "one segment" [^/]+
-		string regexPattern = Regex.Escape(normalizedPattern);
+		var regex = _wildcardRegexCache.GetOrAdd(normalizedPattern, static p =>
+		{
+			// Convert pattern to regex:
+			// - Leading * means "anything before" (.*/)?
+			// - Trailing * means "anything after" (/.*)?
+			// - Middle * means "one segment" [^/]+
+			string regexPattern = Regex.Escape(p);
 
-		// Handle leading wildcard: */admin -> (.*\/)?admin		
-		if (regexPattern.StartsWith(@"\*/"))
-			regexPattern = @"(.*/)?" + regexPattern[3..];
-		else if (regexPattern.StartsWith(@"\*"))
-			regexPattern = @"(.*/)?" + regexPattern[2..];
+			// Handle leading wildcard: */admin -> (.*\/)?admin		
+			if (regexPattern.StartsWith(@"\*/"))
+				regexPattern = @"(.*/)?" + regexPattern[3..];
+			else if (regexPattern.StartsWith(@"\*"))
+				regexPattern = @"(.*/)?" + regexPattern[2..];
 
-		// Handle trailing wildcard: admin/* -> admin(/.*)?
-		if (regexPattern.EndsWith(@"/\*"))
-			regexPattern = regexPattern[..^3] + @"(/.*)?";
-		else if (regexPattern.EndsWith(@"\*"))
-			regexPattern = regexPattern[..^2] + @"(/.*)?";
+			// Handle trailing wildcard: admin/* -> admin(/.*)?
+			if (regexPattern.EndsWith(@"/\*"))
+				regexPattern = regexPattern[..^3] + @"(/.*)?";
+			else if (regexPattern.EndsWith(@"\*"))
+				regexPattern = regexPattern[..^2] + @"(/.*)?";
 
-		// Handle middle wildcards: /api/*/details -> /api/[^/]+/details
-		regexPattern = regexPattern.Replace(@"\*", @"[^/]+");
+			// Handle middle wildcards: /api/*/details -> /api/[^/]+/details
+			regexPattern = regexPattern.Replace(@"\*", @"[^/]+");
 
-		return Regex.IsMatch(normalizedPath, $"^{regexPattern}$", RegexOptions.IgnoreCase);
+			return new Regex($"^{regexPattern}$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+		});
+
+		return regex.IsMatch(normalizedPath);
 	}
 }

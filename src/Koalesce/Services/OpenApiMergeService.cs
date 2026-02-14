@@ -37,7 +37,7 @@ internal class OpenApiMergeService : IKoalesceMergeService
 		_logger.LogInformation("Koalescing complete. Loaded {LoadedCount}/{TotalCount} sources.",
 			sourceResults.Count(r => r.IsLoaded), sourceResults.Count);
 
-		var serializedDocument = _documentSerializer.Serialize(mergedDocument, outputPath);
+		var serializedDocument = await _documentSerializer.SerializeAsync(mergedDocument, outputPath);
 
 		return new MergeResult(serializedDocument, sourceResults);
 	}

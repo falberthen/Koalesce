@@ -58,7 +58,6 @@ public class MergeCommandRunner
 			});
 
 			services.AddSingleton<IMergedSpecificationWriter, MergedSpecificationWriter>();
-			services.AddLogging();
 			services.AddKoalesce(configuration, configureHttpClient: _insecure ? ConfigureInsecureHttpClient : null);
 
 			using var provider = services.BuildServiceProvider();

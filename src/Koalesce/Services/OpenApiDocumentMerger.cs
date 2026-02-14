@@ -37,7 +37,7 @@ internal class OpenApiDocumentMerger
 	/// <returns>A tuple containing the merged document and the load results for each source.</returns>
 	public async Task<(OpenApiDocument Document, IReadOnlyList<SourceLoadResult> SourceResults)> MergeIntoSingleDefinitionAsync()
 	{
-		if (_options.Sources?.Any() != true)
+		if (_options.Sources is null || _options.Sources.Count == 0)
 			throw new ArgumentException("API source list cannot be empty.");
 
 		_logger.LogInformation("Starting API Koalescing process with {Count} APIs", _options.Sources.Count);
@@ -354,7 +354,7 @@ internal class OpenApiDocumentMerger
 			doc.Servers.Clear();
 			doc.Servers.Add(new OpenApiServer { Url = _options.ApiGatewayBaseUrl, Description = "API Gateway" });
 		}
-		else if (!doc.Servers.Any())
+		else if (doc.Servers.Count == 0)
 		{
 			doc.Servers.Add(new OpenApiServer { Url = "/" });
 		}
