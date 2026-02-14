@@ -141,7 +141,7 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 	}
 
 	[Fact]
-	public async Task Koalesce_WhenApiGatewayBaseUrlIsSet_ShouldMergeAllServerUrlDefinitionsIntoSingle()
+	public async Task Koalesce_WhenApiGatewayBaseUrlIsSet_ShouldMergeAllServerUrlSpecificationsIntoSingle()
 	{
 		// Arrange & Act
 		var koalescingApi = await StartWebApplicationAsync(_apiGatewaySettings,

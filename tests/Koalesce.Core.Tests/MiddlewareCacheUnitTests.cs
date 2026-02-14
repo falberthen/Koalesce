@@ -205,7 +205,7 @@ public class MiddlewareCacheUnitTests : KoalesceUnitTestBase
 	{
 		public int CallCount { get; private set; }
 
-		public Task<MergeResult> MergeDefinitionsAsync(string? outputPath = null)
+		public Task<MergeResult> MergeSpecificationsAsync(string? outputPath = null)
 		{
 			CallCount++;
 			return Task.FromResult(new MergeResult(

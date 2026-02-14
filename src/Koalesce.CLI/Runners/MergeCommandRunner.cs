@@ -29,6 +29,9 @@ public class MergeCommandRunner
 			if (_insecure)			
 				KoalesceConsoleUI.PrintWarning("SSL certificate validation is disabled (--insecure)");			
 
+			configPath = Path.GetFullPath(configPath);
+			outputPath = Path.GetFullPath(outputPath);
+
 			if (!File.Exists(configPath))
 			{
 				KoalesceConsoleUI.PrintMissingConfigError(configPath);
@@ -58,15 +61,14 @@ public class MergeCommandRunner
 			});
 
 			services.AddSingleton<IMergedSpecificationWriter, MergedSpecificationWriter>();
-			services.AddLogging();
 			services.AddKoalesce(configuration, configureHttpClient: _insecure ? ConfigureInsecureHttpClient : null);
 
 			using var provider = services.BuildServiceProvider();
 			var mergeService = provider.GetRequiredService<IKoalesceMergeService>();
 			var writer = provider.GetRequiredService<IMergedSpecificationWriter>();
 
-			// Merge definitions and get results with load status
-			var result = await mergeService.MergeDefinitionsAsync(outputPath);
+			// Merge specifications and get results with load status
+			var result = await mergeService.MergeSpecificationsAsync(outputPath);
 
 			// Print source list with load status indicators
 			KoalesceConsoleUI.PrintSourceResults(result.SourceResults);

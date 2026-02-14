@@ -9,8 +9,8 @@
 		<Version>$(KoalesceVersion)</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
-		<Description>The OpenAPI merger for .NET.</Description>
-		<PackageTags>Koalesce, API, OpenAPI, Swagger, Microservices</PackageTags>
+		<Description>.NET library for merging and sanitizing OpenAPI specifications.</Description>
+		<PackageTags>Koalesce, API, OpenAPI, Swagger, Microservices, Merge, Sanitize</PackageTags>
 		<RepositoryType>git</RepositoryType>
 		<RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>

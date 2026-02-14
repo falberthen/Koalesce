@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**Koalesce** is an open-source, lightweight library that merges multiple OpenAPI definitions into a single unified definition.
+**Koalesce** is an open-source .NET library for merging and sanitizing OpenAPI specifications.
 
 
 ## Tech Stack
