@@ -13,7 +13,8 @@
 		<Version>$(KoalesceCLIVersion)</Version>
 		<Authors>Felipe Henrique (Falberthen)</Authors>
 		<Company>falberthen.github.io</Company>
-		<Description>The CLI for Koalesce.</Description>
+		<Description>CLI for merging and sanitizing OpenAPI specifications using Koalesce.</Description>
+		<PackageTags>Koalesce, CLI, API, OpenAPI, Swagger, Microservices, Merge, Sanitize</PackageTags>
 		<RepositoryUrl>https://github.com/falberthen/Koalesce.git</RepositoryUrl>
 		<PackageProjectUrl>https://github.com/falberthen/Koalesce</PackageProjectUrl>
 		<PackageLicenseFile>LICENSE</PackageLicenseFile>
