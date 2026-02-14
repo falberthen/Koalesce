@@ -1,12 +1,12 @@
 ﻿namespace Koalesce.Core.Options;
 
 /// <summary>
-/// Configuration settings for caching merged API definitions in Koalesce.
+/// Configuration settings for caching merged API specifications in Koalesce.
 /// </summary>
 public class CacheOptions
 {
 	/// <summary>
-	/// The maximum duration (in seconds) that the merged OpenAPI document remains cached, 
+	/// The maximum duration (in seconds) that the merged OpenAPI specification remains cached, 
 	/// regardless of access. After this period, the cache is forcibly refreshed.
 	/// Default: 24 hours
 	/// </summary>
@@ -14,7 +14,7 @@ public class CacheOptions
 
 	/// <summary>
 	/// The sliding expiration time (in seconds) that resets the cache expiration 
-	/// every time the merged document is accessed. If no access occurs before this period ends, 
+	/// every time the merged specification is accessed. If no access occurs before this period ends, 
 	/// the cache expires earlier than its absolute expiration.
 	/// Default: 5 minutes
 	/// </summary>
@@ -28,7 +28,7 @@ public class CacheOptions
 	public int MinExpirationSeconds { get; set; } = 30; 
 
 	/// <summary>
-	/// Flag to disable caching entirely. If set to `true`, Koalesce will recompute the merged document on every request.
+	/// Flag to disable caching entirely. If set to `true`, Koalesce will recompute the merged specification on every request.
 	/// Default: Caching enabled
 	/// </summary>
 	public bool DisableCache { get; set; } = false;

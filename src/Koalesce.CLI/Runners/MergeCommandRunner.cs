@@ -67,8 +67,8 @@ public class MergeCommandRunner
 			var mergeService = provider.GetRequiredService<IKoalesceMergeService>();
 			var writer = provider.GetRequiredService<IMergedSpecificationWriter>();
 
-			// Merge definitions and get results with load status
-			var result = await mergeService.MergeDefinitionsAsync(outputPath);
+			// Merge specifications and get results with load status
+			var result = await mergeService.MergeSpecificationsAsync(outputPath);
 
 			// Print source list with load status indicators
 			KoalesceConsoleUI.PrintSourceResults(result.SourceResults);

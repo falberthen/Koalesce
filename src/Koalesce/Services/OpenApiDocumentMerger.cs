@@ -35,7 +35,7 @@ internal class OpenApiDocumentMerger
 	/// Builds a single API definition document from multiple API specifications.
 	/// </summary>
 	/// <returns>A tuple containing the merged document and the load results for each source.</returns>
-	public async Task<(OpenApiDocument Document, IReadOnlyList<SourceLoadResult> SourceResults)> MergeIntoSingleDefinitionAsync()
+	public async Task<(OpenApiDocument Document, IReadOnlyList<SourceLoadResult> SourceResults)> MergeIntoSingleSpecificationAsync()
 	{
 		if (_options.Sources is null || _options.Sources.Count == 0)
 			throw new ArgumentException("API source list cannot be empty.");
@@ -67,12 +67,12 @@ internal class OpenApiDocumentMerger
 				sourceResults.Add(new SourceLoadResult(apiSource, isLoaded, errorMessage));
 
 				if (isLoaded)
-					MergeApiDefinition(downstreamDoc!, mergedDocument, apiSource, schemaOrigins);
+					MergeApiSpecification(downstreamDoc!, mergedDocument, apiSource, schemaOrigins);
 			}
 
 			// Finalize
 			RemoveOrphanedSchemas(mergedDocument);
-			ConsolidateServerDefinitions(mergedDocument);
+			ConsolidateServerSpecifications(mergedDocument);
 
 			_logger.LogInformation("API Koalescing completed.");
 			return (mergedDocument, sourceResults);
@@ -110,9 +110,9 @@ internal class OpenApiDocumentMerger
 	}
 
 	/// <summary>
-	/// Merges a specific API definition into the target document, applying prefixes and isolation rules
+	/// Merges a given API specification into the target document, applying prefixes and isolation rules
 	/// </summary>
-	private void MergeApiDefinition(
+	private void MergeApiSpecification(
 		OpenApiDocument sourceDoc,
 		OpenApiDocument targetDoc,
 		ApiSource apiSource,
@@ -344,9 +344,9 @@ internal class OpenApiDocumentMerger
 	}
 
 	/// <summary>
-	/// Consolidates the server definitions in the specified OpenAPI document to ensure a valid server entry is present.
+	/// Consolidates the server specifications in the specified OpenAPI document to ensure a valid server entry is present.
 	/// </summary>
-	private void ConsolidateServerDefinitions(OpenApiDocument doc)
+	private void ConsolidateServerSpecifications(OpenApiDocument doc)
 	{
 		doc.Servers ??= [];
 		if (!string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
