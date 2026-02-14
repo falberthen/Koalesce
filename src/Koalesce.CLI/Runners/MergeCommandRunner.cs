@@ -29,6 +29,11 @@ public class MergeCommandRunner
 			if (_insecure)			
 				KoalesceConsoleUI.PrintWarning("SSL certificate validation is disabled (--insecure)");			
 
+			// Resolve to absolute paths so File.Exists and AddJsonFile
+			// both resolve from the current working directory
+			configPath = Path.GetFullPath(configPath);
+			outputPath = Path.GetFullPath(outputPath);
+
 			if (!File.Exists(configPath))
 			{
 				KoalesceConsoleUI.PrintMissingConfigError(configPath);
