@@ -39,6 +39,7 @@ if (!app.Environment.IsEnvironment("Docker"))
 
 app.UseRouting();
 
+// #################### MINIMAL API DEFINITION  ####################
 
 var random = new Random();
 var maxQuantity = 1000;
@@ -49,8 +50,11 @@ var inventoryProducts = new List<Product>
 	new Product(Guid.NewGuid(), "Processor", random.Next(maxQuantity)),
 };
 
+var productsGroup = app.MapGroup("/api/products")
+	.WithTags("Products");
+
 // Get all products
-app.MapGet("/api/products", () =>
+productsGroup.MapGet("/", () =>
 {
 	return inventoryProducts;
 })

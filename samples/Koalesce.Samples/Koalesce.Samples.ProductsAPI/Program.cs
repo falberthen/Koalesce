@@ -49,22 +49,34 @@ if (!app.Environment.IsEnvironment("Docker"))
 
 app.UseRouting();
 
-// Get all products
-app.MapGet("/api/products", () =>
+
+// #################### MINIMAL API DEFINITION  ####################
+
+// Public
+var productsGroup = app.MapGroup("/api/products")
+	.WithTags("Products");
+// Admin (Remove from ExcludePaths to be included in the OpenAPI spec)
+var adminProductsGroup = app.MapGroup("/api/admin/products")
+	.WithTags("Products");
+
+var products = new List<Product>
 {
-	return new List<Product>
-	{
-		new Product(Guid.NewGuid(), "Laptop"),
-		new Product(Guid.NewGuid(), "Joystick"),
-		new Product(Guid.NewGuid(), "Guitar")
-	};
+	new Product(Guid.NewGuid(), "Laptop"),
+	new Product(Guid.NewGuid(), "Joystick"),
+	new Product(Guid.NewGuid(), "Guitar")
+};
+
+// Get all products
+productsGroup.MapGet("/", () =>
+{
+	return products;
 })
 .WithName("GetProducts");
 
-
 // Create a product (admin only, to be a skipped endpoint using ExcludePaths)
-app.MapPost("/api/admin/products", (Product newProduct) =>
+adminProductsGroup.MapPost("/", (Product newProduct) =>
 {
+	products.Add(newProduct);
 	return Results.Created($"/api/admin/products/{newProduct.Id}", newProduct);
 })
 .WithName("CreateProduct");
@@ -72,4 +84,3 @@ app.MapPost("/api/admin/products", (Product newProduct) =>
 await app.RunAsync();
 
 public record Product(Guid Id, string Name);
-
