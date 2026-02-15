@@ -13,3 +13,5 @@ global using System.IO;
 global using System.Linq;
 global using System.Threading.Tasks;
 global using Koalesce.Core.Services;
+global using System.Reflection;
+global using System.Text;

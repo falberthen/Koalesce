@@ -6,7 +6,8 @@ namespace Koalesce.Services.MergeResults;
 /// </summary>
 /// <param name="SerializedDocument">The serialized merged OpenAPI document.</param>
 /// <param name="SourceResults">The load results for each configured source.</param>
-public record MergeResult(string SerializedDocument, IReadOnlyList<SourceLoadResult> SourceResults)
+/// <param name="Report">Optional structured report of the merge operation.</param>
+public record MergeResult(string SerializedDocument, IReadOnlyList<SourceLoadResult> SourceResults, MergeReport? Report = null)
 {
 	/// <summary>
 	/// Gets the sources that were successfully loaded.
