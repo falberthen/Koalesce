@@ -33,17 +33,17 @@ public static class KoalesceExtensions
 			.ValidateDataAnnotations()
 			.ValidateOnStart();
 
-		// Also bind base options for middleware
-		services.AddOptions<CoreOptions>()
-			.Bind(koalesceSection)
-			.ValidateDataAnnotations()
-			.PostConfigure(options => options.Validate());
-
 		// Apply code-based configuration if provided
 		if (configureOptions != null)
-		{
 			services.PostConfigure(configureOptions);
-		}
+
+		// Derive CoreOptions (used by middleware) from the fully-configured KoalesceOptions.
+		// This ensures programmatic overrides via configureOptions are visible to the middleware.
+		services.AddSingleton<IOptions<CoreOptions>>(sp =>
+		{
+			CoreOptions opts = sp.GetRequiredService<IOptions<KoalesceOptions>>().Value;
+			return Microsoft.Extensions.Options.Options.Create(opts);
+		});
 
 		// Core services
 		services.AddMemoryCache();
@@ -62,6 +62,7 @@ public static class KoalesceExtensions
 		services.TryAddSingleton<ISchemaReferenceWalker, SchemaReferenceWalker>();
 		services.TryAddSingleton<ISchemaRenamer, SchemaRenamer>();
 		services.TryAddSingleton<SchemaConflictCoordinator>();
+		services.TryAddSingleton<SecuritySchemeConflictCoordinator>();
 
 		// Configure HttpClient for fetching API specs
 		var httpTimeout = koalesceSection.GetValue<int?>(nameof(CoreOptions.HttpTimeoutSeconds))
