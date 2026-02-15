@@ -40,11 +40,15 @@ Open http://localhost:5000/swagger to see the merged OpenAPI spec.
 docker-compose down
 ```
 
-## Notes
+## Notes on running it
 - Ensure Docker is installed and running on your machine.
 - While alternating between samples, stop the currently running services with `docker-compose down` before starting another.
 - When running with Docker, services are hosted with HTTP for simplicity.
-- In the Koalesce.Samples.Swagger, the inventory-api has a conflict in the "Products" schema to demonstrate Koalesce's conflict resolution capabilities.
 - For debugging, you can still run the services locally (with https enabled) using multi-project solutions.
-- The Swagger sample demonstrates **HttpClient customization** with `configureHttpClient` parameter, including SSL bypass, Polly retry policies, and custom headers.
 - ⚠️ If switching between profiles, you may need to hard refresh your browser to clear cached Swagger UI data.
+
+## Notes on Samples
+- In the Koalesce.Samples.Swagger, the inventory-api has a conflict in the "Products" schema to demonstrate Koalesce's conflict resolution capabilities.
+- Ocelot and YARP samples demonstrate how to use Koalesce in conjunction with API gateways, and the `VirtualPrefix` will ensure `inventory-api` integrity, while `PrefixTagsWith` will prevent tag conflicts in the merged spec.
+- The Swagger sample demonstrates **HttpClient customization** with `configureHttpClient` parameter, including SSL bypass, Polly retry policies, and custom headers.
+

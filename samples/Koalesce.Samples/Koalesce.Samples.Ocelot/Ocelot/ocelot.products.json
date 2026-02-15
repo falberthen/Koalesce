@@ -11,6 +11,18 @@
       ],
       "UpstreamPathTemplate": "/api/products",
       "UpstreamHttpMethod": [ "GET" ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/admin/products",
+      "UpstreamPathTemplate": "/api/admin/products",
+      "DownstreamScheme": "https",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": 8002
+        }
+      ],
+      "UpstreamHttpMethod": [ "POST" ]
     }
   ]
 }

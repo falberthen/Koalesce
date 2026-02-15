@@ -13,6 +13,12 @@
           "Path": "/api/products/{**catch-all}"
         }
       },
+      "products-admin-route": {
+        "ClusterId": "products-cluster",
+        "Match": {
+          "Path": "/api/admin/products/{**catch-all}"
+        }
+      },
       "inventory-route": {
         "ClusterId": "inventory-cluster",
         "Match": {

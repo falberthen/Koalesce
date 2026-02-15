@@ -55,6 +55,11 @@ if (!app.Environment.IsEnvironment("Docker"))
 
 app.UseRouting();
 
+// #################### MINIMAL API DEFINITION  ####################
+
+var customersGroup = app.MapGroup("/api/customers")
+	.WithTags("Customers");
+
 // Customers list
 var customers = new List<Customer>
 {
@@ -63,11 +68,11 @@ var customers = new List<Customer>
 };
 
 // List all
-app.MapGet("/api/customers", () => customers)
+customersGroup.MapGet("/", () => customers)
 	.WithName("ListCustomers");
 
 // Get by Id
-app.MapGet("/api/customers/{id:guid}", (Guid id) =>
+customersGroup.MapGet("/{id:guid}", (Guid id) =>
 {
 	var customer = customers.SingleOrDefault(c => c.Id == id);
 	return customer is not null ? Results.Ok(customer) : Results.NotFound();
@@ -75,10 +80,10 @@ app.MapGet("/api/customers/{id:guid}", (Guid id) =>
 .WithName("GetCustomerById");
 
 // Create a customer
-app.MapPost("/api/customers", (Customer newCustomer) =>
+customersGroup.MapPost("/", (Customer newCustomer) =>
 {
 	customers.Add(newCustomer);
-	return Results.Created($"/api/customers/{newCustomer.Id}", newCustomer);
+	return Results.Created($"/{newCustomer.Id}", newCustomer);
 })
 .WithName("CreateCustomer");
 
