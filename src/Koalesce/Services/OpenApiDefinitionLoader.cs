@@ -224,6 +224,6 @@ internal class OpenApiDefinitionLoader
 
 		// Use Warning level so it's suppressed in non-verbose CLI mode
 		_logger.LogWarning(ex, "Failed to load or parse OpenAPI from {Source}. Skipping source.", sourceLocation);
-		return (null, "Parse error");
+		return (null, $"Failed to load or parse OpenAPI from {sourceLocation}. Skipping source.");
 	}
 }

@@ -107,7 +107,7 @@ Catalog API    →  /api/health → ⚠️ Skipped (warning logged)
 **Conflict Behavior:**
 
 | Scenario | Result |
-|---|---|
+| --- | --- |
 | Both sources have `VirtualPrefix` | **Both** schemas are renamed (e.g., `InventoryProduct`, `CatalogProduct`.) |
 | Only one source has `VirtualPrefix` | Only the prefixed source's schema is renamed |
 | Neither source has `VirtualPrefix` | First schema keeps original name. Second uses **Sanitized API Title** as prefix. |
@@ -118,6 +118,23 @@ Catalog API    →  /api/health → ⚠️ Skipped (warning logged)
 
 1. **VirtualPrefix** (if configured): `/inventory` → `InventoryProduct`
 2. **API Name** (sanitized): `Koalesce.Samples.InventoryAPI` → `KoalesceSamplesInventoryAPIProduct`
+
+---
+
+## 🔐 Identical Security Schemes
+
+When multiple APIs define security schemes with the same key (e.g., `"bearerAuth"`), Koalesce compares their functional properties (`type`, `scheme`, `name`, `in`, `bearerFormat`, `openIdConnectUrl`). Identical schemes are **deduplicated**; conflicting schemes are **renamed** using the same rules as schema conflicts.
+
+**Conflict Behavior:**
+
+| Scenario | Result |
+| --- | --- |
+| Schemes are semantically identical | **Deduplicated** — only one copy is kept |
+| Both sources have `VirtualPrefix` | **Both** schemes are renamed (e.g., `InventorybearerAuth`, `CatalogbearerAuth`) |
+| Only one source has `VirtualPrefix` | Only the prefixed source's scheme is renamed |
+| Neither source has `VirtualPrefix` | First scheme keeps original name. Second uses **Sanitized API Title** as prefix. |
+
+> 💡 **Note:** Security references in both document-level and operation-level `security` requirements are automatically rewritten to match the renamed scheme keys.
 
 ---
 

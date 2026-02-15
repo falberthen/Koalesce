@@ -45,7 +45,7 @@ dotnet tool install --global Koalesce.CLI --prerelease
 
 ### 2️⃣ Configure
 
-#### Multiple APIs
+#### Multiple APIs *(merge specs from URLs or files)*
 ```json
 // your .json file
 {
@@ -72,11 +72,11 @@ dotnet tool install --global Koalesce.CLI --prerelease
 }
 ```
 
-#### Single API *(same pipeline, no merge needed)*
+#### Single API *(sanitize, filter, convert)*
 ```json
 {
   "Koalesce": {
-    "OpenApiVersion": "3.1.0",
+    "OpenApiVersion": "3.1.0", // convert from any version to OpenAPI 3.1
     "Info": {
       "Title": "My Public API",
       "Description": "Clean, public-facing API specification"
@@ -95,7 +95,7 @@ dotnet tool install --global Koalesce.CLI --prerelease
 ### 3️⃣ Run it
 
 ```bash
-  koalesce -c .\appsettings.json -o .\Output\apigateway.yaml
+  koalesce -c .\settings.json -o .\Output\mergedspec.yaml --report .\Output\report.html
 ```
 
 ![Koalesce CLI Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI_Sample.png)
@@ -105,13 +105,25 @@ dotnet tool install --global Koalesce.CLI --prerelease
 
 ## CLI arguments
 
-| Option       | Shortcut   | Required |                                                  |
+| Option       | Shortcut   | Required |                                                             |
 | ------------ | ---------- | -------- | ----------------------------------------------------------- |
 | `--config`   | `-c`       | 🔺Yes   | Path to your configuration `.json` file.                    |
 | `--output`   | `-o`       | 🔺Yes   | Path for the output OpenAPI spec file.                      |
+| `--report`   | `-r`       | No       | Path for the merge report (`.json` or `.html`).             |
 | `--insecure` | `-k`, `-i` | No       | Skip SSL certificate validation (for self-signed certs).    |
 | `--verbose`  |            | No       | Enable detailed logging.                                    |
 | `--version`  |            | No       | Display current version.                                    |
+
+---
+
+### Merge Report
+
+Koalesce generates a structured report summarizing everything that happened during the merge.
+Available as a formatted `HTML` page, or `JSON` based on the file path and extension **you defined**.
+
+**CLI:** use `--report <path>` to export the report to disk (e.g., `--report ./output/report.html`).
+
+![Koalesce Report Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_Report.png)
 
 ---
 

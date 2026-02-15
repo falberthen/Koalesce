@@ -614,4 +614,150 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 	}
 
 	#endregion
+
+	#region TESTS USING SecurityScheme Conflict Resolution
+
+	private const string _securityConflictVpSettings = "RestAPIs/appsettings.securityconflict-vp.json";
+	private const string _securityConflictSettings = "RestAPIs/appsettings.securityconflict.json";
+	private const string _securityIdenticalSettings = "RestAPIs/appsettings.securityidentical.json";
+
+	[Fact]
+	public async Task Koalesce_WhenSecuritySchemeConflictOccurs_ShouldRenameOnlySourceWithVirtualPrefix()
+	{
+		// Arrange & Act
+		// CustomersApi (no VirtualPrefix): has "bearerAuth" (JWT)
+		// Payments fixture (VirtualPrefix "/payments"): has "bearerAuth" (Opaque) — different bearerFormat
+		var koalescingApi = await StartWebApplicationAsync(_securityConflictVpSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		// Assert: Source WITH VirtualPrefix is renamed, source WITHOUT keeps original.
+		Assert.Contains("\"bearerAuth\"", mergedResult);
+		Assert.Contains("\"PaymentsbearerAuth\"", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task Koalesce_WhenSecuritySchemeConflictOccurs_WithoutVirtualPrefix_ShouldRenameUsingApiTitle()
+	{
+		// Arrange & Act
+		// CustomersApi (no VirtualPrefix): has "bearerAuth" (JWT)
+		// Payments fixture (no VirtualPrefix): has "bearerAuth" (Opaque) — different bearerFormat
+		var koalescingApi = await StartWebApplicationAsync(_securityConflictSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		// Assert: Neither has VirtualPrefix. First keeps original, second uses sanitized API title.
+		// "Payments API" → "PaymentsApi" prefix → "PaymentsApibearerAuth"
+		Assert.Contains("\"bearerAuth\"", mergedResult);
+		Assert.Contains("\"PaymentsAPIbearerAuth\"", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task Koalesce_WhenSecuritySchemesAreIdentical_ShouldDeduplicateNotRename()
+	{
+		// Arrange & Act
+		// CustomersApi: has "bearerAuth" (type: http, scheme: bearer, bearerFormat: JWT)
+		// Payments fixture: has "bearerAuth" with identical functional properties
+		var koalescingApi = await StartWebApplicationAsync(_securityIdenticalSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		// Assert: Identical schemes are deduplicated — only one "bearerAuth" exists, no renamed variant.
+		Assert.Contains("\"bearerAuth\"", mergedResult);
+		Assert.DoesNotContain("\"PaymentsbearerAuth\"", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	#endregion
+
+	#region TESTS USING Single Source (Sanitization Mode)
+
+	private const string _singleSourceWithTagsSettings = "RestAPIs/appsettings.singlesource-withtags.json";
+	private const string _singleSourceNoTagsSettings = "RestAPIs/appsettings.singlesource-notags.json";
+
+	[Fact]
+	public async Task Koalesce_SingleSource_WithTags_ShouldPreserveOriginalTags()
+	{
+		// Arrange & Act
+		// CustomersApi has doc-level tag "Customers" and operations without explicit tags
+		var koalescingApi = await StartWebApplicationAsync(_singleSourceWithTagsSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Assert: Original tags preserved, no auto-generated tags
+		Assert.Contains("\"Customers\"", mergedResult);
+		Assert.DoesNotContain("localhost-8001", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task Koalesce_SingleSource_WithoutTags_ShouldNotGenerateTags()
+	{
+		// Arrange & Act
+		// notags-api.json has no document-level tags and no operation-level tags
+		var koalescingApi = await StartWebApplicationAsync(_singleSourceNoTagsSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Assert: Operations exist
+		Assert.Contains("/api/payments", mergedResult);
+
+		// Assert: No tags section generated — single source without tags stays tagless
+		Assert.DoesNotContain("\"tags\"", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task Koalesce_SingleSource_WithTagsAndPrefix_ShouldPrefixTags()
+	{
+		// Arrange & Act
+		// CustomersApi has doc-level tag "Customers"
+		var koalescingApi = await StartWebApplicationAsync(_singleSourceWithTagsSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration, options =>
+				{
+					if (options.Sources != null)
+					{
+						foreach (var source in options.Sources)
+						{
+							source.PrefixTagsWith = "Legacy";
+						}
+					}
+				}));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		Assert.False(string.IsNullOrWhiteSpace(mergedResult), "Merged API response is empty!");
+
+		// Assert: Tags are prefixed
+		Assert.Contains("Legacy - Customers", mergedResult);
+
+		// Assert: Original unprefixed tag should not exist
+		Assert.DoesNotContain("\"Customers\"", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	#endregion
 }

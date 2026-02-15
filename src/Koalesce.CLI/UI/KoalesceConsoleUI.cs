@@ -32,8 +32,7 @@ public static class KoalesceConsoleUI
 	/// Returns 
 	/// </summary>
 	/// <returns></returns>
-	public static string GetRootCommandDescription() =>
-		"🐨 Koalesce CLI";
+	public static string GetRootCommandDescription() => "🐨 Koalesce CLI";
 
 	/// <summary>
 	/// Prints an error message
@@ -50,21 +49,14 @@ public static class KoalesceConsoleUI
 	public static void PrintError(string category, string message)
 	{
 		Console.WriteLine($"\n{Red}❌ [{category}]{Reset}");
-		Console.WriteLine($"{Red}   {message}{Reset}\n");
+		Console.WriteLine($"{Red} {message}{Reset}\n");
 	}
-
-	/// <summary>
-	/// Prints a success message
-	/// </summary>
-	/// <param name="successMessage"></param>
-	public static void PrintSuccess(string successMessage) =>
-		Console.WriteLine($"\n{Green}✅ {successMessage}{Reset}\n");
 
 	/// <summary>
 	/// Prints a success message with a highlighted path
 	/// </summary>
 	public static void PrintSuccess(string message, string path) =>
-		Console.WriteLine($"\n{Green}✅ {message}{Reset} {path}\n");
+		Console.WriteLine($"{Green} {message}{Reset} {path}");
 
 	/// <summary>
 	/// Prints an informational message
@@ -84,10 +76,13 @@ public static class KoalesceConsoleUI
 	/// Prints an error message indicating the configuration file was not found.
 	/// </summary>
 	/// <param name="configPath">The path to the missing configuration file.</param>
-	public static void PrintMissingConfigError(string configPath)
-	{
+	public static void PrintMissingConfigError(string configPath) =>
 		Console.WriteLine($"{Red}❌ Configuration file not found:\x1b[0m {Path.GetFullPath(configPath)}{Reset}\n");
-	}
+
+	/// <summary>
+	/// Prints a blank line to the console for spacing purposes.
+	/// </summary>
+	public static void PrintBlankLine() => Console.WriteLine("\n");
 
 	/// <summary>
 	/// Prints the list of source load results with status indicators.

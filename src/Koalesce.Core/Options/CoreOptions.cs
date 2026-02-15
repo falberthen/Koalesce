@@ -20,6 +20,12 @@ public class CoreOptions : IValidatableObject
 	public string? MergedEndpoint { get; set; } = default!;
 
 	/// <summary>
+	/// Optional endpoint path where the merge report is exposed as JSON.
+	/// When configured, the middleware serves a structured report at this path.
+	/// </summary>
+	public string? MergeReportEndpoint { get; set; }
+
+	/// <summary>
 	/// Caching configuration settings for Koalesce.
 	/// </summary>
 	public CacheOptions Cache { get; set; } = new();
@@ -62,6 +68,9 @@ public class CoreOptions : IValidatableObject
 		foreach (var result in ValidateMergedEndpoint())
 			yield return result;
 
+		foreach (var result in ValidateMergeReportEndpoint())
+			yield return result;
+
 		foreach (var result in ValidateCacheSettings())
 			yield return result;
 
@@ -94,6 +103,27 @@ public class CoreOptions : IValidatableObject
 			yield return new ValidationResult(
 				"MergedEndpoint must start with '/'.",
 				[nameof(MergedEndpoint)]);
+		}
+	}
+
+	private IEnumerable<ValidationResult> ValidateMergeReportEndpoint()
+	{
+		if (string.IsNullOrWhiteSpace(MergeReportEndpoint))
+			yield break;
+
+		if (!MergeReportEndpoint.StartsWith("/"))
+		{
+			yield return new ValidationResult(
+				"MergeReportEndpoint must start with '/'.",
+				[nameof(MergeReportEndpoint)]);
+		}
+
+		if (!string.IsNullOrWhiteSpace(MergedEndpoint) &&
+			string.Equals(MergeReportEndpoint, MergedEndpoint, StringComparison.OrdinalIgnoreCase))
+		{
+			yield return new ValidationResult(
+				"MergeReportEndpoint must be different from MergedEndpoint.",
+				[nameof(MergeReportEndpoint)]);
 		}
 	}
 

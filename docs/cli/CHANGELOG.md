@@ -6,6 +6,18 @@ All notable changes to **Koalesce.CLI** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.8] - 2026-02-15
+
+### Added
+
+- **`--report` flag**: Export a structured merge report to disk. Supports `.json` for raw JSON and `.html` for a formatted HTML page. The report summarizes sources loaded, conflicts resolved, deduplications, excluded/skipped paths, and summary counts.
+
+### Changed
+
+- Updated `Koalesce` dependency to `1.0.0-beta.8`.
+
+---
+
 ## [1.0.0-beta.7] - 2026-02-13
 
 ### Fixed

@@ -12,4 +12,14 @@ public record SourceLoadResult(ApiSource Source, bool IsLoaded, string? ErrorMes
 	/// Gets the display path for this source (URL or file path).
 	/// </summary>
 	public string DisplayPath => Source.Url ?? Source.FilePath ?? "Unknown";
+
+	/// <summary>
+	/// Gets the displayable VirtualPrefix.
+	/// </summary>
+	public string? DisplayVirtualPrefix => Source.VirtualPrefix;
+
+	/// <summary>
+	/// Gets the displayable PrefixTagsWith.
+	/// </summary>
+	public string? DisplayPrefixTagsWith => Source.PrefixTagsWith;
 }

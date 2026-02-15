@@ -1,4 +1,6 @@
-﻿namespace Koalesce.Services;
+﻿using Koalesce.Services.Report;
+
+namespace Koalesce.Services;
 
 /// <summary>
 /// Service responsible for merging OpenAPI paths from source documents into a target document.
@@ -25,7 +27,8 @@ internal class OpenApiPathMerger
 		OpenApiPaths targetPaths,
 		string apiName,
 		ApiSource apiSource,
-		OpenApiServer? sourceServerEntry)
+		OpenApiServer? sourceServerEntry,
+		MergeReportBuilder reportBuilder)
 	{
 		if (sourceDocument.Paths is null)
 			return;
@@ -35,8 +38,10 @@ internal class OpenApiPathMerger
 		foreach (var (originalPath, pathItem) in sourceDocument.Paths)
 		{
 			// Check Exclusions
-			if (IsPathExcluded(originalPath, apiSource.ExcludePaths))
+			var matchedPattern = GetMatchedExclusionPattern(originalPath, apiSource.ExcludePaths);
+			if (matchedPattern is not null)
 			{
+				reportBuilder.AddExcludedPath(originalPath, apiName, matchedPattern);
 				_logger.LogInformation("Excluding path '{Path}' from '{ApiName}'", originalPath, apiName);
 				continue;
 			}
@@ -54,6 +59,7 @@ internal class OpenApiPathMerger
 					throw new KoalesceIdenticalPathFoundException(newPathKey, apiName);
 				}
 
+				reportBuilder.AddSkippedPath(newPathKey, apiName);
 				_logger.LogWarning("Skipping identical path '{Path}' from '{ApiName}'.", newPathKey, apiName);
 
 				continue;
@@ -68,6 +74,7 @@ internal class OpenApiPathMerger
 			};
 
 			targetPaths[newPathKey] = newPathItem;
+			reportBuilder.IncrementPathsMerged();
 
 			// Process Operations
 			if (pathItem.Operations is null) continue;
@@ -121,16 +128,16 @@ internal class OpenApiPathMerger
 	}
 
 	/// <summary>
-	/// Determines whether the specified path matches any of the provided exclusion patterns.
+	/// Returns the first exclusion pattern that matches the given path, or null if no pattern matches.
 	/// Supports wildcards (*) anywhere in the pattern:
 	/// - /api/* matches /api/users, /api/orders, etc.
 	/// - /*/health matches /users/health, /orders/health, etc.
 	/// - /api/*/details matches /api/users/details, /api/orders/details, etc.
 	/// </summary>
-	private static bool IsPathExcluded(string path, List<string>? excludePaths)
+	private static string? GetMatchedExclusionPattern(string path, List<string>? excludePaths)
 	{
 		if (excludePaths == null || excludePaths.Count == 0)
-			return false;
+			return null;
 
 		foreach (var pattern in excludePaths)
 		{
@@ -138,10 +145,10 @@ internal class OpenApiPathMerger
 				continue;
 
 			if (MatchesWildcardPattern(path, pattern))
-				return true;
+				return pattern;
 		}
 
-		return false;
+		return null;
 	}
 
 	private static readonly ConcurrentDictionary<string, Regex> _wildcardRegexCache = new();

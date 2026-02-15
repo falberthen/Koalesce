@@ -32,7 +32,7 @@ internal class OpenApiMergeService : IKoalesceMergeService
 	{
 		_logger.LogInformation("Starting Koalescing process");
 
-		var (mergedDocument, sourceResults) = await _documentMerger.MergeIntoSingleSpecificationAsync();
+		var (mergedDocument, sourceResults, report) = await _documentMerger.MergeIntoSingleSpecificationAsync();
 
 		_logger.LogInformation("Koalescing complete. Loaded {LoadedCount}/{TotalCount} sources.",
 			sourceResults.Count(r => r.IsLoaded), sourceResults.Count);
@@ -40,6 +40,6 @@ internal class OpenApiMergeService : IKoalesceMergeService
 		var serializedDocument = await _documentSerializer
 			.SerializeAsync(mergedDocument, outputPath);
 
-		return new MergeResult(serializedDocument, sourceResults);
+		return new MergeResult(serializedDocument, sourceResults, report);
 	}
 }

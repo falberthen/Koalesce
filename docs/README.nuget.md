@@ -52,7 +52,7 @@ dotnet tool install --global Koalesce.CLI --prerelease
 
 ### 2️⃣ Configure
 
-#### Multiple APIs
+#### Multiple APIs *(merge specs from URLs or files)*
 ```json
 // appsettings.json
 {
@@ -80,11 +80,11 @@ dotnet tool install --global Koalesce.CLI --prerelease
 }
 ```
 
-#### Single API *(same pipeline, no merge needed)*
+#### Single API *(sanitize, filter, convert)*
 ```json
 {
   "Koalesce": {
-    "OpenApiVersion": "3.1.0",
+    "OpenApiVersion": "3.1.0", // convert from any version to OpenAPI 3.1
     "Info": {
       "Title": "My Public API",
       "Description": "Clean, public-facing API specification"
@@ -96,7 +96,7 @@ dotnet tool install --global Koalesce.CLI --prerelease
         "PrefixTagsWith": "v2"
       }
     ],
-    "MergedEndpoint": "/swagger/v1/public-api.yaml"
+    "MergedEndpoint": "/swagger/v1/public-api.yaml" // the processed spec endpoint
   }
 }
 ```
@@ -115,16 +115,28 @@ app.UseSwaggerUI(c =>
 });
 ```
 
-![Koalesce CLI Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_Swagger.png)
+![Koalesce Swagger Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_Swagger.png)
 
 #### Option B: Using the CLI Tool
 ```bash
-  koalesce -c .\appsettings.json -o .\Output\apigateway.yaml
+  koalesce -c .\settings.json -o .\Output\mergedspec.yaml --report .\Output\report.html
 ```
 
 ![Koalesce CLI Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_CLI_Sample.png)
 
 💡 The CLI processes OpenAPI specifications directly into a file on disk without requiring a host application.
+
+---
+
+### Merge Report
+
+Koalesce generates a structured report summarizing everything that happened during the merge.
+Available as a formatted `HTML` page, or `JSON` based on the file path and extension **you defined**.
+
+**Middleware:** set `MergeReportEndpoint` (e.g., `/merge-report.html`, `/api/report.json`) to serve the report.
+**CLI:** use `--report <path>` to export the report to disk (e.g., `--report ./output/report.html`).
+
+![Koalesce Report Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_Report.png)
 
 ---
 
@@ -150,13 +162,13 @@ app.UseSwaggerUI(c =>
 
 ### 🌞 Where Koalesce Shines
 
-#### Multiple APIs → Unified Spec
+#### Multiple APIs *(merge specs from URLs or files)* → Unified Spec
 - ✅ **Backend-for-Frontend (BFF)**: Unify multiple microservices into one API contract for your frontend team.
 - ✅ **Developer Portals**: Publish a single API reference for partners without exposing internal service boundaries.
 - ✅ **Client SDK Generation**: Generate one SDK from the unified spec (Kiota, NSwag, AutoRest) instead of managing multiple clients.
 - ✅ **Mixed OpenAPI Versions**: Merge specs from different OpenAPI versions (2.0, 3.0.x, 3.1.x) into one normalized output.
 
-#### Single API → Same Pipeline, No Merge
+#### Single API → Curate Your Spec
 - ✅ **Public API Publishing**: Strip internal, admin, or debug endpoints before sharing specs externally.
 - ✅ **Version Conversion**: Convert a legacy Swagger 2.0 spec to OpenAPI 3.1 with a single configuration.
 - ✅ **Spec Cleanup**: Remove unused schemas, reorganize tags, and filter paths — all through the same pipeline.
@@ -185,7 +197,7 @@ app.UseSwaggerUI(c =>
 - **Mutate When Convenient:** Optional features like `PrefixTagsWith`, `VirtualPrefix`, `ExcludePaths` enhance organization and visibility.
 - **Predictable:** Same inputs always produce the same output.
 
-> 💡 *In practice:* Your source APIs define the contract. Koalesce merges them intelligently, changing only what's needed for conflict-free results or what you explicitly configure.
+> 💡 *In practice:* Your source APIs define the contract. Koalesce processes them intelligently, changing only what's needed for conflict-free results or what you explicitly configure.
 
 ---
 

@@ -6,6 +6,23 @@ All notable changes to **Koalesce** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.8] - 2026-02-15
+
+### Added
+
+- **Merge Report**: Structured report summarizing everything that happened during a merge — source load results, schema and security scheme conflict resolutions, deduplications, excluded/skipped paths, and summary counts. Exposed via `--report <path>` in the CLI and `MergeReportEndpoint` in the middleware. The file extension determines the output format: `.json` for JSON, `.html` for a user-friendly HTML page.
+
+### Fixed
+
+- **Security scheme conflicts silently dropped during merge**: When multiple APIs defined security schemes with the same key (e.g., `"bearerAuth"`) but different configurations, only the first one was kept. Identical schemes are now deduplicated, while conflicting schemes are renamed using the same `VirtualPrefix`-based rules applied to schema conflicts. This ensures correct behavior with Swagger UI, SDK generators (Kiota, NSwag), and API Gateways.
+- **Orphaned security schemes left in merged document**: Security schemes that were no longer referenced by any security requirement (e.g., after paths were skipped by `SkipIdenticalPaths` or excluded by `ExcludePaths`) remained in the merged output. They are now removed during finalization, consistent with the existing orphaned schema cleanup.
+
+### Changed
+
+- **Tag behavior in single-source (sanitization) mode**: Previously, Koalesce always auto-generated tags for operations even when using a single source. Now, single-source mode preserves the original tag structure — if the source has no tags, no tags are generated. Merge mode (2+ sources) continues to ensure all operations are tagged for proper grouping.
+
+---
+
 ## [1.0.0-beta.7] - 2026-02-13
 
 ### Fixed
