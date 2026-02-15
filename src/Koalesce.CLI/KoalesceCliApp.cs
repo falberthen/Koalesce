@@ -36,10 +36,16 @@ public static class KoalesceCliApp
 			Description = "Skip SSL certificate validation (use for self-signed certificates)"
 		};
 
+		var reportOption = new Option<string>("--report", "-r")
+		{
+			Description = "Path to write the merge report (e.g. report.html, report.json)"
+		};
+
 		rootCommand.Options.Add(outputOption);
 		rootCommand.Options.Add(configOption);
 		rootCommand.Options.Add(verboseOption);
 		rootCommand.Options.Add(insecureOption);
+		rootCommand.Options.Add(reportOption);
 
 		// Setting handler
 		rootCommand.SetAction(async (parseResult, cancellationToken) =>
@@ -48,6 +54,7 @@ public static class KoalesceCliApp
 			string? config = parseResult.GetValue(configOption);
 			bool verbose = parseResult.GetValue(verboseOption);
 			bool insecure = parseResult.GetValue(insecureOption);
+			string? report = parseResult.GetValue(reportOption);
 
 			if (string.IsNullOrWhiteSpace(output))
 			{
@@ -62,7 +69,7 @@ public static class KoalesceCliApp
 			}
 
 			var runner = new MergeCommandRunner(verbose, insecure);
-			return await runner.RunAsync(output, config);
+			return await runner.RunAsync(output, config, report);
 		});
 
 		return await rootCommand.Parse(args).InvokeAsync();
