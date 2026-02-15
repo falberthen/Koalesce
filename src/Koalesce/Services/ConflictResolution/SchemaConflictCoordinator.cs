@@ -28,7 +28,8 @@ internal class SchemaConflictCoordinator
 		string apiName,
 		string? virtualPrefix,
 		string? schemaConflictPattern,
-		Dictionary<string, SchemaOrigin> schemaOrigins)
+		Dictionary<string, SchemaOrigin> schemaOrigins,
+		MergeReportBuilder reportBuilder)
 	{
 		if (sourceDocument.Components?.Schemas is null || targetDocument.Components?.Schemas is null)
 			return;
@@ -60,14 +61,16 @@ internal class SchemaConflictCoordinator
 
 			// Applying resolution decision
 			ApplyResolutionDecision(
-				decision, 
-				key, 
-				apiName, 
-				schemaConflictPattern, 
-				targetDocument, 
-				sourceRenames, 
-				targetRenames, 
-				schemasToKeepOriginalName);
+				decision,
+				key,
+				apiName,
+				existingOrigin,
+				schemaConflictPattern,
+				targetDocument,
+				sourceRenames,
+				targetRenames,
+				schemasToKeepOriginalName,
+				reportBuilder);
 		}
 
 		// Applying renames to Target Document
@@ -102,11 +105,13 @@ internal class SchemaConflictCoordinator
 		ResolutionDecision decision,
 		string originalKey,
 		string apiName,
+		SchemaOrigin? existingOrigin,
 		string conflictPattern,
 		OpenApiDocument targetDocument,
 		Dictionary<string, string> sourceRenames,
 		Dictionary<string, string> targetRenames,
-		HashSet<string> schemasToKeep)
+		HashSet<string> schemasToKeep,
+		MergeReportBuilder reportBuilder)
 	{
 		// Helper method to ensure uniqueness logic is applied to the decision result
 		string UniqueCheck(string newKey) =>
@@ -124,6 +129,10 @@ internal class SchemaConflictCoordinator
 				string uniqueBoth = UniqueCheck(decision.NewCurrentKey);
 				sourceRenames[originalKey] = uniqueBoth;
 
+				reportBuilder.AddSchemaConflict(
+					originalKey, uniqueBoth,
+					nameof(ConflictResolutionType.RenameBoth), apiName);
+
 				_logger.LogInformation("Schema collision '{Key}': Renaming existing to '{Existing}' and new to '{New}'",
 					originalKey, decision.NewExistingKey, uniqueBoth);
 				break;
@@ -133,6 +142,11 @@ internal class SchemaConflictCoordinator
 					targetRenames[originalKey] = decision.NewExistingKey;
 
 				schemasToKeep.Add(originalKey);
+
+				reportBuilder.AddSchemaConflict(
+					originalKey, originalKey,
+					nameof(ConflictResolutionType.RenameExisting), apiName);
+
 				_logger.LogInformation("Schema collision '{Key}': Renaming existing to '{Existing}' (New keeps original)",
 					originalKey, decision.NewExistingKey);
 				break;
@@ -140,6 +154,10 @@ internal class SchemaConflictCoordinator
 			case ConflictResolutionType.RenameCurrent:
 				string uniqueCurrent = UniqueCheck(decision.NewCurrentKey);
 				sourceRenames[originalKey] = uniqueCurrent;
+
+				reportBuilder.AddSchemaConflict(
+					originalKey, uniqueCurrent,
+					nameof(ConflictResolutionType.RenameCurrent), apiName);
 
 				_logger.LogInformation("Schema collision '{Key}': Renaming new to '{New}'", originalKey, uniqueCurrent);
 				break;

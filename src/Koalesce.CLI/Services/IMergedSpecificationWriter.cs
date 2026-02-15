@@ -5,5 +5,6 @@
 /// </summary>
 public interface IMergedSpecificationWriter
 {
-	Task WriteAsync(string outputPath, string content);
+	Task WriteMergeAsync(string outputPath, string content);
+	Task WriteReportAsync(string? reportPath, MergeReport? report);
 }

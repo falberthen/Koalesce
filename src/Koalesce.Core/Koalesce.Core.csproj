@@ -8,6 +8,14 @@
 	<ItemGroup>
 	  <Compile Remove="Options\KoalesceCacheOptions.cs" />
 	</ItemGroup>
+	<ItemGroup>
+	  <None Remove="Services\MergeResults\MergeReportTemplate.html" />
+	</ItemGroup>
+	<ItemGroup>
+	  <EmbeddedResource Include="Services\MergeResults\MergeReportTemplate.html">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </EmbeddedResource>
+	</ItemGroup>
 
 	<ItemGroup>
 		<FrameworkReference Include="Microsoft.AspNetCore.App" />

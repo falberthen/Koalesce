@@ -47,7 +47,15 @@ Each source must have **either** `Url` **or** `FilePath`:
 | `FailOnServiceLoadError` |  `boolean` | `false` | If `true`, fails startup on unreachable source |
 | `HttpTimeoutSeconds` |  `int`  | `15` | Timeout for fetching remote specs |
 
-## Cache Settings *(Middleware Only)*
+#### Merge Report *(Middleware Only)*
+
+| Setting               | Type     | Default | Description                                                                                   |
+|-----------------------|----------|---------|-----------------------------------------------------------------------------------------------|
+| `MergeReportEndpoint` | `string` | `null`  | Endpoint to serve the merge report. Use `.json` for JSON or `.html` for a formatted HTML page |
+
+> **How the report works:** The report is a **read-only byproduct** of the main merge. Accessing `MergeReportEndpoint` never triggers a new merge — it serves the cached report produced by the last merge on `MergedEndpoint`. If no merge has occurred yet, it returns empty content (`{}` for JSON, or a placeholder page for HTML).
+
+#### Cache Settings *(Middleware Only)*
 
 | Setting          | Type       | Default | Description |
 |------------------|------------|----------|-------------|
@@ -84,6 +92,7 @@ Each source must have **either** `Url` **or** `FilePath`:
       { "FilePath": "./specs/external-api.json" }
     ],
     "MergedEndpoint": "/swagger/v1/apigateway.json",
+    "MergeReportEndpoint": "/koalesce/report",
     "ApiGatewayBaseUrl": "https://localhost:5000",
     "HttpTimeoutSeconds": 30,
     "SchemaConflictPattern": "{Prefix}_{SchemaName}",
@@ -114,6 +123,8 @@ Each source must have **either** `Url` **or** `FilePath`:
 Koalesce doesn't require multiple sources. When a single source is provided, the same processing pipeline runs — `ExcludePaths`, `PrefixTagsWith`, `OpenApiVersion`, `Info`, and all other options work exactly the same way. The only difference is that no merge or conflict resolution takes place.
 
 This makes Koalesce a practical choice for sanitizing an API spec before publishing it externally, converting it to a different OpenAPI version, or simply cleaning up endpoints and tags — without needing any additional tooling.
+
+> **Tag behavior in sanitization mode:** When using a single source, Koalesce preserves the original tag structure as-is. If the source has no tags, no tags are generated. This differs from merge mode (2+ sources), where Koalesce always ensures operations are tagged for proper grouping in Swagger UI.
 
 ```json
 {

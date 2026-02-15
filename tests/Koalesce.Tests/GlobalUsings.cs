@@ -13,3 +13,5 @@ global using System.Net.Sockets;
 global using Koalesce.Core.Options;
 global using Koalesce.Options;
 global using Koalesce.Constants;
+global using System.Text.Json;
+global using Koalesce.Services.MergeResults;

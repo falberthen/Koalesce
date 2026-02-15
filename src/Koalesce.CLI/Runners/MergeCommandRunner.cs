@@ -20,17 +20,18 @@ public class MergeCommandRunner
 	/// <param name="outputPath">The file path where the merged OpenAPI specification will be saved.</param>
 	/// <param name="configPath">The path to the configuration file (e.g., appsettings.json) containing Koalesce settings.</param>
 	/// <returns>The exit code indicating success (0) or failure (non-zero).</returns>
-	public async Task<int> RunAsync(string outputPath, string configPath)
+	public async Task<int> RunAsync(string outputPath, string configPath, string? reportPath = null)
 	{
 		try
 		{
 			KoalesceConsoleUI.PrintBanner();
 
-			if (_insecure)			
-				KoalesceConsoleUI.PrintWarning("SSL certificate validation is disabled (--insecure)");			
+			if (_insecure)
+				KoalesceConsoleUI.PrintWarning("SSL certificate validation is disabled (--insecure)");
 
 			configPath = Path.GetFullPath(configPath);
 			outputPath = Path.GetFullPath(outputPath);
+			reportPath = reportPath is not null ? Path.GetFullPath(reportPath) : null;
 
 			if (!File.Exists(configPath))
 			{
@@ -73,8 +74,13 @@ public class MergeCommandRunner
 			// Print source list with load status indicators
 			KoalesceConsoleUI.PrintSourceResults(result.SourceResults);
 
-			await writer.WriteAsync(outputPath, result.SerializedDocument);
+			// Write merged specification to output path
+			await writer.WriteMergeAsync(outputPath, result.SerializedDocument);
 
+			// Optionally write a report with details about the merge process
+			await writer.WriteReportAsync(reportPath, result.Report);
+
+			KoalesceConsoleUI.PrintBlankLine();
 			return 0;
 		}
 		catch (KoalesceConfigurationNotFoundException)
