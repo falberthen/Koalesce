@@ -144,8 +144,8 @@ app.UseSwaggerUI(c =>
 Koalesce generates a structured report summarizing everything that happened during the merge.
 Available as a formatted `HTML` page, or `JSON` based on the file path and extension **you defined**.
 
-**Middleware:** set `MergeReportEndpoint` (e.g., `/merge-report.html`, `/api/report.json`) to serve the report.
-**CLI:** use `--report <path>` to export the report to disk (e.g., `--report ./output/report.html`).
+- **Middleware:** set `MergeReportEndpoint` (e.g., `/merge-report.html`, `/api/report.json`) to serve the report.
+- **CLI:** use `--report <path>` to export the report to disk (e.g., `--report ./output/report.html`).
 
 
 ![Koalesce Report Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_Report.png)
