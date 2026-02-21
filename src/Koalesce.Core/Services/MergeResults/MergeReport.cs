@@ -23,6 +23,7 @@ public record MergeReportSummary
 	public int? PathsExcluded { get; init; }
 	public int? PathsSkipped { get; init; }
 	public int? SchemaConflictsResolved { get; init; }
+	public int? SchemasDeduplicated { get; init; }
 	public int? SecuritySchemeConflictsResolved { get; init; }
 	public int? SecuritySchemesDeduplicated { get; init; }
 }
@@ -60,7 +61,14 @@ public record MergeReportSecuritySchemeConflict
 
 public record MergeReportDeduplication
 {
-	public List<MergeReportDeduplicatedScheme> SecuritySchemes { get; init; } = [];
+	public List<MergeReportDeduplicatedSchema>? Schemas { get; init; }
+	public List<MergeReportDeduplicatedScheme>? SecuritySchemes { get; init; }
+}
+
+public record MergeReportDeduplicatedSchema
+{
+	public string Key { get; init; } = string.Empty;
+	public string SourceApi { get; init; } = string.Empty;
 }
 
 public record MergeReportDeduplicatedScheme
