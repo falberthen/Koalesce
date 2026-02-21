@@ -45,6 +45,9 @@ public static class MergeReportHtmlRenderer
 		if (summary.SchemaConflictsResolved.HasValue)
 			AppendStat(sb, "Schema Conflicts", summary.SchemaConflictsResolved.Value.ToString(), "stat-info");
 
+		if (summary.SchemasDeduplicated.HasValue)
+			AppendStat(sb, "Schemas Deduplicated", summary.SchemasDeduplicated.Value.ToString());
+
 		if (summary.SecuritySchemeConflictsResolved.HasValue)
 			AppendStat(sb, "Security Conflicts", summary.SecuritySchemeConflictsResolved.Value.ToString(), "stat-info");
 
@@ -143,11 +146,27 @@ public static class MergeReportHtmlRenderer
 		var sb = new StringBuilder();
 		sb.AppendLine("<section>");
 		sb.AppendLine("<h2>Deduplications</h2>");
-		sb.AppendLine("<table><thead>" +
-			"<tr><th>Security Scheme</th><th>Source API</th></tr></thead><tbody>");
-		foreach (var d in dedup.SecuritySchemes)
-			sb.AppendLine($"<tr><td><code>{Escape(d.Key)}</code></td><td>{Escape(d.SourceApi)}</td></tr>");
-		sb.AppendLine("</tbody></table>");
+
+		if (dedup.Schemas is { Count: > 0 })
+		{
+			sb.AppendLine("<h3>Schemas</h3>");
+			sb.AppendLine("<table><thead>" +
+				"<tr><th>Schema</th><th>Source API</th></tr></thead><tbody>");
+			foreach (var d in dedup.Schemas)
+				sb.AppendLine($"<tr><td><code>{Escape(d.Key)}</code></td><td>{Escape(d.SourceApi)}</td></tr>");
+			sb.AppendLine("</tbody></table>");
+		}
+
+		if (dedup.SecuritySchemes is { Count: > 0 })
+		{
+			sb.AppendLine("<h3>Security Schemes</h3>");
+			sb.AppendLine("<table><thead>" +
+				"<tr><th>Security Scheme</th><th>Source API</th></tr></thead><tbody>");
+			foreach (var d in dedup.SecuritySchemes)
+				sb.AppendLine($"<tr><td><code>{Escape(d.Key)}</code></td><td>{Escape(d.SourceApi)}</td></tr>");
+			sb.AppendLine("</tbody></table>");
+		}
+
 		sb.AppendLine("</section>");
 		return sb.ToString();
 	}
