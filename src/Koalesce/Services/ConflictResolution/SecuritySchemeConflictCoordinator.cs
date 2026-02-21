@@ -131,7 +131,7 @@ internal class SecuritySchemeConflictCoordinator
 
 				reportBuilder.AddSecuritySchemeConflict(
 					originalKey, decision.NewCurrentKey,
-					nameof(ConflictResolutionType.RenameBoth), apiName);
+					ConflictResolutionType.RenameBoth, apiName);
 
 				_logger.LogInformation(
 					"SecurityScheme collision '{Key}': Renaming existing to '{Existing}' and new to '{New}'",
@@ -146,7 +146,7 @@ internal class SecuritySchemeConflictCoordinator
 
 				reportBuilder.AddSecuritySchemeConflict(
 					originalKey, originalKey,
-					nameof(ConflictResolutionType.RenameExisting), apiName);
+					ConflictResolutionType.RenameExisting, apiName);
 
 				_logger.LogInformation(
 					"SecurityScheme collision '{Key}': Renaming existing to '{Existing}' (new keeps original)",
@@ -158,7 +158,7 @@ internal class SecuritySchemeConflictCoordinator
 
 				reportBuilder.AddSecuritySchemeConflict(
 					originalKey, decision.NewCurrentKey,
-					nameof(ConflictResolutionType.RenameCurrent), apiName);
+					ConflictResolutionType.RenameCurrent, apiName);
 
 				_logger.LogInformation(
 					"SecurityScheme collision '{Key}': Renaming new to '{New}'",

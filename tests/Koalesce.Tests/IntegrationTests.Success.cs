@@ -178,6 +178,7 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 	#region TESTS USING SchemaConflictPattern
 
 	private const string _schemaConflictSettings = "RestAPIs/appsettings.schemaconflict.json";
+	private const string _schemaDedupSettings = "RestAPIs/appsettings.schemadedup.json";
 	private const string _bothVirtualPrefixSettings = "RestAPIs/appsettings.bothvirtualprefix.json";
 	private const string _firstVirtualPrefixSettings = "RestAPIs/appsettings.firstvirtualprefix.json";
 
@@ -253,6 +254,30 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 
 		// Verify the references were updated
 		Assert.Contains("#/components/schemas/ProductsProduct", mergedResult);
+
+		await koalescingApi.StopAsync();
+	}
+
+	[Fact]
+	public async Task Koalesce_WhenSchemasAreIdentical_ShouldDeduplicateNotRename()
+	{
+		// Arrange & Act
+		// Accounts API (no VirtualPrefix): defines ProblemDetails
+		// Customer Management API (VirtualPrefix "/customerManagement"): defines identical ProblemDetails
+		// Without deduplication, the second would become "CustomerManagementProblemDetails".
+		var koalescingApi = await StartWebApplicationAsync(_schemaDedupSettings,
+			builder => builder.Services
+				.AddKoalesce(builder.Configuration));
+
+		var mergedResult = await _httpClient.GetStringAsync(_mergedOpenApiPath);
+
+		// Assert: Identical schemas are deduplicated — only one "ProblemDetails" exists, no prefixed variant.
+		Assert.Contains("\"ProblemDetails\"", mergedResult);
+		Assert.DoesNotContain("\"CustomerManagementProblemDetails\"", mergedResult);
+
+		// Assert: References in the Customer Management paths point to the shared ProblemDetails.
+		Assert.Contains("/api/customers", mergedResult);
+		Assert.Contains("\"$ref\": \"#/components/schemas/ProblemDetails\"", mergedResult);
 
 		await koalescingApi.StopAsync();
 	}

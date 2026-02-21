@@ -102,9 +102,11 @@ Catalog API    →  /api/health → ⚠️ Skipped (warning logged)
 
 ## 🟰 Identical Schemas
 
-**Automatic Resolution:** When multiple APIs define schemas with identical names (e.g., `Product`), Koalesce automatically renames them using the (customizable) pattern `{Prefix}{SchemaName}`.
+When multiple APIs define schemas with the same name, Koalesce first checks whether the schemas are **structurally identical**. Identical schemas are **deduplicated** — only one copy is kept and all references from both sources point to it. This is particularly common with framework-generated types like ASP.NET Core's `ProblemDetails` and `ValidationProblemDetails`, which appear identically across every microservice.
 
-**Conflict Behavior:**
+When schemas with the same name have **different content**, Koalesce automatically renames them using the (customizable) pattern `{Prefix}{SchemaName}`.
+
+**Conflict Behavior (when schemas are structurally different):**
 
 | Scenario | Result |
 | --- | --- |

@@ -41,11 +41,20 @@ internal class SchemaConflictCoordinator
 		var schemasToKeepOriginalName = new HashSet<string>();
 
 		// Detection and Decision Phase
-		foreach (var (key, _) in sourceDocument.Components.Schemas)
+		foreach (var (key, sourceSchema) in sourceDocument.Components.Schemas)
 		{
 			// If no collision, skip
-			if (!targetDocument.Components.Schemas.ContainsKey(key))
+			if (!targetDocument.Components.Schemas.TryGetValue(key, out var targetSchema))
 				continue;
+			
+			if (AreStructurallyIdentical(sourceSchema, targetSchema))
+			{
+				reportBuilder.AddDeduplicatedSchema(key, apiName);
+				_logger.LogDebug(
+					"Schema '{Key}' from '{ApiName}' is structurally identical to existing — deduplicated.",
+					key, apiName);
+				continue;
+			}
 
 			schemaOrigins.TryGetValue(key, out var existingOrigin);
 
@@ -99,6 +108,19 @@ internal class SchemaConflictCoordinator
 	}
 
 	/// <summary>
+	/// Compares two schemas by serializing them to JSON and comparing the result.
+	/// Handles all nesting, composition keywords, and additionalProperties.
+	/// </summary>
+	private static bool AreStructurallyIdentical(IOpenApiSchema source, IOpenApiSchema target)
+	{
+		using var sw1 = new StringWriter();
+		using var sw2 = new StringWriter();
+		source.SerializeAsV3(new OpenApiJsonWriter(sw1));
+		target.SerializeAsV3(new OpenApiJsonWriter(sw2));
+		return sw1.ToString() == sw2.ToString();
+	}
+
+	/// <summary>
 	/// Applies the resolution decision to the renaming dictionaries
 	/// </summary>
 	private void ApplyResolutionDecision(
@@ -131,7 +153,7 @@ internal class SchemaConflictCoordinator
 
 				reportBuilder.AddSchemaConflict(
 					originalKey, uniqueBoth,
-					nameof(ConflictResolutionType.RenameBoth), apiName);
+					ConflictResolutionType.RenameBoth, apiName);
 
 				_logger.LogInformation("Schema collision '{Key}': Renaming existing to '{Existing}' and new to '{New}'",
 					originalKey, decision.NewExistingKey, uniqueBoth);
@@ -145,7 +167,7 @@ internal class SchemaConflictCoordinator
 
 				reportBuilder.AddSchemaConflict(
 					originalKey, originalKey,
-					nameof(ConflictResolutionType.RenameExisting), apiName);
+					ConflictResolutionType.RenameExisting, apiName);
 
 				_logger.LogInformation("Schema collision '{Key}': Renaming existing to '{Existing}' (New keeps original)",
 					originalKey, decision.NewExistingKey);
@@ -157,7 +179,7 @@ internal class SchemaConflictCoordinator
 
 				reportBuilder.AddSchemaConflict(
 					originalKey, uniqueCurrent,
-					nameof(ConflictResolutionType.RenameCurrent), apiName);
+					ConflictResolutionType.RenameCurrent, apiName);
 
 				_logger.LogInformation("Schema collision '{Key}': Renaming new to '{New}'", originalKey, uniqueCurrent);
 				break;

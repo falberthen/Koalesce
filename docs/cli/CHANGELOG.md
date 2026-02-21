@@ -6,6 +6,14 @@ All notable changes to **Koalesce.CLI** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.9] - 2026-02-21
+
+### Changed
+
+- Updated `Koalesce` dependency to `1.0.0-beta.9`.
+
+---
+
 ## [1.0.0-beta.8] - 2026-02-15
 
 ### Added

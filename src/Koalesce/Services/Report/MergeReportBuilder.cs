@@ -11,6 +11,7 @@ internal class MergeReportBuilder
 	private readonly List<MergeReportSource> _sources = [];
 	private readonly List<MergeReportSchemaConflict> _schemaConflicts = [];
 	private readonly List<MergeReportSecuritySchemeConflict> _securitySchemeConflicts = [];
+	private readonly List<MergeReportDeduplicatedSchema> _deduplicatedSchemas = [];
 	private readonly List<MergeReportDeduplicatedScheme> _deduplicatedSchemes = [];
 	private readonly List<MergeReportExcludedPath> _excludedPaths = [];
 	private readonly List<MergeReportSkippedPath> _skippedPaths = [];
@@ -28,23 +29,30 @@ internal class MergeReportBuilder
 
 	public void AddSchemaConflict(
 		string originalKey, string newKey,
-		string resolution, string sourceApi) =>
+		ConflictResolutionType resolution, string sourceApi) =>
 		_schemaConflicts.Add(new MergeReportSchemaConflict
 		{
 			OriginalKey = originalKey,
 			NewKey = newKey,
-			Resolution = resolution,
+			Resolution = resolution.ToString(),
 			SourceApi = sourceApi
 		});
 
 	public void AddSecuritySchemeConflict(
 		string originalKey, string newKey,
-		string resolution, string sourceApi) =>
+		ConflictResolutionType resolution, string sourceApi) =>
 		_securitySchemeConflicts.Add(new MergeReportSecuritySchemeConflict
 		{
 			OriginalKey = originalKey,
 			NewKey = newKey,
-			Resolution = resolution,
+			Resolution = resolution.ToString(),
+			SourceApi = sourceApi
+		});
+
+	public void AddDeduplicatedSchema(string key, string sourceApi) =>
+		_deduplicatedSchemas.Add(new MergeReportDeduplicatedSchema
+		{
+			Key = key,
 			SourceApi = sourceApi
 		});
 
@@ -82,7 +90,7 @@ internal class MergeReportBuilder
 		int failedCount = _sources.Count(s => !s.IsLoaded);
 
 		bool hasConflicts = _schemaConflicts.Count > 0 || _securitySchemeConflicts.Count > 0;
-		bool hasDedup = _deduplicatedSchemes.Count > 0;
+		bool hasDedup = _deduplicatedSchemas.Count > 0 || _deduplicatedSchemes.Count > 0;
 		bool hasRemovals = _excludedPaths.Count > 0 || _skippedPaths.Count > 0;
 
 		return new MergeReport
@@ -97,6 +105,7 @@ internal class MergeReportBuilder
 				PathsExcluded = NullIfZero(_excludedPaths.Count),
 				PathsSkipped = NullIfZero(_skippedPaths.Count),
 				SchemaConflictsResolved = NullIfZero(_schemaConflicts.Count),
+				SchemasDeduplicated = NullIfZero(_deduplicatedSchemas.Count),
 				SecuritySchemeConflictsResolved = NullIfZero(_securitySchemeConflicts.Count),
 				SecuritySchemesDeduplicated = NullIfZero(_deduplicatedSchemes.Count)
 			},
@@ -108,7 +117,8 @@ internal class MergeReportBuilder
 			} : null,
 			Deduplication = hasDedup ? new MergeReportDeduplication
 			{
-				SecuritySchemes = [.. _deduplicatedSchemes]
+				Schemas = _deduplicatedSchemas.Count > 0 ? [.. _deduplicatedSchemas] : null,
+				SecuritySchemes = _deduplicatedSchemes.Count > 0 ? [.. _deduplicatedSchemes] : null
 			} : null,
 			Removals = hasRemovals ? new MergeReportRemovals
 			{
