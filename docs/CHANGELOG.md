@@ -6,6 +6,15 @@ All notable changes to **Koalesce** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.9] - 2026-02-21
+
+### Added
+
+- **Identical schema deduplication**: When multiple sources define schemas with the same name and identical structure, Koalesce now deduplicates them instead of renaming. Only one copy is kept in the merged document and all references from both sources point to it. This is consistent with the existing behavior for security schemes, and particularly beneficial when merging .NET microservices that all expose framework-generated types like `ProblemDetails` and `ValidationProblemDetails`. When schemas with the same name genuinely differ in content, the existing conflict resolution rules (VirtualPrefix-based renaming) continue to apply unchanged.
+- **Schema deduplication in Merge Report**: Deduplicated schemas are now tracked in the merge report under `Deduplication.Schemas`, with a `SchemasDeduplicated` count in the summary. The HTML report includes a new Schemas subsection under Deduplications.
+
+---
+
 ## [1.0.0-beta.8] - 2026-02-15
 
 ### Added
