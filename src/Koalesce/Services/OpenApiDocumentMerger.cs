@@ -1,5 +1,3 @@
-﻿using Koalesce.Services.Report;
-
 namespace Koalesce.Services;
 
 /// <summary>
@@ -13,7 +11,7 @@ internal class OpenApiDocumentMerger
 	private readonly OpenApiPathMerger _pathMerger;
 	private readonly SchemaConflictCoordinator _schemaConflictCoordinator;
 	private readonly SecuritySchemeConflictCoordinator _securitySchemeConflictCoordinator;
-	private readonly ISchemaReferenceWalker _schemaReferenceWalker;
+	private readonly OpenApiDocumentFinalizer _finalizer;
 
 	public OpenApiDocumentMerger(
 		IOptions<KoalesceOptions> options,
@@ -22,7 +20,7 @@ internal class OpenApiDocumentMerger
 		OpenApiPathMerger pathMerger,
 		SchemaConflictCoordinator schemaConflictCoordinator,
 		SecuritySchemeConflictCoordinator securitySchemeConflictCoordinator,
-		ISchemaReferenceWalker schemaReferenceWalker)
+		OpenApiDocumentFinalizer finalizer)
 	{
 		ArgumentNullException.ThrowIfNull(options);
 		ArgumentNullException.ThrowIfNull(logger);
@@ -33,7 +31,7 @@ internal class OpenApiDocumentMerger
 		_pathMerger = pathMerger;
 		_schemaConflictCoordinator = schemaConflictCoordinator;
 		_securitySchemeConflictCoordinator = securitySchemeConflictCoordinator;
-		_schemaReferenceWalker = schemaReferenceWalker;
+		_finalizer = finalizer;
 	}
 
 	/// <summary>
@@ -80,9 +78,7 @@ internal class OpenApiDocumentMerger
 			}
 
 			// Finalize
-			RemoveOrphanedSchemas(mergedDocument);
-			RemoveOrphanedSecuritySchemes(mergedDocument);
-			ConsolidateServerSpecifications(mergedDocument);
+			_finalizer.Finalize(mergedDocument);
 
 			_logger.LogInformation("API Koalescing completed.");
 			return (mergedDocument, sourceResults, reportBuilder.Build());
@@ -208,7 +204,7 @@ internal class OpenApiDocumentMerger
 	/// <summary>
 	/// Merges schemas and security scheme definitions
 	/// </summary>
-	private void MergeComponents(
+	private static void MergeComponents(
 		OpenApiComponents? sourceComponents,
 		OpenApiComponents? targetComponents,
 		string apiName,
@@ -226,9 +222,7 @@ internal class OpenApiDocumentMerger
 			foreach (var (key, schema) in sourceComponents.Schemas)
 			{
 				if (targetComponents.Schemas.TryAdd(key, schema))
-				{
 					schemaOrigins.TryAdd(key, new SchemaOrigin(apiName, virtualPrefix));
-				}
 			}
 		}
 
@@ -239,9 +233,7 @@ internal class OpenApiDocumentMerger
 			foreach (var (key, securityScheme) in sourceComponents.SecuritySchemes)
 			{
 				if (targetComponents.SecuritySchemes.TryAdd(key, securityScheme))
-				{
 					securitySchemeOrigins.TryAdd(key, new SchemaOrigin(apiName, virtualPrefix));
-				}
 			}
 		}
 	}
@@ -257,20 +249,15 @@ internal class OpenApiDocumentMerger
 		bool isMergeContext)
 	{
 		var prefix = apiSource.PrefixTagsWith;
+		var existingTagNames = targetDoc.Tags?.Select(t => t.Name).OfType<string>().ToHashSet() ?? [];
 
-		// Use HashSet for O(1) lookup
-		var existingTagNames = new HashSet<string>(
-			targetDoc.Tags?.Select(t => t.Name).Where(n => n != null).Cast<string>() ?? []);
-
-		// Apply prefix to source document-level tags
+		// Prefix and register document-level tags from source
 		if (sourceDoc.Tags != null)
 		{
-			foreach (var tag in sourceDoc.Tags)
+			foreach (var tag in sourceDoc.Tags.Where(t => t.Name != null))
 			{
-				if (tag.Name != null)
-					tag.Name = ApplyTagPrefix(tag.Name, prefix);
-
-				if (tag.Name != null && existingTagNames.Add(tag.Name))
+				tag.Name = ApplyTagPrefix(tag.Name!, prefix);
+				if (existingTagNames.Add(tag.Name))
 					targetDoc.Tags?.Add(tag);
 			}
 		}
@@ -278,9 +265,13 @@ internal class OpenApiDocumentMerger
 		if (sourceDoc.Paths is null)
 			return;
 
-		foreach (var path in sourceDoc.Paths.Values)
+		foreach (var (pathKey, path) in sourceDoc.Paths)
 		{
-			if (path.Operations is null)
+			if (path.Operations is null) 
+				continue;
+
+			// Skip paths that were excluded during path merging
+			if (OpenApiPathMerger.GetMatchedExclusionPattern(pathKey, apiSource.ExcludePaths) is not null) 
 				continue;
 
 			foreach (var operation in path.Operations.Values)
@@ -288,45 +279,34 @@ internal class OpenApiDocumentMerger
 				operation.Tags ??= new HashSet<OpenApiTagReference>();
 
 				// Apply prefix to existing operation tags
-				if (prefix != null && operation.Tags.Count > 0)
-				{
-					var prefixedTags = operation.Tags
-						.Select(t => new OpenApiTagReference(ApplyTagPrefix(t.Name!, prefix)))
-						.ToList();
-					operation.Tags.Clear();
-					foreach (var tag in prefixedTags)
-						operation.Tags.Add(tag);
+				if (prefix != null && operation.Tags.Count > 0) 
+				{ 
+					operation.Tags = operation.Tags.Select(t => 
+						new OpenApiTagReference(ApplyTagPrefix(t.Name!, prefix)))
+						.ToHashSet();
 				}
 
 				if (operation.Tags.Count == 0)
 				{
 					// Priority 1: Document Tags (previously prefixed)
-					if (sourceDoc.Tags?.Count > 0)
-					{
-						foreach (var t in sourceDoc.Tags)
-						{
-							if (t.Name != null)
-								operation.Tags.Add(new OpenApiTagReference(t.Name));
-						}
+					if (sourceDoc.Tags?.Count > 0) { 
+						foreach (var t in sourceDoc.Tags.Where(t => t.Name != null))
+							operation.Tags.Add(new OpenApiTagReference(t.Name!));
 					}
-					// Priority 2: Only generate tag if in a merged context (multiple sources) to avoid unnecessary tags for single-source scenarios
+					// Priority 2: Only generate tag in a merged context to avoid unnecessary tags for single-source scenarios
 					else if (isMergeContext)
 					{
-						// If prefix is configured, use it as the tag name; otherwise, derive a default tag name from the API source
-						string tagName = !string.IsNullOrEmpty(prefix)
+						operation.Tags.Add
+							(new OpenApiTagReference(!string.IsNullOrEmpty(prefix)
 							? prefix
-							: GetDefaultTagName(apiSource);
-
-						operation.Tags.Add(new OpenApiTagReference(tagName));
-					}					
+							: GetDefaultTagName(apiSource))
+						);
+					}
 				}
 
 				// Add referenced tags to document-level tags
-				foreach (var tagRef in operation.Tags)
-				{
-					if (tagRef.Name != null && existingTagNames.Add(tagRef.Name))
-						targetDoc.Tags?.Add(new OpenApiTag { Name = tagRef.Name });
-				}
+				foreach (var tagRef in operation.Tags.Where(t => t.Name != null && existingTagNames.Add(t.Name!)))
+					targetDoc.Tags?.Add(new OpenApiTag { Name = tagRef.Name });
 			}
 		}
 	}
@@ -346,95 +326,8 @@ internal class OpenApiDocumentMerger
 			return new Uri(apiSource.Url).Host.Replace(".", "-");
 
 		if (!string.IsNullOrWhiteSpace(apiSource.FilePath))
-			return Path.GetFileNameWithoutExtension(apiSource.FilePath).CleanName(); // Use file name without extension as default tag
+			return Path.GetFileNameWithoutExtension(apiSource.FilePath).CleanName();
 
 		return KoalesceConstants.UnknownTagName;
-	}
-
-	/// <summary>
-	/// Removes schemas from the merged document that are not referenced by any path/operation.
-	/// </summary>
-	private void RemoveOrphanedSchemas(OpenApiDocument document)
-	{
-		if (document.Components?.Schemas is null || document.Components.Schemas.Count == 0)
-			return;
-
-		var referencedSchemas = _schemaReferenceWalker.CollectReferencedSchemas(document);
-		var orphanedKeys = document.Components.Schemas.Keys
-			.Where(key => !referencedSchemas.Contains(key))
-			.ToList();
-
-		foreach (var key in orphanedKeys)
-		{
-			document.Components.Schemas.Remove(key);
-			_logger.LogInformation("Removed orphaned schema '{SchemaName}' (not referenced by any path)", key);
-		}
-	}
-
-	/// <summary>
-	/// Removes security schemes from the merged document that are not referenced by any security requirement.
-	/// </summary>
-	private void RemoveOrphanedSecuritySchemes(OpenApiDocument document)
-	{
-		if (document.Components?.SecuritySchemes is null || document.Components.SecuritySchemes.Count == 0)
-			return;
-
-		var referenced = new HashSet<string>();
-
-		CollectSecuritySchemeRefs(document.Security, referenced);
-
-		if (document.Paths is not null)
-		{
-			foreach (var pathItem in document.Paths.Values)
-			{
-				if (pathItem.Operations is null)
-					continue;
-
-				foreach (var operation in pathItem.Operations.Values)
-					CollectSecuritySchemeRefs(operation.Security, referenced);
-			}
-		}
-
-		var orphanedKeys = document.Components.SecuritySchemes.Keys
-			.Where(key => !referenced.Contains(key))
-			.ToList();
-
-		foreach (var key in orphanedKeys)
-		{
-			document.Components.SecuritySchemes.Remove(key);
-			_logger.LogInformation("Removed orphaned security scheme '{SchemeName}' (not referenced by any security requirement)", key);
-		}
-	}
-
-	private static void CollectSecuritySchemeRefs(IList<OpenApiSecurityRequirement>? requirements, HashSet<string> referenced)
-	{
-		if (requirements is null)
-			return;
-
-		foreach (var requirement in requirements)
-		{
-			foreach (var key in requirement.Keys.OfType<OpenApiSecuritySchemeReference>())
-			{
-				if (key.Reference?.Id is not null)
-					referenced.Add(key.Reference.Id);
-			}
-		}
-	}
-
-	/// <summary>
-	/// Consolidates the server specifications in the specified OpenAPI document to ensure a valid server entry is present.
-	/// </summary>
-	private void ConsolidateServerSpecifications(OpenApiDocument doc)
-	{
-		doc.Servers ??= [];
-		if (!string.IsNullOrEmpty(_options.ApiGatewayBaseUrl))
-		{
-			doc.Servers.Clear();
-			doc.Servers.Add(new OpenApiServer { Url = _options.ApiGatewayBaseUrl, Description = "API Gateway" });
-		}
-		else if (doc.Servers.Count == 0)
-		{
-			doc.Servers.Add(new OpenApiServer { Url = "/" });
-		}
 	}
 }

@@ -374,6 +374,9 @@ public partial class IntegrationTests : KoalesceIntegrationTestBase
 		// Products path should be present (not excluded)
 		Assert.Contains("/api/products", mergedResult);
 
+		// "Customers" tag should be removed since all paths using it were excluded
+		Assert.DoesNotContain("\"Customers\"", mergedResult);
+
 		await koalescingApi.StopAsync();
 	}
 
