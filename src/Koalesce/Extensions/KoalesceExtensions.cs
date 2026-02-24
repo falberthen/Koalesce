@@ -56,11 +56,12 @@ public static class KoalesceExtensions
 		// Supporting services for merging
 		services.TryAddSingleton<OpenApiDefinitionLoader>();
 		services.TryAddSingleton<OpenApiPathMerger>();
+		services.TryAddSingleton<OpenApiDocumentFinalizer>();
 
 		// Conflict resolution services
 		services.TryAddSingleton<IConflictResolutionStrategy, DefaultConflictResolutionStrategy>();
-		services.TryAddSingleton<ISchemaReferenceWalker, SchemaReferenceWalker>();
-		services.TryAddSingleton<ISchemaRenamer, SchemaRenamer>();
+		services.TryAddSingleton<SchemaReferenceWalker>();
+		services.TryAddSingleton<SchemaRenamer>();
 		services.TryAddSingleton<SchemaConflictCoordinator>();
 		services.TryAddSingleton<SecuritySchemeConflictCoordinator>();
 
