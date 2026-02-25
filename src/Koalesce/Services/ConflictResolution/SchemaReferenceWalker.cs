@@ -3,7 +3,7 @@ namespace Koalesce.Services.ConflictResolution;
 /// <summary>
 /// Service responsible for walking and manipulating schema references in OpenAPI documents.
 /// </summary>
-internal class SchemaReferenceWalker : ISchemaReferenceWalker
+internal class SchemaReferenceWalker
 {
 	/// <inheritdoc />
 	public void RewriteReferences(OpenApiDocument document, IReadOnlyDictionary<string, string> renames)

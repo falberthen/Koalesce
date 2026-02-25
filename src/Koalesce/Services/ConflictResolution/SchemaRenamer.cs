@@ -3,12 +3,12 @@
 /// <summary>
 /// Service responsible for renaming schemas in OpenAPI documents to resolve naming conflicts.
 /// </summary>
-internal class SchemaRenamer : ISchemaRenamer
+internal class SchemaRenamer
 {
 	private readonly ILogger<SchemaRenamer> _logger;
-	private readonly ISchemaReferenceWalker _referenceRewriter;
+	private readonly SchemaReferenceWalker _referenceRewriter;
 
-	public SchemaRenamer(ILogger<SchemaRenamer> logger, ISchemaReferenceWalker referenceRewriter)
+	public SchemaRenamer(ILogger<SchemaRenamer> logger, SchemaReferenceWalker referenceRewriter)
 	{
 		_logger = logger;
 		_referenceRewriter = referenceRewriter;

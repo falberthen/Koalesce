@@ -108,11 +108,6 @@ dotnet tool install --global Koalesce.CLI --prerelease
 // Program.cs
 builder.Services.AddKoalesce();
 app.UseKoalesce();
-
-app.UseSwaggerUI(c =>
-{
-  c.SwaggerEndpoint(koalesceOptions.MergedEndpoint, koalesceOptions.Info.Title);
-});
 ```
 
 ![Koalesce Swagger Screenshot](https://raw.githubusercontent.com/falberthen/Koalesce/master/img/Screenshot_Swagger.png)

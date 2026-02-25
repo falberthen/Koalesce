@@ -134,7 +134,7 @@ internal class OpenApiPathMerger
 	/// - /*/health matches /users/health, /orders/health, etc.
 	/// - /api/*/details matches /api/users/details, /api/orders/details, etc.
 	/// </summary>
-	private static string? GetMatchedExclusionPattern(string path, List<string>? excludePaths)
+	internal static string? GetMatchedExclusionPattern(string path, List<string>? excludePaths)
 	{
 		if (excludePaths == null || excludePaths.Count == 0)
 			return null;

@@ -6,6 +6,14 @@ All notable changes to **Koalesce** will be documented in this file.
 
 ---
 
+## [1.0.0-beta.10] - 2026-02-24
+
+### Fixed
+
+- **ExcludePaths not excluding tags**: Paths matched by `ExcludePaths` were correctly excluded from the merged paths list, but their tags were still being added to the merged document. Tags from excluded paths are now skipped during tag merging. Additionally, document-level tags that have no remaining operations referencing them after exclusion are automatically removed (orphaned tag cleanup), consistent with the existing orphaned schema and security scheme cleanup.
+
+---
+
 ## [1.0.0-beta.9] - 2026-02-21
 
 ### Added
