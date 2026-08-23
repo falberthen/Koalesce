@@ -10,7 +10,9 @@
 
 ![Tests](https://github.com/falberthen/Koalesce/actions/workflows/tests.yml/badge.svg) ![GitHub Issues](https://img.shields.io/github/issues/falberthen/Koalesce)
 
-⭐ **If you find Koalesce useful, please consider giving it a star!** It helps others discover the project.  [![GitHub stars](https://img.shields.io/github/stars/falberthen/Koalesce?style=social)](https://github.com/falberthen/Koalesce/stargazers)
+⭐ **If you find Koalesce useful, please consider giving it a star!** It helps others discover the project.  
+
+[![GitHub stars](https://img.shields.io/github/stars/falberthen/Koalesce?style=social)](https://github.com/falberthen/Koalesce/stargazers)
 
 ---
 
@@ -171,7 +173,7 @@ Available as a formatted `HTML` page, or `JSON` based on the file path and exten
 ### 🌞 Where Koalesce Shines
 
 #### Multiple APIs *(merge specs from URLs or files)* → Unified Spec
-- ✅ **Backend-for-Frontend (BFF)**: Unify multiple microservices into one API contract for your frontend team.
+- ✅ **Gateway/BFF contract aggregation**: Merge multiple API specs into the single one that a gateway or BFF layer needs to expose, without hand-writing aggregation logic.
 - ✅ **Developer Portals**: Publish a single API reference for partners without exposing internal service boundaries.
 - ✅ **Client SDK Generation**: Generate one SDK from the unified spec (Kiota, NSwag, AutoRest) instead of managing multiple clients.
 - ✅ **Mixed OpenAPI Versions**: Merge specs from different OpenAPI versions (2.0, 3.0.x, 3.1.x) into one normalized output.
